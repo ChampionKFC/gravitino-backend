@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { CreateOrganizationDto, UpdateOrganizationDto } from './dto';
-import { Organization } from './entities/organization.entity';
-import { InjectModel } from '@nestjs/sequelize';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { OrganizationResponse, StatusOrganizationResponse } from './response';
-import { OrganizationFilter } from './filters';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
-import { QueryTypes } from 'sequelize';
-import { Sequelize } from 'sequelize-typescript';
+import { Injectable } from '@nestjs/common'
+import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
+import { Organization } from './entities/organization.entity'
+import { InjectModel } from '@nestjs/sequelize'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { OrganizationResponse, StatusOrganizationResponse } from './response'
+import { OrganizationFilter } from './filters'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import { Op, QueryTypes } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { Checkpoint } from '../checkpoint/entities/checkpoint.entity'
+import { Facility } from '../facility/entities/facility.entity'
+import { OrganizationType } from '../organization_type/entities/organization_type.entity'
 
 @Injectable()
 export class OrganizationService {
@@ -21,47 +21,36 @@ export class OrganizationService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(
-    organization: CreateOrganizationDto,
-    user_id: number,
-  ): Promise<StatusOrganizationResponse> {
+  async create(organization: CreateOrganizationDto, user_id: number): Promise<StatusOrganizationResponse> {
     try {
       const newOrganization = await this.organizationRepository.create({
         ...organization,
-      });
+      })
 
       const historyDto = {
         user_id: user_id,
         comment: `Создана организация #${newOrganization.organization_id}`,
-      };
-      await this.historyService.create(historyDto);
+      }
+      await this.historyService.create(historyDto)
 
-      return { status: true, data: newOrganization };
+      return { status: true, data: newOrganization }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async findAll(
-    organizationFilter: OrganizationFilter,
-  ): Promise<OrganizationResponse[]> {
+  async findAll(organizationFilter: OrganizationFilter): Promise<OrganizationResponse[]> {
     try {
-      const offset_count =
-        organizationFilter.offset?.count == undefined
-          ? 50
-          : organizationFilter.offset.count;
-      const offset_page =
-        organizationFilter.offset?.page == undefined
-          ? 1
-          : organizationFilter.offset.page;
+      const offset_count = organizationFilter.offset?.count == undefined ? 50 : organizationFilter.offset.count
+      const offset_page = organizationFilter.offset?.page == undefined ? 1 : organizationFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (organizationFilter?.filter) {
-        whereQuery = generateWhereQuery(organizationFilter?.filter);
+        whereQuery = generateWhereQuery(organizationFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (organizationFilter?.sorts) {
-        sortQuery = generateSortQuery(organizationFilter?.sorts);
+        sortQuery = generateSortQuery(organizationFilter?.sorts)
       }
 
       const result = this.sequelize.query<Organization>(
@@ -93,11 +82,26 @@ export class OrganizationService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return result;
+      return result
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
+    }
+  }
+
+  async findAllByCheckpoint(checkpoint_id: number): Promise<OrganizationResponse[]> {
+    try {
+      const result = await this.organizationRepository.findAll({
+        include: [
+          OrganizationType,
+          { model: Facility, as: 'facilities', where: { facility_id: { [Op.ne]: null } }, include: [{ model: Checkpoint, where: { checkpoint_id } }] },
+        ],
+      })
+
+      return result
+    } catch (error) {
+      throw new Error(error)
     }
   }
 
@@ -105,69 +109,60 @@ export class OrganizationService {
     try {
       const result = await this.organizationRepository.findOne({
         where: { organization_id },
-      });
+      })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async update(
-    updatedOrganization: UpdateOrganizationDto,
-    user_id: number,
-  ): Promise<OrganizationResponse> {
+  async update(updatedOrganization: UpdateOrganizationDto, user_id: number): Promise<OrganizationResponse> {
     try {
-      let foundOrganization = null;
-      await this.organizationRepository.update(
-        { ...updatedOrganization },
-        { where: { organization_id: updatedOrganization.organization_id } },
-      );
+      let foundOrganization = null
+      await this.organizationRepository.update({ ...updatedOrganization }, { where: { organization_id: updatedOrganization.organization_id } })
 
       foundOrganization = await this.organizationRepository.findOne({
         where: { organization_id: updatedOrganization.organization_id },
-      });
+      })
 
       if (foundOrganization) {
         const historyDto = {
           user_id: user_id,
           comment: `Изменена организация #${foundOrganization.organization_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
       }
 
-      return foundOrganization;
+      return foundOrganization
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async remove(
-    organization_id: number,
-    user_id: number,
-  ): Promise<StatusOrganizationResponse> {
+  async remove(organization_id: number, user_id: number): Promise<StatusOrganizationResponse> {
     try {
       const deleteOrganization = await this.organizationRepository.destroy({
         where: { organization_id },
-      });
+      })
 
       if (deleteOrganization) {
         const historyDto = {
           user_id: user_id,
           comment: `Удалена организация #${organization_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
 
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

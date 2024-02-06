@@ -1,36 +1,16 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Req,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiCreatedResponse,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { CreateUserDto, UpdateUserDto } from './dto';
-import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard';
-import { RolesService } from '../roles/roles.service';
-import { OrganizationService } from '../organization/organization.service';
-import { GroupService } from '../group/group.service';
-import { AppError } from 'src/common/constants/error';
-import { AllExceptionsFilter } from 'src/common/exception.filter';
-import { UserFilter } from './filters';
-import { StatusUserResponse } from './response';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, Req, UseFilters, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { UsersService } from './users.service'
+import { User } from './entities/user.entity'
+import { CreateUserDto, UpdateUserDto, UpdateUserStatusDto } from './dto'
+import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
+import { RolesService } from '../roles/roles.service'
+import { OrganizationService } from '../organization/organization.service'
+import { GroupService } from '../group/group.service'
+import { AppError } from 'src/common/constants/error'
+import { AllExceptionsFilter } from 'src/common/exception.filter'
+import { UserFilter } from './filters'
+import { StatusUserResponse } from './response'
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -60,40 +40,35 @@ export class UsersController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden!' })
   async create(@Body() user: CreateUserDto) {
-    const foundUser = await this.usersService.findByEmail(user.email);
+    const foundUser = await this.usersService.findByEmail(user.email)
     if (foundUser) {
-      throw new HttpException(AppError.USER_EMAIL_EXISTS, HttpStatus.CONFLICT);
+      throw new HttpException(AppError.USER_EMAIL_EXISTS, HttpStatus.CONFLICT)
     }
 
-    const foundRole = await this.roleService.findOne(user.role_id);
+    const foundRole = await this.roleService.findOne(user.role_id)
     if (!foundRole) {
-      throw new HttpException(AppError.ROLE_NOT_FOUND, HttpStatus.NOT_FOUND);
+      throw new HttpException(AppError.ROLE_NOT_FOUND, HttpStatus.NOT_FOUND)
     }
 
     if (user.organization_id) {
-      const foundOrganization = await this.organizationService.findOne(
-        user.organization_id,
-      );
+      const foundOrganization = await this.organizationService.findOne(user.organization_id)
       if (!foundOrganization) {
-        throw new HttpException(
-          AppError.ORGANIZATION_NOT_FOUND,
-          HttpStatus.NOT_FOUND,
-        );
+        throw new HttpException(AppError.ORGANIZATION_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
     }
 
     if (user.group_id) {
-      const foundGroup = await this.groupService.findOne(user.group_id);
+      const foundGroup = await this.groupService.findOne(user.group_id)
       if (!foundGroup) {
-        throw new HttpException(AppError.GROUP_NOT_FOUND, HttpStatus.NOT_FOUND);
+        throw new HttpException(AppError.GROUP_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
     }
 
     return this.usersService.create(user).catch((error) => {
-      const errorMessage = error.message;
+      const errorMessage = error.message
 
-      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
-    });
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST)
+    })
   }
 
   @UseGuards(JwtAuthGuard)
@@ -107,7 +82,7 @@ export class UsersController {
   })
   @ApiBody({ required: false, type: UserFilter })
   findAll(@Body() userFilter: UserFilter) {
-    return this.usersService.findAll(userFilter);
+    return this.usersService.findAll(userFilter)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -124,7 +99,7 @@ export class UsersController {
     type: User,
   })
   findById(@Param('id') id: number) {
-    return this.usersService.findById(+id);
+    return this.usersService.findById(+id)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -141,41 +116,36 @@ export class UsersController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden!' })
   async update(@Body() user: UpdateUserDto, @Req() request) {
-    let foundUser = null;
+    let foundUser = null
     if (user.user_id) {
-      foundUser = await this.usersService.findOne(user.user_id);
+      foundUser = await this.usersService.findOne(user.user_id)
     }
     if (!foundUser) {
-      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
     }
 
     if (user.role_id) {
-      const foundRole = await this.roleService.findOne(user.role_id);
+      const foundRole = await this.roleService.findOne(user.role_id)
       if (!foundRole) {
-        throw new HttpException(AppError.ROLE_NOT_FOUND, HttpStatus.NOT_FOUND);
+        throw new HttpException(AppError.ROLE_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
     }
 
     if (user.organization_id) {
-      const foundOrganization = await this.organizationService.findOne(
-        user.organization_id,
-      );
+      const foundOrganization = await this.organizationService.findOne(user.organization_id)
       if (!foundOrganization) {
-        throw new HttpException(
-          AppError.ORGANIZATION_NOT_FOUND,
-          HttpStatus.NOT_FOUND,
-        );
+        throw new HttpException(AppError.ORGANIZATION_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
     }
 
     if (user.group_id) {
-      const foundGroup = await this.groupService.findOne(user.group_id);
+      const foundGroup = await this.groupService.findOne(user.group_id)
       if (!foundGroup) {
-        throw new HttpException(AppError.GROUP_NOT_FOUND, HttpStatus.NOT_FOUND);
+        throw new HttpException(AppError.GROUP_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
     }
 
-    return this.usersService.update(user, request.user.user_id);
+    return this.usersService.update(user, request.user.user_id)
   }
 
   @UseGuards(JwtAuthGuard)
@@ -192,24 +162,23 @@ export class UsersController {
     type: User,
   })
   async remove(@Param('id') id: number, @Req() request) {
-    const foundUser = await this.usersService.findOne(id);
+    const foundUser = await this.usersService.findOne(id)
     if (foundUser == null) {
-      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
     }
 
-    return this.usersService.remove(+id, request.user.user_id);
+    return this.usersService.remove(+id, request.user.user_id)
   }
 
-  // @HasPermissions(PermissionEnum.UserApprove)
-  // @UseGuards(JwtAuthGuard, PermissionsGuard)
-  // @Patch('approve/:id')
-  // @ApiOperation({ summary: 'Подтверждение пользователя по ID' })
-  // async approve(@Param('id') id: number, @Req() request) {
-  //   const foundUser = await this.usersService.findOne(id);
-  //   if (foundUser == null) {
-  //     throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
-  //   }
+  @UseGuards(JwtAuthGuard)
+  @Patch('change_status')
+  @ApiOperation({ summary: 'Изменение статуса пользователя' })
+  async approve(@Body() updateUserStatusDto: UpdateUserStatusDto, @Req() request) {
+    const foundUser = await this.usersService.findOne(updateUserStatusDto.user_id)
+    if (!foundUser) {
+      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+    }
 
-  //   return this.usersService.approve(+id, request.user.user_id);
-  // }
+    return this.usersService.changeStatus(updateUserStatusDto, request.user.user_id)
+  }
 }

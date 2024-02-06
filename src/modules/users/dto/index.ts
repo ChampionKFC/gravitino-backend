@@ -1,110 +1,115 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
-import { GroupFilters, GroupSorts } from 'src/modules/group/dto';
-import {
-  OrganizationFilters,
-  OrganizationSorts,
-} from 'src/modules/organization/dto';
-import { PersonFilters, PersonSorts } from 'src/modules/person/dto';
-import { RoleFilters, RoleSorts } from 'src/modules/roles/dto';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsOptional } from 'class-validator'
+import { GroupFilters, GroupSorts } from 'src/modules/group/dto'
+import { OrganizationFilters, OrganizationSorts } from 'src/modules/organization/dto'
+import { PersonFilters, PersonSorts } from 'src/modules/person/dto'
+import { RoleFilters, RoleSorts } from 'src/modules/roles/dto'
 
 export class CreateUserDto {
   @ApiProperty({ required: false })
-  last_name?: string;
+  last_name?: string
 
   @ApiProperty({ required: false })
-  first_name?: string;
+  first_name?: string
 
   @ApiProperty({ required: false })
-  patronymic?: string;
+  patronymic?: string
 
   @ApiProperty({ required: false })
-  phone?: string;
+  phone?: string
 
   @IsOptional()
-  person_id?: number;
+  person_id?: number
 
   @ApiProperty({ default: 1 })
-  role_id: number;
+  role_id: number
 
   @ApiProperty({ default: 1, required: false })
-  organization_id?: number;
+  organization_id?: number
 
   @ApiProperty({ default: 1, required: false })
-  group_id?: number;
+  group_id?: number
 
   @ApiProperty({ default: true, required: false })
-  is_active?: boolean;
+  is_active?: boolean
 
   @ApiProperty()
-  email: string;
+  email: string
 
   @ApiProperty()
-  password: string;
+  password: string
 
   @ApiProperty({ default: [], required: false })
-  property_values?: number[];
+  property_values?: number[]
 }
 
 export class UpdateUserDto {
   @ApiProperty()
-  user_id: number;
+  user_id: number
 
   @ApiProperty({ required: false })
-  last_name?: string;
+  last_name?: string
 
   @ApiProperty({ required: false })
-  first_name?: string;
+  first_name?: string
 
   @ApiProperty({ required: false })
-  patronymic?: string;
+  patronymic?: string
 
   @ApiProperty({ required: false })
-  phone?: string;
+  phone?: string
 
   @IsOptional()
-  person_id?: number;
+  person_id?: number
 
   @ApiProperty({ default: 1, required: false })
-  role_id?: number;
+  role_id?: number
 
   @ApiProperty({ default: 1, required: false })
-  organization_id?: number;
+  organization_id?: number
 
   @ApiProperty({ default: 1, required: false })
-  group_id?: number;
+  group_id?: number
 
   @ApiProperty({ default: true, required: false })
-  is_active?: boolean;
+  is_active?: boolean
 
   @ApiProperty({ required: false })
-  email?: string;
+  email?: string
 
   @ApiProperty({ required: false })
-  password?: string;
+  password?: string
 
   @ApiProperty({ default: [], required: false })
-  property_values?: number[];
+  property_values?: number[]
+}
+
+export class UpdateUserStatusDto {
+  @ApiProperty()
+  user_id: number
+
+  @ApiProperty({ default: true })
+  is_active: boolean
 }
 
 export class UserSorts {
   @ApiProperty({ default: 'ASC', required: false })
-  user_id?: string;
+  user_id?: string
 
   @ApiProperty({ default: 'ASC', required: false })
-  email?: string;
+  email?: string
 
   @ApiProperty({ default: 'ASC', required: false })
-  is_active?: string;
+  is_active?: string
 
   @ApiProperty({ required: false })
-  person?: PersonSorts;
+  person?: PersonSorts
 
   @ApiProperty({ required: false })
-  role?: RoleSorts;
+  role?: RoleSorts
 
   @ApiProperty({ required: false })
-  group?: GroupSorts;
+  group?: GroupSorts
 
   // @ApiProperty()
   // facility?: FacilitySorts;
@@ -113,28 +118,28 @@ export class UserSorts {
   // checkpoint?: CheckpointSorts;
 
   @ApiProperty({ required: false })
-  organization?: OrganizationSorts;
+  organization?: OrganizationSorts
 }
 
 export class UserFilters {
   @ApiProperty({ required: false })
-  user_id?: number;
+  user_id?: number
 
   @ApiProperty({ required: false })
-  person?: PersonFilters;
+  person?: PersonFilters
 
   @ApiProperty({ required: false })
-  role?: RoleFilters;
+  role?: RoleFilters
 
   @ApiProperty({ required: false })
-  organization?: OrganizationFilters;
+  organization?: OrganizationFilters
 
   @ApiProperty({ required: false })
-  group?: GroupFilters;
+  group?: GroupFilters
 
   @ApiProperty({ default: true, required: false })
-  is_active?: boolean;
+  is_active?: boolean
 
   @ApiProperty({ required: false })
-  email?: string;
+  email?: string
 }

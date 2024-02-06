@@ -1,23 +1,20 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { User } from './entities/user.entity';
-import { CreateUserDto, UpdateUserDto } from './dto';
-import { Role } from 'src/modules/roles/entities/role.entity';
-import * as bcrypt from 'bcrypt';
-import { Organization } from 'src/modules/organization/entities/organization.entity';
-import { InjectModel } from '@nestjs/sequelize';
-import { Person } from 'src/modules/person/entities/person.entity';
-import { CreatePersonDto, UpdatePersonDto } from 'src/modules/person/dto';
-import { Group } from 'src/modules/group/entities/group.entity';
-import { Sequelize } from 'sequelize-typescript';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { AppError } from 'src/common/constants/error';
-import { Op, QueryTypes } from 'sequelize';
-import { StatusUserResponse, UserResponse } from './response';
-import { UserFilter } from './filters';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { User } from './entities/user.entity'
+import { CreateUserDto, UpdateUserDto, UpdateUserStatusDto } from './dto'
+import { Role } from 'src/modules/roles/entities/role.entity'
+import * as bcrypt from 'bcrypt'
+import { Organization } from 'src/modules/organization/entities/organization.entity'
+import { InjectModel } from '@nestjs/sequelize'
+import { Person } from 'src/modules/person/entities/person.entity'
+import { CreatePersonDto, UpdatePersonDto } from 'src/modules/person/dto'
+import { Group } from 'src/modules/group/entities/group.entity'
+import { Sequelize } from 'sequelize-typescript'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { AppError } from 'src/common/constants/error'
+import { Op, QueryTypes } from 'sequelize'
+import { StatusUserResponse, UserResponse } from './response'
+import { UserFilter } from './filters'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 
 @Injectable()
 export class UsersService {
@@ -30,47 +27,42 @@ export class UsersService {
 
   async create(user: CreateUserDto): Promise<StatusUserResponse> {
     try {
-      const transaction = await this.sequelize.transaction();
+      const transaction = await this.sequelize.transaction()
 
-      const email = user.email.toLowerCase();
-      user.email = email;
-      user.password = await bcrypt.hash(user.password, 10);
+      const email = user.email.toLowerCase()
+      user.email = email
+      user.password = await bcrypt.hash(user.password, 10)
 
       if (user.last_name && user.first_name && user.phone) {
-        const createPersonDto = new CreatePersonDto();
-        createPersonDto.last_name = user.last_name;
-        createPersonDto.first_name = user.first_name;
-        createPersonDto.patronymic = user.patronymic;
-        createPersonDto.phone = user.phone;
+        const createPersonDto = new CreatePersonDto()
+        createPersonDto.last_name = user.last_name
+        createPersonDto.first_name = user.first_name
+        createPersonDto.patronymic = user.patronymic
+        createPersonDto.phone = user.phone
 
-        const newPerson = await this.personRepository.create(
-          { ...createPersonDto },
-          { transaction: transaction },
-        );
+        const newPerson = await this.personRepository.create({ ...createPersonDto }, { transaction: transaction })
 
-        user.person_id = newPerson.person_id;
+        user.person_id = newPerson.person_id
       }
 
-      const newUser = await this.userRepository
-        .create({ ...user }, { transaction: transaction })
-        .catch((error) => {
-          let errorMessage = error.message;
-          let errorCode = HttpStatus.BAD_REQUEST;
-          if (error.original.code === '23505') {
-            errorMessage = AppError.USER_EMAIL_EXISTS;
-            errorCode = HttpStatus.CONFLICT;
-          }
+      const newUser = await this.userRepository.create({ ...user }, { transaction: transaction }).catch((error) => {
+        let errorMessage = error.message
+        let errorCode = HttpStatus.BAD_REQUEST
+        if (error.original.code === '23505') {
+          errorMessage = AppError.USER_EMAIL_EXISTS
+          errorCode = HttpStatus.CONFLICT
+        }
 
-          throw new HttpException(errorMessage, errorCode);
-        });
+        throw new HttpException(errorMessage, errorCode)
+      })
 
-      await transaction.commit();
+      await transaction.commit()
 
       const historyDto = {
         user_id: newUser.user_id,
         comment: `Создан пользователь #${newUser.user_id} (person_id: ${newUser.person_id})`,
-      };
-      await this.historyService.create(historyDto);
+      }
+      await this.historyService.create(historyDto)
 
       return {
         status: true,
@@ -79,93 +71,82 @@ export class UsersService {
           ...user,
           is_active: true,
         },
-      };
+      }
     } catch (error) {
       if (error.code === 409) {
-        throw new Error(error.message);
+        throw new Error(error.message)
       } else {
-        throw new Error(error);
+        throw new Error(error)
       }
     }
   }
 
-  async update(
-    updatedUser: UpdateUserDto,
-    user_id: number,
-  ): Promise<UserResponse> {
+  async update(updatedUser: UpdateUserDto, user_id: number): Promise<UserResponse> {
     try {
-      const transaction = await this.sequelize.transaction();
+      const transaction = await this.sequelize.transaction()
 
       if (updatedUser.email != undefined) {
-        const email = updatedUser.email.toLowerCase();
-        updatedUser.email = email;
+        const email = updatedUser.email.toLowerCase()
+        updatedUser.email = email
       }
 
       if (updatedUser.password != undefined) {
-        updatedUser.password = await bcrypt.hash(updatedUser.password, 10);
+        updatedUser.password = await bcrypt.hash(updatedUser.password, 10)
       }
 
-      const user = await this.findById(updatedUser.user_id);
-      const person_id = user.person.person_id;
+      const user = await this.findById(updatedUser.user_id)
+      const person_id = user.person.person_id
       const foundPerson = await this.personRepository.findOne({
         where: { person_id },
-      });
+      })
       if (foundPerson == null) {
-        await transaction.rollback();
-        throw new HttpException(
-          AppError.PERSON_NOT_FOUND,
-          HttpStatus.BAD_REQUEST,
-        );
+        await transaction.rollback()
+        throw new HttpException(AppError.PERSON_NOT_FOUND, HttpStatus.BAD_REQUEST)
       }
 
-      const updatePersonDto = new UpdatePersonDto();
-      updatePersonDto.last_name = updatedUser.last_name;
-      updatePersonDto.first_name = updatedUser.first_name;
-      updatePersonDto.patronymic = updatedUser.patronymic;
-      updatePersonDto.phone = updatedUser.phone;
+      const updatePersonDto = new UpdatePersonDto()
+      updatePersonDto.last_name = updatedUser.last_name
+      updatePersonDto.first_name = updatedUser.first_name
+      updatePersonDto.patronymic = updatedUser.patronymic
+      updatePersonDto.phone = updatedUser.phone
 
-      await foundPerson.update(updatePersonDto, { transaction: transaction });
+      await foundPerson.update(updatePersonDto, { transaction: transaction })
 
-      let foundUser = null;
-      await this.userRepository.update(
-        { ...updatedUser },
-        { where: { user_id: updatedUser.user_id }, transaction: transaction },
-      );
+      let foundUser = null
+      await this.userRepository.update({ ...updatedUser }, { where: { user_id: updatedUser.user_id }, transaction: transaction })
 
       foundUser = await this.userRepository.findOne({
         where: { user_id: updatedUser.user_id },
-      });
+      })
 
       if (foundUser) {
         const historyDto = {
           user_id: user_id,
           comment: `Изменен пользователь #${foundUser.user_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
       }
 
-      await transaction.commit();
+      await transaction.commit()
 
-      return foundUser;
+      return foundUser
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async findAll(userFilter: UserFilter) {
     try {
-      const offset_count =
-        userFilter.offset?.count == undefined ? 50 : userFilter.offset.count;
-      const offset_page =
-        userFilter.offset?.page == undefined ? 1 : userFilter.offset.page;
+      const offset_count = userFilter.offset?.count == undefined ? 50 : userFilter.offset.count
+      const offset_page = userFilter.offset?.page == undefined ? 1 : userFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (userFilter?.filter) {
-        whereQuery = generateWhereQuery(userFilter?.filter);
+        whereQuery = generateWhereQuery(userFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (userFilter?.sorts) {
-        sortQuery = generateSortQuery(userFilter?.sorts);
+        sortQuery = generateSortQuery(userFilter?.sorts)
       }
 
       const foundUsers = this.sequelize.query<User>(
@@ -216,24 +197,24 @@ export class UsersService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
-      return foundUsers;
+      )
+      return foundUsers
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async findOne(user_id: number): Promise<boolean> {
     try {
-      const result = await this.userRepository.findOne({ where: { user_id } });
+      const result = await this.userRepository.findOne({ where: { user_id } })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -242,45 +223,33 @@ export class UsersService {
       include: [Role, Organization, Person, Group],
       where: { user_id: id },
       attributes: {
-        exclude: [
-          'password',
-          'organization_id',
-          'role_id',
-          'person_id',
-          'group_id',
-        ],
+        exclude: ['password', 'organization_id', 'role_id', 'person_id', 'group_id'],
       },
-    });
+    })
 
     if (result != null) {
-      return result;
+      return result
     } else {
       return Promise.reject({
         statusCode: HttpStatus.NOT_FOUND,
         message: AppError.USER_NOT_FOUND,
-      });
+      })
     }
   }
 
-  async findUser({
-    user_id = -1,
-    email = '',
-  }: {
-    user_id?: number;
-    email?: string;
-  }): Promise<boolean> {
+  async findUser({ user_id = -1, email = '' }: { user_id?: number; email?: string }): Promise<boolean> {
     try {
       const foundUser = await this.userRepository.findOne({
         where: { [Op.or]: [{ user_id }, { email }] },
-      });
+      })
 
       if (foundUser) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -290,9 +259,9 @@ export class UsersService {
         include: [Person],
         where: { email },
         attributes: { exclude: ['person_id'] },
-      });
+      })
 
-      console.log(result);
+      console.log(result)
 
       if (result != null) {
         // const userRoles = await this.rolePermissionRepository.findAll({
@@ -315,70 +284,66 @@ export class UsersService {
           user_id: result.user_id,
           email: result.email,
           password: result.password,
-        };
+        }
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async remove(id: number, user_id: number): Promise<StatusUserResponse> {
     try {
-      const transaction = await this.sequelize.transaction();
+      const transaction = await this.sequelize.transaction()
 
       const user = await this.userRepository.findOne({
         where: { user_id: id },
         attributes: { exclude: ['password'] },
-      });
+      })
 
       const deleteUser = await this.userRepository.destroy({
         where: { user_id: id },
         transaction: transaction,
-      });
+      })
       const deletePerson = await this.personRepository.destroy({
         where: { person_id: user.person_id },
         transaction: transaction,
-      });
+      })
 
       if (deleteUser && deletePerson) {
         const historyDto = {
           user_id: user_id,
           comment: `Удален пользователь #${id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
 
-        await transaction.commit();
+        await transaction.commit()
 
-        return { status: true };
+        return { status: true }
       }
 
-      await transaction.rollback();
-      return { status: false };
+      await transaction.rollback()
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async approve(id: number, user_id: number): Promise<StatusUserResponse> {
+  async changeStatus(updateUserStatusDto: UpdateUserStatusDto, user_id: number): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction();
-
-      await this.userRepository.update(
-        { approved: true },
-        { where: { user_id: id } },
-      );
+      await this.userRepository.update({ is_active: updateUserStatusDto.is_active }, { where: { user_id: updateUserStatusDto.user_id } })
 
       const historyDto = {
         user_id: user_id,
-        comment: `Пользователь #${id} подтвержден`,
-      };
-      await this.historyService.create(historyDto);
+        comment: `Статус пользователя #${updateUserStatusDto.user_id} изменен на ${updateUserStatusDto.is_active}`,
+      }
+      await this.historyService.create(historyDto)
 
-      await transaction.commit();
-
-      return { status: true };
+      await transaction.commit()
+      return { status: true }
     } catch (error) {
-      throw new Error(error);
+      await transaction.rollback()
+      throw new Error(error)
     }
   }
 }

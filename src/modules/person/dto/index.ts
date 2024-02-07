@@ -1,69 +1,70 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
+import { AppStrings } from 'src/common/constants/strings'
 
 export class CreatePersonDto {
   @ApiProperty()
-  last_name: string;
+  last_name: string
 
   @ApiProperty()
-  first_name: string;
+  first_name: string
 
   @ApiProperty({ required: false })
-  patronymic?: string;
+  patronymic?: string
 
   @ApiProperty()
-  phone: string;
+  phone: string
 
   @ApiProperty({ required: false })
-  property_values?: number[];
+  property_values?: number[]
 }
 
 export class UpdatePersonDto {
   @ApiProperty()
-  person_id: number;
+  person_id: number
 
   @ApiProperty({ required: false })
-  last_name?: string;
+  last_name?: string
 
   @ApiProperty({ required: false })
-  first_name?: string;
+  first_name?: string
 
   @ApiProperty({ required: false })
-  patronymic?: string;
+  patronymic?: string
 
   @ApiProperty({ required: false })
-  phone?: string;
+  phone?: string
 
   @ApiProperty({ required: false })
-  property_values?: number[];
+  property_values?: number[]
 }
 
 export class PersonSorts {
-  @ApiProperty({ default: 'ASC', required: false })
-  last_name?: string;
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  last_name?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
-  first_name?: string;
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  first_name?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
-  patronymic?: string;
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  patronymic?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
-  phone?: string;
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  phone?: string
 }
 
 export class PersonFilters {
   @ApiProperty({ required: false })
-  person_id?: number;
+  person_id?: number
 
   @ApiProperty({ required: false })
-  last_name?: string;
+  last_name?: string
 
   @ApiProperty({ required: false })
-  first_name?: string;
+  first_name?: string
 
   @ApiProperty({ required: false })
-  patronymic?: string;
+  patronymic?: string
 
   @ApiProperty({ required: false })
-  phone?: string;
+  phone?: string
 }

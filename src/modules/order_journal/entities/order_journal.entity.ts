@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { PrimaryKey, Column, DataType, ForeignKey, BelongsTo, Table, Model } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 import { Order } from 'src/modules/order/entities/order.entity'
 import { OrderStatus } from 'src/modules/order_status/entities/order_status.entity'
 import { User } from 'src/modules/users/entities/user.entity'
@@ -17,7 +18,7 @@ export class OrderJournal extends Model {
 
   @ApiProperty({
     type: () => User,
-    description: 'Пользовтель выполнивший действие',
+    description: AppStrings.USER_HISTORY,
   })
   @BelongsTo(() => User)
   user: User
@@ -28,9 +29,9 @@ export class OrderJournal extends Model {
 
   @ApiProperty({
     type: () => Order,
-    description: 'Заказ',
+    description: AppStrings.ORDER,
   })
-  @BelongsTo(() => Order, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @BelongsTo(() => Order, { onDelete: AppStrings.CASCADE, onUpdate: AppStrings.CASCADE })
   order: Order
 
   @ForeignKey(() => OrderStatus)
@@ -39,35 +40,35 @@ export class OrderJournal extends Model {
 
   @ApiProperty({
     type: () => OrderStatus,
-    description: 'Статус заказа',
+    description: AppStrings.ORDER_STATUS,
   })
   @BelongsTo(() => OrderStatus)
   order_status: OrderStatus
 
   @ApiProperty({
-    example: 'Изменен статус',
-    description: 'Название действия',
+    example: AppStrings.ORDER_JOURNAL_COMMENT_EXAMPLE,
+    description: AppStrings.ORDER_JOURNAL_COMMENT_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: false })
   comment: string
 
   @ApiProperty({
-    example: 'order_name',
-    description: 'Измененное поле',
+    example: AppStrings.ORDER_JOURNAL_FIELD_EXAMPLE,
+    description: AppStrings.ORDER_JOURNAL_FIELD_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: true })
   changed_field?: string
 
   @ApiProperty({
-    example: 'Заказ №1',
-    description: 'Старое значение',
+    example: AppStrings.ORDER_JOURNAL_OLD_VALUE_EXAMPLE,
+    description: AppStrings.ORDER_JOURNAL_OLD_VALUE_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: true })
   old_value?: string
 
   @ApiProperty({
-    example: 'Заказ №2',
-    description: 'Новое значение',
+    example: AppStrings.ORDER_JOURNAL_NEW_VALUE_EXAMPLE,
+    description: AppStrings.ORDER_JOURNAL_NEW_VALUE_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: true })
   new_value?: string

@@ -1,20 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTaskDto, UpdateTaskDto } from './dto';
-import { InjectModel } from '@nestjs/sequelize';
-import { Task } from './entities/task.entity';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { StatusTaskResponse, TaskResponse } from './response';
-import { TaskFilter } from './filters';
-import { QueryTypes } from 'sequelize';
-import { Sequelize } from 'sequelize-typescript';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
-import getPeriodDates from 'src/common/utlis/get_period_dates';
-import { CreateOrderDto } from '../order/dto';
-import { FacilityService } from '../facility/facility.service';
-import { OrderService } from '../order/order.service';
+import { Injectable } from '@nestjs/common'
+import { CreateTaskDto, UpdateTaskDto } from './dto'
+import { InjectModel } from '@nestjs/sequelize'
+import { Task } from './entities/task.entity'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { StatusTaskResponse, TaskResponse } from './response'
+import { TaskFilter } from './filters'
+import { QueryTypes } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import getPeriodDates from 'src/common/utlis/get_period_dates'
+import { CreateOrderDto } from '../order/dto'
+import { FacilityService } from '../facility/facility.service'
+import { OrderService } from '../order/order.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class TaskService {
@@ -26,101 +24,79 @@ export class TaskService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(
-    task: CreateTaskDto,
-    user_id: number,
-  ): Promise<StatusTaskResponse> {
+  async create(task: CreateTaskDto, user_id: number): Promise<StatusTaskResponse> {
     try {
-      const transaction = await this.sequelize.transaction();
+      const transaction = await this.sequelize.transaction()
 
-      const newTask = await this.taskRepository.create(
-        { ...task },
-        { transaction },
-      );
+      const newTask = await this.taskRepository.create({ ...task }, { transaction })
 
-      const dates = getPeriodDates(
-        task.periodicity_id,
-        task.period_start,
-        task.period_end,
-      );
+      const dates = getPeriodDates(task.periodicity_id, task.period_start, task.period_end)
 
       for (let index = 0; index < task.executor_ids.length; index++) {
-        const executor_id = task.executor_ids[index];
+        const executor_id = task.executor_ids[index]
 
-        const orderDto = new CreateOrderDto();
-        orderDto.task_id = newTask.task_id;
-        orderDto.order_name = newTask.task_name;
-        orderDto.order_description = newTask.task_description;
-        orderDto.executor_id = executor_id;
-        orderDto.creator_id = user_id;
-        orderDto.order_status_id = 1;
-        orderDto.priority_id = task.priority_id;
+        const orderDto = new CreateOrderDto()
+        orderDto.task_id = newTask.task_id
+        orderDto.order_name = newTask.task_name
+        orderDto.order_description = newTask.task_description
+        orderDto.executor_id = executor_id
+        orderDto.creator_id = user_id
+        orderDto.order_status_id = 1
+        orderDto.priority_id = task.priority_id
 
         if (task.facility_ids && task.facility_ids.length > 0) {
           for (let index = 0; index < task.facility_ids.length; index++) {
-            const facility_id = task.facility_ids[index];
+            const facility_id = task.facility_ids[index]
 
             for (let index = 0; index < dates.length; index++) {
-              const period = dates[index];
+              const period = dates[index]
 
-              orderDto.facility_id = facility_id;
-              orderDto.planned_datetime = period.planned_datetime;
-              orderDto.task_end_datetime = period.task_end_datetime;
+              orderDto.facility_id = facility_id
+              orderDto.planned_datetime = period.planned_datetime
+              orderDto.task_end_datetime = period.task_end_datetime
 
-              await this.orderService
-                .create(orderDto, user_id, transaction)
-                .catch((e) => {
-                  transaction.rollback();
-                  throw new Error(e);
-                });
+              await this.orderService.create(orderDto, user_id, transaction).catch((e) => {
+                transaction.rollback()
+                throw new Error(e)
+              })
             }
           }
         } else if (task.checkpoint_ids && task.checkpoint_ids.length > 0) {
-          const facilities = await this.facilityService.findAllByCheckpoint(
-            task.checkpoint_ids,
-            {},
-          );
+          const facilities = await this.facilityService.findAllByCheckpoint(task.checkpoint_ids, {})
 
           for (let index = 0; index < facilities.length; index++) {
-            const facility_id = facilities[index].facility_id;
+            const facility_id = facilities[index].facility_id
 
             for (let index = 0; index < dates.length; index++) {
-              const period = dates[index];
+              const period = dates[index]
 
-              orderDto.facility_id = facility_id;
-              orderDto.planned_datetime = period.planned_datetime;
-              orderDto.task_end_datetime = period.task_end_datetime;
+              orderDto.facility_id = facility_id
+              orderDto.planned_datetime = period.planned_datetime
+              orderDto.task_end_datetime = period.task_end_datetime
 
-              await this.orderService
-                .create(orderDto, user_id, transaction)
-                .catch((e) => {
-                  transaction.rollback();
-                  throw new Error(e);
-                });
+              await this.orderService.create(orderDto, user_id, transaction).catch((e) => {
+                transaction.rollback()
+                throw new Error(e)
+              })
             }
           }
         } else {
-          const facilities = await this.facilityService.findAllByBranch(
-            task.branch_ids,
-            {},
-          );
+          const facilities = await this.facilityService.findAllByBranch(task.branch_ids, {})
 
           for (let index = 0; index < facilities.length; index++) {
-            const facility_id = facilities[index].facility_id;
+            const facility_id = facilities[index].facility_id
 
             for (let index = 0; index < dates.length; index++) {
-              const period = dates[index];
+              const period = dates[index]
 
-              orderDto.facility_id = facility_id;
-              orderDto.planned_datetime = period.planned_datetime;
-              orderDto.task_end_datetime = period.task_end_datetime;
+              orderDto.facility_id = facility_id
+              orderDto.planned_datetime = period.planned_datetime
+              orderDto.task_end_datetime = period.task_end_datetime
 
-              await this.orderService
-                .create(orderDto, user_id, transaction)
-                .catch((e) => {
-                  transaction.rollback();
-                  throw new Error(e);
-                });
+              await this.orderService.create(orderDto, user_id, transaction).catch((e) => {
+                transaction.rollback()
+                throw new Error(e)
+              })
             }
           }
         }
@@ -128,32 +104,30 @@ export class TaskService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана задача #${newTask.task_id}`,
-      };
-      await this.historyService.create(historyDto);
+        comment: `${AppStrings.HISTORY_TASK_CREATED}${newTask.task_id}`,
+      }
+      await this.historyService.create(historyDto)
 
-      transaction.commit();
+      transaction.commit()
 
-      return { status: true };
+      return { status: true }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async findAll(taskFilter: TaskFilter): Promise<TaskResponse[]> {
     try {
-      const offset_count =
-        taskFilter.offset?.count == undefined ? 50 : taskFilter.offset.count;
-      const offset_page =
-        taskFilter.offset?.page == undefined ? 1 : taskFilter.offset.page;
+      const offset_count = taskFilter.offset?.count == undefined ? 50 : taskFilter.offset.count
+      const offset_page = taskFilter.offset?.page == undefined ? 1 : taskFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (taskFilter?.filter) {
-        whereQuery = generateWhereQuery(taskFilter?.filter);
+        whereQuery = generateWhereQuery(taskFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (taskFilter?.sorts) {
-        sortQuery = generateSortQuery(taskFilter?.sorts);
+        sortQuery = generateSortQuery(taskFilter?.sorts)
       }
 
       const result = await this.sequelize.query<Task>(
@@ -184,11 +158,11 @@ export class TaskService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return result;
+      return result
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -196,43 +170,37 @@ export class TaskService {
     try {
       const foundTask = await this.taskRepository.findOne({
         where: { task_id },
-      });
+      })
 
       if (foundTask) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async update(
-    updatedTask: UpdateTaskDto,
-    user_id: number,
-  ): Promise<TaskResponse> {
+  async update(updatedTask: UpdateTaskDto, user_id: number): Promise<TaskResponse> {
     try {
-      await this.taskRepository.update(
-        { ...updatedTask },
-        { where: { task_id: updatedTask.task_id } },
-      );
+      await this.taskRepository.update({ ...updatedTask }, { where: { task_id: updatedTask.task_id } })
 
       const foundTask = await this.taskRepository.findOne({
         where: { task_id: updatedTask.task_id },
-      });
+      })
 
       if (foundTask) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена задача #${foundTask.task_id}`,
-        };
-        await this.historyService.create(historyDto);
+          comment: `${AppStrings.HISTORY_TASK_UPDATED}${foundTask.task_id}`,
+        }
+        await this.historyService.create(historyDto)
       }
 
-      return foundTask;
+      return foundTask
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -240,21 +208,21 @@ export class TaskService {
     try {
       const deleteTask = await this.taskRepository.destroy({
         where: { task_id },
-      });
+      })
 
       if (deleteTask) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена задача #${task_id}`,
-        };
-        await this.historyService.create(historyDto);
+          comment: `${AppStrings.HISTORY_TASK_DELETED}${task_id}`,
+        }
+        await this.historyService.create(historyDto)
 
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

@@ -12,6 +12,7 @@ import { QueryTypes, Transaction } from 'sequelize'
 import { OrderJournalService } from '../order_journal/order_journal.service'
 import { CreateOrderJournalDto } from '../order_journal/dto'
 import { FacilityService } from '../facility/facility.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OrderService {
@@ -49,9 +50,7 @@ export class OrderService {
       "facility_organization"."organization_id" AS "facility.organization.organization_id",
       "facility_organization"."full_name" AS "facility.organization.full_name",
       "facility_organization"."short_name" AS "facility.organization.short_name",
-      "facility_organization"."register_number" AS "facility.organization.register_number",
       "facility_organization"."phone" AS "facility.organization.phone",
-      "facility_organization"."email" AS "facility.organization.email",
       "facility_organization"."property_values" AS "facility.organization.property_values",
       "facility_organization_type"."organization_type_id" AS "facility.organization.organization_type.organization_type_id",
       "facility_organization_type"."organization_type_name" AS "facility.organization.organization_type.organization_type_name",
@@ -74,9 +73,7 @@ export class OrderService {
       "executor"."organization_id" AS "executor.organization_id",
       "executor"."full_name" AS "executor.full_name",
       "executor"."short_name" AS "executor.short_name",
-      "executor"."register_number" AS "executor.register_number",
       "executor"."phone" AS "executor.phone",
-      "executor"."email" AS "executor.email",
       "executor"."property_values" AS "executor.property_values",
       "executor_type"."organization_type_id" AS "executor.organization_type.organization_type_id",
       "executor_type"."organization_type_name" AS "executor.organization_type.organization_type_name",
@@ -98,9 +95,7 @@ export class OrderService {
       "creator_organization"."organization_id" AS "creator.organization.organization_id",
       "creator_organization"."full_name" AS "creator.organization.full_name",
       "creator_organization"."short_name" AS "creator.organization.short_name",
-      "creator_organization"."register_number" AS "creator.organization.register_number",
       "creator_organization"."phone" AS "creator.organization.phone",
-      "creator_organization"."email" AS "creator.organization.email",
       "creator_organization"."property_values" AS "creator.organization.property_values",
       "creator_organization_type"."organization_type_id" AS "creator.organization.organization_type.organization_type_id",
       "creator_organization_type"."organization_type_name" AS "creator.organization.organization_type.organization_type_name",
@@ -122,9 +117,7 @@ export class OrderService {
       "completed_by_organization"."organization_id" AS "completed_by.organization.organization_id",
       "completed_by_organization"."full_name" AS "completed_by.organization.full_name",
       "completed_by_organization"."short_name" AS "completed_by.organization.short_name",
-      "completed_by_organization"."register_number" AS "completed_by.organization.register_number",
       "completed_by_organization"."phone" AS "completed_by.organization.phone",
-      "completed_by_organization"."email" AS "completed_by.organization.email",
       "completed_by_organization"."property_values" AS "completed_by.organization.property_values",
       "completed_by_organization_type"."organization_type_id" AS "completed_by.organization.organization_type.organization_type_id",
       "completed_by_organization_type"."organization_type_name" AS "completed_by.organization.organization_type.organization_type_name",
@@ -169,7 +162,7 @@ export class OrderService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан заказ #${newOrder.order_id}`,
+        comment: `${AppStrings.HISTORY_ORDER_CREATED} #${newOrder.order_id}`,
       }
       await this.historyService.create(historyDto, transaction)
 
@@ -177,7 +170,7 @@ export class OrderService {
       orderJournalDto.user_id = user_id
       orderJournalDto.order_id = newOrder.order_id
       orderJournalDto.order_status_id = 1
-      orderJournalDto.comment = 'Создан заказ'
+      orderJournalDto.comment = AppStrings.HISTORY_ORDER_CREATED
 
       await this.orderJournalService.create(orderJournalDto, transaction)
 
@@ -510,26 +503,26 @@ export class OrderService {
 
           switch (changedField) {
             case 'order_name':
-              orderJournalDto.comment = 'Изменено название заказа'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_NAME_UPDATED
               break
             case 'order_description':
-              orderJournalDto.comment = 'Изменено описание заказа'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_DESC_UPDATED
               break
             case 'facility_id':
-              orderJournalDto.comment = 'Изменен объект обслуживания'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_FACILITY_UPDATED
               break
             case 'executor_id':
-              orderJournalDto.comment = 'Изменен исполнитель'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_EXECUTOR_UPDATED
               break
             case 'planned_datetime':
-              orderJournalDto.comment = 'Изменена планируемая дата выполнения'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_PLANNED_DATE_UPDATED
               break
             case 'task_end_datetime':
-              orderJournalDto.comment = 'Изменена крайняя дата выполнения'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_END_DATE_UPDATED
               break
             case 'order_status_id':
               orderJournalDto.order_status_id = foundOrder.order_status_id
-              orderJournalDto.comment = 'Изменен статус заказа'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_STATUS_UPDATED
               break
             default:
               orderJournalDto.comment = ''
@@ -543,7 +536,7 @@ export class OrderService {
       if (foundOrder) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен заказ #${foundOrder.order_id}`,
+          comment: `${AppStrings.HISTORY_ORDER_UPDATED}${foundOrder.order_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -574,7 +567,7 @@ export class OrderService {
         orderJournalDto.order_status_id = foundOrder.order_status_id
         orderJournalDto.old_value = foundOrder.previous('order_status_id').toString()
         orderJournalDto.new_value = foundOrder.get('order_status_id').toString()
-        orderJournalDto.comment = `Изменен статус заказа`
+        orderJournalDto.comment = AppStrings.HISTORY_ORDER_STATUS_UPDATED
 
         await this.orderJournalService.create(orderJournalDto)
       }
@@ -594,7 +587,7 @@ export class OrderService {
       if (deleteOrder) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален заказ #${order_id}`,
+          comment: `${AppStrings.HISTORY_ORDER_DELETED}${order_id}`,
         }
         await this.historyService.create(historyDto)
 

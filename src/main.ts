@@ -1,12 +1,12 @@
-import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './modules/app/app.module';
-import { ConfigService } from '@nestjs/config';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core'
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
+import { AppModule } from './modules/app/app.module'
+import { ConfigService } from '@nestjs/config'
+import { ValidationPipe } from '@nestjs/common'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {});
-  const configService = app.get(ConfigService);
+  const app = await NestFactory.create(AppModule, {})
+  const configService = app.get(ConfigService)
   app.enableCors({
     origin: [
       'http://localhost:3001',
@@ -26,7 +26,8 @@ async function bootstrap() {
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
-  });
+  })
+
   const config = new DocumentBuilder()
     .setTitle('GRAVITINO ASU API')
     .setDescription('The GRAVITINO ASU API!')
@@ -40,18 +41,20 @@ async function bootstrap() {
       description: 'Enter JWT token',
       in: 'header',
     })
-    .build();
-  const port = configService.get('port');
-  const document = SwaggerModule.createDocument(app, config);
+    .build()
+
+  const port = configService.get('port')
+
+  const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api', app, document, {
     swaggerOptions: {
       tagsSorter: 'alpha',
       persistAuthorization: true,
     },
     customSiteTitle: 'GRAVITINO ASU API',
-  });
+  })
 
-  app.useGlobalPipes(new ValidationPipe());
-  await app.listen(port);
+  app.useGlobalPipes(new ValidationPipe())
+  await app.listen(port)
 }
-bootstrap();
+bootstrap()

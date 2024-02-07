@@ -8,6 +8,7 @@ import { FacilityFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { Sequelize } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class FacilityService {
@@ -23,7 +24,7 @@ export class FacilityService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан объект обслуживания #${newFacility.facility_id}`,
+        comment: `${AppStrings.HISTORY_FACILITY_CREATED}${newFacility.facility_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -78,9 +79,7 @@ export class FacilityService {
             "organization_type"."organization_type_name" AS "organization.organization_type.organization_type_name",
             "organization"."full_name" AS "organization.full_name",
             "organization"."short_name" AS "organization.short_name",
-            "organization"."register_number" AS "organization.register_number",
             "organization"."phone" AS "organization.phone",
-            "organization"."email" AS "organization.email",
             "organization"."property_values" AS "organization.property_values"
           FROM
             "Facilities" AS "Facility"
@@ -180,7 +179,7 @@ export class FacilityService {
       if (foundFacility) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен объект обслуживания #${foundFacility.facility_id}`,
+          comment: `${AppStrings.HISTORY_FACILITY_UPDATED}${foundFacility.facility_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -200,7 +199,7 @@ export class FacilityService {
       if (deleteFacility) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален объект обслуживания #${facility_id}`,
+          comment: `${AppStrings.HISTORY_FACILITY_DELETED}${facility_id}`,
         }
         await this.historyService.create(historyDto)
 

@@ -1,39 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { CreateGroupDto, UpdateGroupDto } from './dto';
-import { InjectModel } from '@nestjs/sequelize';
-import { Group } from './entities/group.entity';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { GroupResponse, StatusGroupResponse } from './response';
+import { Injectable } from '@nestjs/common'
+import { CreateGroupDto, UpdateGroupDto } from './dto'
+import { InjectModel } from '@nestjs/sequelize'
+import { Group } from './entities/group.entity'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { GroupResponse, StatusGroupResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class GroupService {
   constructor(
     @InjectModel(Group) private groupRepository: typeof Group,
     private readonly historyService: TransactionHistoryService,
-  ) { }
+  ) {}
 
   async create(group: CreateGroupDto, user_id: number): Promise<StatusGroupResponse> {
     try {
-      const newGroup = await this.groupRepository.create({ ...group });
+      const newGroup = await this.groupRepository.create({ ...group })
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана группа #${newGroup.group_id}`,
-      };
-      await this.historyService.create(historyDto);
+        comment: `${AppStrings.HISTORY_GROUP_CREATED}${newGroup.group_id}`,
+      }
+      await this.historyService.create(historyDto)
 
-      return { status: true, data: newGroup };
+      return { status: true, data: newGroup }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async findAll(): Promise<GroupResponse[]> {
     try {
-      const foundGroups = await this.groupRepository.findAll();
-      return foundGroups;
+      const foundGroups = await this.groupRepository.findAll()
+      return foundGroups
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -41,43 +42,37 @@ export class GroupService {
     try {
       const result = await this.groupRepository.findOne({
         where: { group_id },
-      });
+      })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async update(
-    updatedGroup: UpdateGroupDto,
-    user_id: number,
-  ): Promise<GroupResponse> {
+  async update(updatedGroup: UpdateGroupDto, user_id: number): Promise<GroupResponse> {
     try {
-      await this.groupRepository.update(
-        { ...updatedGroup },
-        { where: { group_id: updatedGroup.group_id } },
-      );
+      await this.groupRepository.update({ ...updatedGroup }, { where: { group_id: updatedGroup.group_id } })
 
       const foundGroup = await this.groupRepository.findOne({
         where: { group_id: updatedGroup.group_id },
-      });
+      })
 
       if (foundGroup) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена группа #${foundGroup.group_id}`,
-        };
-        await this.historyService.create(historyDto);
+          comment: `${AppStrings.HISTORY_GROUP_UPDATED}${foundGroup.group_id}`,
+        }
+        await this.historyService.create(historyDto)
       }
 
-      return foundGroup;
+      return foundGroup
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -85,21 +80,21 @@ export class GroupService {
     try {
       const deleteGroup = await this.groupRepository.destroy({
         where: { group_id },
-      });
+      })
 
       if (deleteGroup) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена группа #${group_id}`,
-        };
-        await this.historyService.create(historyDto);
+          comment: `${AppStrings.HISTORY_GROUP_DELETED}${group_id}`,
+        }
+        await this.historyService.create(historyDto)
 
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      return new Error(error);
+      return new Error(error)
     }
   }
 }

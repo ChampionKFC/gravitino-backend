@@ -11,6 +11,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { Checkpoint } from '../checkpoint/entities/checkpoint.entity'
 import { Facility } from '../facility/entities/facility.entity'
 import { OrganizationType } from '../organization_type/entities/organization_type.entity'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OrganizationService {
@@ -29,7 +30,7 @@ export class OrganizationService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана организация #${newOrganization.organization_id}`,
+        comment: `${AppStrings.HISTORY_ORGANIZATION_CREATED}${newOrganization.organization_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -57,21 +58,19 @@ export class OrganizationService {
         `
         SELECT * FROM (
           SELECT 
-            "Organization"."organization_id", 
-            "Organization"."full_name", 
-            "Organization"."short_name", 
-            "Organization"."register_number", 
-            "Organization"."phone", 
-            "Organization"."email", 
-            "Organization"."property_values", 
-            "Organization"."createdAt", 
-            "Organization"."updatedAt", 
-            "organization_type"."organization_type_id" AS "organization_type.organization_type_id", 
-            "organization_type"."organization_type_name" AS "organization_type.organization_type_name", 
-            "organization_type"."createdAt" AS "organization_type.createdAt", 
-            "organization_type"."updatedAt" AS "organization_type.updatedAt" 
-          FROM 
-            "Organizations" AS "Organization" 
+            "Organization"."organization_id",
+            "Organization"."full_name",
+            "Organization"."short_name",
+            "Organization"."phone",
+            "Organization"."property_values",
+            "Organization"."createdAt",
+            "Organization"."updatedAt",
+            "organization_type"."organization_type_id" AS "organization_type.organization_type_id",
+            "organization_type"."organization_type_name" AS "organization_type.organization_type_name",
+            "organization_type"."createdAt" AS "organization_type.createdAt",
+            "organization_type"."updatedAt" AS "organization_type.updatedAt"
+          FROM
+            "Organizations" AS "Organization"
           LEFT JOIN "OrganizationTypes" AS "organization_type" ON "Organization"."organization_type_id" = "organization_type"."organization_type_id"
         )
         ${whereQuery}
@@ -133,7 +132,7 @@ export class OrganizationService {
       if (foundOrganization) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена организация #${foundOrganization.organization_id}`,
+          comment: `${AppStrings.HISTORY_ORGANIZATION_UPDATED}${foundOrganization.organization_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -153,7 +152,7 @@ export class OrganizationService {
       if (deleteOrganization) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена организация #${organization_id}`,
+          comment: `${AppStrings.HISTORY_ORGANIZATION_DELETED}${organization_id}`,
         }
         await this.historyService.create(historyDto)
 

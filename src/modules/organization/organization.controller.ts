@@ -5,6 +5,7 @@ import { OrganizationTypeService } from '../organization_type/organization_type.
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Organization } from './entities/organization.entity'
 import { OrganizationFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Organization')
@@ -36,9 +37,9 @@ export class OrganizationController {
 
   //@UseGuards(JwtAuthGuard)
   @Post('all')
-  @ApiOperation({ summary: 'Список всех организаций' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список организаций',
+    description: AppStrings.ORGANIZATION_ALL_RESPONSE,
     type: Organization,
     isArray: true,
   })
@@ -49,9 +50,9 @@ export class OrganizationController {
 
   //@UseGuards(JwtAuthGuard)
   @Get('all/:checkpoint_id')
-  @ApiOperation({ summary: 'Список всех организаций по пункту пропуска' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_ALL_BY_CHECKPOINT_OPERATION })
   @ApiOkResponse({
-    description: 'Список организаций по пункту пропуска',
+    description: AppStrings.ORGANIZATION_ALL_BY_CHECKPOINT_RESPONSE,
     type: Organization,
     isArray: true,
   })

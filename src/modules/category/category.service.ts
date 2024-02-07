@@ -1,16 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCategoryDto, UpdateCategoryDto } from './dto';
-import { InjectModel } from '@nestjs/sequelize';
-import { Category } from './entities/category.entity';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { CategoryResponse, StatusCategoryResponse } from './response';
-import { CategoryFilter } from './filters';
-import { QueryTypes } from 'sequelize';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
-import { Sequelize } from 'sequelize-typescript';
+import { Injectable } from '@nestjs/common'
+import { CreateCategoryDto, UpdateCategoryDto } from './dto'
+import { InjectModel } from '@nestjs/sequelize'
+import { Category } from './entities/category.entity'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { CategoryResponse, StatusCategoryResponse } from './response'
+import { CategoryFilter } from './filters'
+import { QueryTypes } from 'sequelize'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import { Sequelize } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class CategoryService {
@@ -20,43 +18,34 @@ export class CategoryService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(
-    category: CreateCategoryDto,
-    user_id: number,
-  ): Promise<StatusCategoryResponse> {
+  async create(category: CreateCategoryDto, user_id: number): Promise<StatusCategoryResponse> {
     try {
-      const newCategory = await this.categoryRepository.create({ ...category });
+      const newCategory = await this.categoryRepository.create({ ...category })
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана категория #${newCategory.category_id}`,
-      };
-      await this.historyService.create(historyDto);
+        comment: `${AppStrings.HISTORY_CATEGORY_CREATED}${newCategory.category_id}`,
+      }
+      await this.historyService.create(historyDto)
 
-      return { status: true, data: newCategory };
+      return { status: true, data: newCategory }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async findAll(categoryFilter?: CategoryFilter): Promise<CategoryResponse[]> {
     try {
-      const offset_count =
-        categoryFilter.offset?.count == undefined
-          ? 50
-          : categoryFilter.offset.count;
-      const offset_page =
-        categoryFilter.offset?.page == undefined
-          ? 1
-          : categoryFilter.offset.page;
+      const offset_count = categoryFilter.offset?.count == undefined ? 50 : categoryFilter.offset.count
+      const offset_page = categoryFilter.offset?.page == undefined ? 1 : categoryFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (categoryFilter?.filter) {
-        whereQuery = generateWhereQuery(categoryFilter?.filter);
+        whereQuery = generateWhereQuery(categoryFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (categoryFilter?.sorts) {
-        sortQuery = generateSortQuery(categoryFilter?.sorts);
+        sortQuery = generateSortQuery(categoryFilter?.sorts)
       }
 
       const foundCategories = await this.sequelize.query<Category>(
@@ -76,11 +65,11 @@ export class CategoryService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return foundCategories;
+      return foundCategories
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -88,69 +77,60 @@ export class CategoryService {
     try {
       const result = await this.categoryRepository.findOne({
         where: { category_id },
-      });
+      })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async update(
-    updatedCategory: UpdateCategoryDto,
-    user_id: number,
-  ): Promise<CategoryResponse> {
+  async update(updatedCategory: UpdateCategoryDto, user_id: number): Promise<CategoryResponse> {
     try {
-      let foundCategory = null;
-      await this.categoryRepository.update(
-        { ...updatedCategory },
-        { where: { category_id: updatedCategory.category_id } },
-      );
+      let foundCategory = null
+      await this.categoryRepository.update({ ...updatedCategory }, { where: { category_id: updatedCategory.category_id } })
 
       foundCategory = await this.categoryRepository.findOne({
         where: { category_id: updatedCategory.category_id },
-      });
+      })
 
       if (foundCategory) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена категория #${foundCategory.category_id}`,
-        };
-        await this.historyService.create(historyDto);
+          comment: `${AppStrings.HISTORY_CATEGORY_UPDATED}${foundCategory.category_id}`,
+        }
+        await this.historyService.create(historyDto)
       }
 
-      return foundCategory;
+      return foundCategory
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async remove(
-    category_id: number,
-    user_id: number,
-  ): Promise<StatusCategoryResponse> {
+  async remove(category_id: number, user_id: number): Promise<StatusCategoryResponse> {
     try {
       const deleteCategory = await this.categoryRepository.destroy({
         where: { category_id },
-      });
+      })
 
       if (deleteCategory) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена категория #${category_id}`,
-        };
-        await this.historyService.create(historyDto);
+          comment: `${AppStrings.HISTORY_CATEGORY_DELETED}${category_id}`,
+        }
+        await this.historyService.create(historyDto)
 
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

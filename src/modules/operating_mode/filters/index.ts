@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { AppStrings } from 'src/common/constants/strings'
 
 export class OperatingModeSorts {
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   operating_mode_id?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   operating_mode_name?: string
 }
 

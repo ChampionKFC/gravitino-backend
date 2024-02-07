@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, Req, UseFilters, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { User } from './entities/user.entity'
 import { CreateUserDto, CreateUserOrganizationDto, UpdateUserDto, UpdateUserOrganizationDto, UpdateUserStatusDto } from './dto'
@@ -12,6 +12,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { UserFilter } from './filters'
 import { StatusUserResponse } from './response'
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -26,20 +27,11 @@ export class UsersController {
     private readonly groupService: GroupService,
   ) {}
 
-  @ApiOperation({ summary: 'Создание пользователя' })
+  @ApiOperation({ summary: AppStrings.USER_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Пользователь успешно создан!',
+    description: AppStrings.USER_CREATED_RESPONSE,
     type: StatusUserResponse,
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Запись отсутствует в базе данных!',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Пользователь с таким логином уже существует!',
-  })
-  @ApiResponse({ status: 403, description: 'Forbidden!' })
   @Post()
   async create(@Body() user: CreateUserDto) {
     const foundUser = await this.usersService.findByEmail(user.email)
@@ -66,9 +58,9 @@ export class UsersController {
     })
   }
 
-  @ApiOperation({ summary: 'Создание аккаунта подрядчика' })
+  @ApiOperation({ summary: AppStrings.USER_ORGANIZATION_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Подрядчик успешно создан!',
+    description: AppStrings.USER_ORGANIZATION_CREATED_RESPONSE,
     type: StatusUserResponse,
   })
   @Post('organization')
@@ -104,10 +96,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('all')
-  @ApiOperation({ summary: 'Получение всех пользователей' })
+  @ApiOperation({ summary: AppStrings.USER_ALL_OPERATION })
   @ApiResponse({
     status: 200,
-    description: 'Список всех пользователей',
+    description: AppStrings.USER_ALL_RESPONSE,
     type: User,
     isArray: true,
   })
@@ -118,32 +110,18 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  @ApiOperation({ summary: 'Получение отдельного пользователя' })
+  @ApiOperation({ summary: AppStrings.USER_GET_OPERATION })
   @ApiResponse({
     status: 200,
-    description: 'Найденная запись',
-    type: User,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Пользователь не найден!',
+    description: AppStrings.USER_GET_RESPONSE,
     type: User,
   })
   findById(@Param('id') id: number) {
     return this.usersService.findById(+id)
   }
 
-  @ApiOperation({ summary: 'Обновление данных пользователя' })
-  @ApiResponse({ status: 200, description: 'Пользователь успешно обновлен!' })
-  @ApiResponse({
-    status: 404,
-    description: 'Запись отсутствует в базе данных!',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Пользователь с таким логином уже существует!',
-  })
-  @ApiResponse({ status: 403, description: 'Forbidden!' })
+  @ApiOperation({ summary: AppStrings.USER_UPDATE_OPERATION })
+  @ApiResponse({ status: 200, description: AppStrings.USER_UPDATE_RESPONSE })
   @UseGuards(JwtAuthGuard)
   @Patch()
   async update(@Body() user: UpdateUserDto, @Req() request) {
@@ -169,13 +147,8 @@ export class UsersController {
     return this.usersService.update(user, request.user.user_id)
   }
 
-  @ApiOperation({ summary: 'Обновление данных подрядчика' })
-  @ApiResponse({ status: 200, description: 'Подрядчик успешно обновлен!' })
-  @ApiResponse({
-    status: 404,
-    description: 'Запись отсутствует в базе данных!',
-  })
-  @ApiResponse({ status: 403, description: 'Forbidden!' })
+  @ApiOperation({ summary: AppStrings.USER_ORGANIZATION_UPDATE_OPERATION })
+  @ApiResponse({ status: 200, description: AppStrings.USER_ORGANIZATION_UPDATE_RESPONSE })
   @UseGuards(JwtAuthGuard)
   @Patch('organization')
   async updateOrganization(@Body() organization: UpdateUserOrganizationDto, @Req() request) {
@@ -210,15 +183,10 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  @ApiOperation({ summary: 'Удаление отдельного пользователя' })
+  @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
   @ApiResponse({
     status: 200,
-    description: 'Пользователь успешно удален!',
-    type: User,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Пользователь не найден!',
+    description: AppStrings.USER_DELETE_RESPONSE,
     type: User,
   })
   async remove(@Param('id') id: number, @Req() request) {
@@ -232,7 +200,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('change_status')
-  @ApiOperation({ summary: 'Изменение статуса пользователя' })
+  @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
+  @ApiOkResponse({ type: StatusUserResponse, description: AppStrings.USER_DELETE_RESPONSE })
   async approve(@Body() updateUserStatusDto: UpdateUserStatusDto, @Req() request) {
     const foundUser = await this.usersService.findOne(updateUserStatusDto.user_id)
     if (!foundUser) {

@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { AppStrings } from 'src/common/constants/strings'
 
 export class WorkingHoursSorts {
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   working_hours_id?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   working_hours_name?: string
 }
 

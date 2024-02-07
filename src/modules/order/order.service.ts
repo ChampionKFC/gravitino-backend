@@ -12,6 +12,7 @@ import { QueryTypes, Transaction } from 'sequelize'
 import { OrderJournalService } from '../order_journal/order_journal.service'
 import { CreateOrderJournalDto } from '../order_journal/dto'
 import { FacilityService } from '../facility/facility.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OrderService {
@@ -161,7 +162,7 @@ export class OrderService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан заказ #${newOrder.order_id}`,
+        comment: `${AppStrings.HISTORY_ORDER_CREATED} #${newOrder.order_id}`,
       }
       await this.historyService.create(historyDto, transaction)
 
@@ -169,7 +170,7 @@ export class OrderService {
       orderJournalDto.user_id = user_id
       orderJournalDto.order_id = newOrder.order_id
       orderJournalDto.order_status_id = 1
-      orderJournalDto.comment = 'Создан заказ'
+      orderJournalDto.comment = AppStrings.HISTORY_ORDER_CREATED
 
       await this.orderJournalService.create(orderJournalDto, transaction)
 
@@ -502,26 +503,26 @@ export class OrderService {
 
           switch (changedField) {
             case 'order_name':
-              orderJournalDto.comment = 'Изменено название заказа'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_NAME_UPDATED
               break
             case 'order_description':
-              orderJournalDto.comment = 'Изменено описание заказа'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_DESC_UPDATED
               break
             case 'facility_id':
-              orderJournalDto.comment = 'Изменен объект обслуживания'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_FACILITY_UPDATED
               break
             case 'executor_id':
-              orderJournalDto.comment = 'Изменен исполнитель'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_EXECUTOR_UPDATED
               break
             case 'planned_datetime':
-              orderJournalDto.comment = 'Изменена планируемая дата выполнения'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_PLANNED_DATE_UPDATED
               break
             case 'task_end_datetime':
-              orderJournalDto.comment = 'Изменена крайняя дата выполнения'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_END_DATE_UPDATED
               break
             case 'order_status_id':
               orderJournalDto.order_status_id = foundOrder.order_status_id
-              orderJournalDto.comment = 'Изменен статус заказа'
+              orderJournalDto.comment = AppStrings.HISTORY_ORDER_STATUS_UPDATED
               break
             default:
               orderJournalDto.comment = ''
@@ -535,7 +536,7 @@ export class OrderService {
       if (foundOrder) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен заказ #${foundOrder.order_id}`,
+          comment: `${AppStrings.HISTORY_ORDER_UPDATED}${foundOrder.order_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -566,7 +567,7 @@ export class OrderService {
         orderJournalDto.order_status_id = foundOrder.order_status_id
         orderJournalDto.old_value = foundOrder.previous('order_status_id').toString()
         orderJournalDto.new_value = foundOrder.get('order_status_id').toString()
-        orderJournalDto.comment = `Изменен статус заказа`
+        orderJournalDto.comment = AppStrings.HISTORY_ORDER_STATUS_UPDATED
 
         await this.orderJournalService.create(orderJournalDto)
       }
@@ -586,7 +587,7 @@ export class OrderService {
       if (deleteOrder) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален заказ #${order_id}`,
+          comment: `${AppStrings.HISTORY_ORDER_DELETED}${order_id}`,
         }
         await this.historyService.create(historyDto)
 

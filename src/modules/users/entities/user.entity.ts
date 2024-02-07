@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { NonAttribute } from 'sequelize'
 import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 import { Auth } from 'src/modules/auth/entities/auth.entity'
 import { Group } from 'src/modules/group/entities/group.entity'
 import { Order } from 'src/modules/order/entities/order.entity'
@@ -24,7 +25,7 @@ export class User extends Model {
   @ApiProperty({
     type: () => Person,
     required: false,
-    description: 'Данные пользователя',
+    description: AppStrings.PERSON,
     nullable: true,
   })
   @BelongsTo(() => Person)
@@ -36,7 +37,7 @@ export class User extends Model {
 
   @ApiProperty({
     type: () => Role,
-    description: 'Роль пользователя (исполнитель, заказчик, администратор и т.д.)',
+    description: AppStrings.ROLE_DESCRIPTION,
   })
   @BelongsTo(() => Role)
   role: Role
@@ -48,7 +49,7 @@ export class User extends Model {
   @ApiProperty({
     type: () => Group,
     required: false,
-    description: 'Группа пользователя',
+    description: AppStrings.GROUP,
   })
   @BelongsTo(() => Group)
   group: Group
@@ -60,23 +61,23 @@ export class User extends Model {
   @ApiProperty({
     type: () => Organization,
     required: false,
-    description: 'Организация',
+    description: AppStrings.ORGANIZATION,
   })
   @BelongsTo(() => Organization)
   organization: Organization
 
-  @ApiProperty({ example: true, description: 'Активна ли учетная запись' })
+  @ApiProperty({ example: AppStrings.USER_ISACTIVE_EXAMPLE, description: AppStrings.USER_ISACTIVE_DESCRIPTION })
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
   is_active: boolean
 
-  @ApiProperty({ example: 'email', description: 'E-Mail пользователя' })
+  @ApiProperty({ example: AppStrings.USER_EMAIL_EXAMPLE, description: AppStrings.USER_EMAIL_DESCRIPTION })
   @Column({ type: DataType.STRING, allowNull: false, unique: true })
   email: string
 
   @Column({ type: DataType.STRING, allowNull: false })
   password: string
 
-  @HasMany(() => Auth, 'user_id')
+  @HasMany(() => Auth, User.primaryKeyAttribute)
   users: NonAttribute<Auth[]>
 
   // @HasMany(() => Report, 'report_user_id')
@@ -88,9 +89,9 @@ export class User extends Model {
   @HasMany(() => Order, 'completed_by')
   order_completed_by: NonAttribute<Order[]>
 
-  @HasMany(() => TransactionHistory, 'user_id')
+  @HasMany(() => TransactionHistory, User.primaryKeyAttribute)
   history: NonAttribute<TransactionHistory[]>
 
-  @HasMany(() => RolePermission, 'user_id')
+  @HasMany(() => RolePermission, User.primaryKeyAttribute)
   rolesPermissions: NonAttribute<RolePermission[]>
 }

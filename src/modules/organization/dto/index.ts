@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { AppStrings } from 'src/common/constants/strings'
 import { OrganizationTypeFilters, OrganizationTypeSorts } from 'src/modules/organization_type/dto'
 
 export class CreateOrganizationDto {
@@ -39,25 +40,25 @@ export class UpdateOrganizationDto {
 }
 
 export class OrganizationSorts {
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   organization_id?: string
 
   @ApiProperty({ required: false })
   organization_type?: OrganizationTypeSorts
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   full_name?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   short_name?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   register_number?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   phone?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   email?: string
 }
 

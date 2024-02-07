@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Group } from './entities/group.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { GroupResponse, StatusGroupResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class GroupService {
@@ -18,7 +19,7 @@ export class GroupService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана группа #${newGroup.group_id}`,
+        comment: `${AppStrings.HISTORY_GROUP_CREATED}${newGroup.group_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -64,7 +65,7 @@ export class GroupService {
       if (foundGroup) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена группа #${foundGroup.group_id}`,
+          comment: `${AppStrings.HISTORY_GROUP_UPDATED}${foundGroup.group_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -84,7 +85,7 @@ export class GroupService {
       if (deleteGroup) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена группа #${group_id}`,
+          comment: `${AppStrings.HISTORY_GROUP_DELETED}${group_id}`,
         }
         await this.historyService.create(historyDto)
 

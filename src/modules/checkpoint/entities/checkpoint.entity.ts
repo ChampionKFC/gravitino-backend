@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { BelongsTo, Column, DataType, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 import { Branch } from 'src/modules/branch/entities/branch.entity'
 import { CheckpointType } from 'src/modules/checkpoint_type/entities/checkpoint_type.entity'
 import { NeighboringState } from 'src/modules/neighboring_state/entities/neighboring_state.entity'
@@ -14,15 +15,15 @@ export class Checkpoint extends Model {
   checkpoint_id: number
 
   @ApiProperty({
-    example: 'Пункт пропуска №1',
-    description: 'Название пункта пропуска',
+    example: AppStrings.CHECKPOINT_NAME_EXAMPLE,
+    description: AppStrings.CHECKPOINT_NAME_DESCRIPTION,
   })
   @Column({ type: DataType.STRING(50), allowNull: false })
   checkpoint_name: string
 
   @ApiProperty({
-    example: 'улица У.',
-    description: 'Местоположение пункта пропуска',
+    example: AppStrings.CHECKPOINT_ADDRESS_EXAMPLE,
+    description: AppStrings.CHECKPOINT_ADDRESS_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: false })
   address: string
@@ -33,7 +34,7 @@ export class Checkpoint extends Model {
 
   @ApiProperty({
     type: () => Branch,
-    description: 'Филиал',
+    description: AppStrings.BRANCH,
   })
   @BelongsTo(() => Branch)
   branch: Branch
@@ -44,16 +45,16 @@ export class Checkpoint extends Model {
 
   @ApiProperty({
     type: () => NeighboringState,
-    description: 'Приграничное гос-во',
+    description: AppStrings.NEIGHBORING_STATE,
   })
   @BelongsTo(() => NeighboringState)
   neighboring_state: NeighboringState
 
-  @ApiProperty({ example: 'Округ', description: 'Округ пункта пропуска' })
+  @ApiProperty({ example: AppStrings.CHECKPOINT_DISTRICT_EXAMPLE, description: AppStrings.CHECKPOINT_DISTRICT_DESCRIPTION })
   @Column({ type: DataType.STRING, allowNull: false })
   district: string
 
-  @ApiProperty({ example: 'Москва', description: 'Область пункта пропуска' })
+  @ApiProperty({ example: AppStrings.CHECKPOINT_REGION_EXAMPLE, description: AppStrings.CHECKPOINT_REGION_DESCRIPTION })
   @Column({ type: DataType.STRING, allowNull: false })
   region: string
 
@@ -63,7 +64,7 @@ export class Checkpoint extends Model {
 
   @ApiProperty({
     type: () => CheckpointType,
-    description: 'Филиал',
+    description: AppStrings.BRANCH,
   })
   @BelongsTo(() => CheckpointType)
   checkpoint_type: CheckpointType
@@ -74,7 +75,7 @@ export class Checkpoint extends Model {
 
   @ApiProperty({
     type: () => WorkingHours,
-    description: 'Часы работы',
+    description: AppStrings.WORKING_HOURS,
   })
   @BelongsTo(() => WorkingHours)
   working_hours: WorkingHours
@@ -85,12 +86,12 @@ export class Checkpoint extends Model {
 
   @ApiProperty({
     type: () => OperatingMode,
-    description: 'Режим работы',
+    description: AppStrings.OPERATING_MODE,
   })
   @BelongsTo(() => OperatingMode)
   operating_mode: OperatingMode
 
-  @ApiProperty({ example: '1,2,3', description: 'ID характеристик', required: false })
+  @ApiProperty({ example: AppStrings.PROPERTY_VALUES_EXAMPLE, description: AppStrings.PROPERTY_VALUES_DESCRIPTION, required: false })
   @Column({ type: DataType.ARRAY(DataType.INTEGER) })
   property_values?: number[]
 }

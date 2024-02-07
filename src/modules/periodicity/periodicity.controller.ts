@@ -1,15 +1,10 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { PeriodicityService } from './periodicity.service';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/auth.guard';
-import { PeriodicityFilter } from './filters';
-import { Periodicity } from './entities/periodicity.entity';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
+import { PeriodicityService } from './periodicity.service'
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { JwtAuthGuard } from '../auth/guards/auth.guard'
+import { PeriodicityFilter } from './filters'
+import { Periodicity } from './entities/periodicity.entity'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @Controller('periodicity')
@@ -17,9 +12,9 @@ import { Periodicity } from './entities/periodicity.entity';
 export class PeriodicityController {
   constructor(private readonly periodicityService: PeriodicityService) {}
 
-  @ApiOperation({ summary: 'Список всех периодичностей задач' })
+  @ApiOperation({ summary: AppStrings.PERIODICITY_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список периодичностей задач',
+    description: AppStrings.PERIODICITY_ALL_RESPONSE,
     type: Periodicity,
     isArray: true,
   })
@@ -27,18 +22,18 @@ export class PeriodicityController {
   @ApiBody({ required: false, type: PeriodicityFilter })
   @Post('all')
   findAll(@Body() periodicityFilter: PeriodicityFilter) {
-    return this.periodicityService.findAll(periodicityFilter);
+    return this.periodicityService.findAll(periodicityFilter)
   }
 
-  @ApiOperation({ summary: 'Список всех периодичностей задач' })
+  @ApiOperation({ summary: AppStrings.PERIODICITY_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список периодичностей задач',
+    description: AppStrings.PERIODICITY_ALL_RESPONSE,
     type: Periodicity,
     isArray: true,
   })
   @UseGuards(JwtAuthGuard)
   @Get('all')
   getAll() {
-    return this.periodicityService.findAll({});
+    return this.periodicityService.findAll({})
   }
 }

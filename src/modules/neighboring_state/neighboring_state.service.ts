@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { NeighboringStateResponse, StatusNeighboringStateResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class NeighboringStateService {
@@ -23,7 +24,7 @@ export class NeighboringStateService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создано приграничное гос-во #${newNeighboringState.neighboring_state_id}`,
+        comment: `${AppStrings.HISTORY_NEIGHBORING_STATE_CREATED}${newNeighboringState.neighboring_state_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -69,7 +70,7 @@ export class NeighboringStateService {
       if (updateNeighboringState) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменено приграничное гос-во #${updateNeighboringStateDto.neighboring_state_id}`,
+          comment: `${AppStrings.HISTORY_NEIGHBORING_STATE_UPDATED}${updateNeighboringStateDto.neighboring_state_id}`,
         }
         await this.historyService.create(historyDto)
 
@@ -91,7 +92,7 @@ export class NeighboringStateService {
       if (deleteNeighboringState) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалено приграничное гос-во  #${neighboring_state_id}`,
+          comment: `${AppStrings.HISTORY_NEIGHBORING_STATE_DELETED}${neighboring_state_id}`,
         }
         await this.historyService.create(historyDto)
 

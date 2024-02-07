@@ -8,6 +8,7 @@ import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate
 import { CheckpointFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class CheckpointService {
@@ -24,7 +25,7 @@ export class CheckpointService {
 
     const historyDto = {
       user_id: user_id,
-      comment: `Создан пункт пропуска #${newCheckpoint.checkpoint_id}`,
+      comment: `${AppStrings.HISTORY_CHECKPOINT_CREATED}${newCheckpoint.checkpoint_id}`,
     }
     await this.historyService.create(historyDto)
 
@@ -141,7 +142,7 @@ export class CheckpointService {
       if (foundCheckpoint) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен пункт пропуска #${foundCheckpoint.checkpoint_id}`,
+          comment: `${AppStrings.HISTORY_CHECKPOINT_UPDATED}${foundCheckpoint.checkpoint_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -160,7 +161,7 @@ export class CheckpointService {
     if (deleteCheckpoint) {
       const historyDto = {
         user_id: user_id,
-        comment: `Удален пункт пропуска #${checkpoint_id}`,
+        comment: `${AppStrings.HISTORY_CHECKPOINT_DELETED}${checkpoint_id}`,
       }
       await this.historyService.create(historyDto)
 

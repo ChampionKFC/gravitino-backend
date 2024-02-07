@@ -7,6 +7,7 @@ import { StatusNeighboringStateResponse } from './response'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { NeighboringState } from './entities/neighboring_state.entity'
 import { AppError } from 'src/common/constants/error'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiTags('Neighboring State')
 @Controller('neighboring-state')
@@ -16,10 +17,10 @@ export class NeighboringStateController {
   constructor(private readonly neighboringStateService: NeighboringStateService) {}
 
   @ApiCreatedResponse({
-    description: 'Приграничное гос-во успешно создано',
+    description: AppStrings.NEIGHBORING_STATE_CREATED_RESPONSE,
     type: StatusNeighboringStateResponse,
   })
-  @ApiOperation({ summary: 'Создание приграничного гос-ва' })
+  @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_CREATE_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createNeighboringStateDto: CreateNeighboringStateDto, @Req() request) {
@@ -27,11 +28,11 @@ export class NeighboringStateController {
   }
 
   @ApiOkResponse({
-    description: 'Список приграничных государств',
+    description: AppStrings.NEIGHBORING_STATE_ALL_RESPONSE,
     type: NeighboringState,
     isArray: true,
   })
-  @ApiOperation({ summary: 'Получение списка приграничных государств' })
+  @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_ALL_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Get('all')
   findAll() {
@@ -39,10 +40,10 @@ export class NeighboringStateController {
   }
 
   @ApiOkResponse({
-    description: 'Приграничное гос-во успешно изменено',
+    description: AppStrings.NEIGHBORING_STATE_UPDATE_RESPONSE,
     type: StatusNeighboringStateResponse,
   })
-  @ApiOperation({ summary: 'Изменение приграничного государства' })
+  @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_UPDATE_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Patch()
   async update(@Body() updateNeighboringStateDto: UpdateNeighboringStateDto, @Req() request) {
@@ -56,10 +57,10 @@ export class NeighboringStateController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Приграничное гос-во успешно удалено',
+    description: AppStrings.NEIGHBORING_STATE_DELETE_RESPONSE,
     type: StatusNeighboringStateResponse,
   })
-  @ApiOperation({ summary: 'Удаление приграничного государства' })
+  @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() request) {
     const foundNeighboringState = await this.neighboringStateService.findOne(+id)

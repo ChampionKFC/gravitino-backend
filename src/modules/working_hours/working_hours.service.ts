@@ -5,6 +5,7 @@ import { TransactionHistoryService } from '../transaction_history/transaction_hi
 import { Sequelize } from 'sequelize-typescript'
 import { StatusWorkingHoursResponse, WorkingHoursResponse } from './response'
 import { InjectModel } from '@nestjs/sequelize'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class WorkingHoursService {
@@ -23,7 +24,7 @@ export class WorkingHoursService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Созданы часы работы #${newWorkingHours.working_hours_id}`,
+        comment: `${AppStrings.HISTORY_WORKING_HOURS_CREATED}${newWorkingHours.working_hours_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -69,7 +70,7 @@ export class WorkingHoursService {
       if (updateWorkingHours) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменены часы работы #${updateWorkingHourDto.working_hours_id}`,
+          comment: `${AppStrings.HISTORY_WORKING_HOURS_UPDATED}${updateWorkingHourDto.working_hours_id}`,
         }
         await this.historyService.create(historyDto)
 
@@ -91,7 +92,7 @@ export class WorkingHoursService {
       if (deleteWorkingHours) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалены часы работы #${working_hours_id}`,
+          comment: `${AppStrings.HISTORY_WORKING_HOURS_DELETED}${working_hours_id}`,
         }
         await this.historyService.create(historyDto)
 

@@ -1,81 +1,73 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { NonAttribute } from 'sequelize';
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-  HasMany,
-  Model,
-  PrimaryKey,
-  Table,
-} from 'sequelize-typescript';
-import { Category } from 'src/modules/category/entities/category.entity';
-import { CategoryResponse } from 'src/modules/category/response';
-import { Order } from 'src/modules/order/entities/order.entity';
-import { Periodicity } from 'src/modules/periodicity/entities/periodicity.entity';
-import { PeriodicityResponse } from 'src/modules/periodicity/response';
+import { ApiProperty } from '@nestjs/swagger'
+import { NonAttribute } from 'sequelize'
+import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
+import { Category } from 'src/modules/category/entities/category.entity'
+import { CategoryResponse } from 'src/modules/category/response'
+import { Order } from 'src/modules/order/entities/order.entity'
+import { Periodicity } from 'src/modules/periodicity/entities/periodicity.entity'
+import { PeriodicityResponse } from 'src/modules/periodicity/response'
 
 @Table
 export class Task extends Model {
   @PrimaryKey
   @ApiProperty()
   @Column({ type: DataType.INTEGER, allowNull: false, autoIncrement: true })
-  task_id: number;
+  task_id: number
 
   @ApiProperty({
-    example: 'Уборка снега',
-    description: 'Название задачи',
+    example: AppStrings.TASK_NAME_EXAMPLE,
+    description: AppStrings.TASK_NAME_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: false })
-  task_name: string;
+  task_name: string
 
   @ApiProperty({
-    example: 'Уборка снега перед входом',
-    description: 'Описание задачи',
+    example: AppStrings.TASK_DESC_EXAMPLE,
+    description: AppStrings.TASK_DESC_DESCRIPTION,
     required: false,
   })
   @Column({ type: DataType.STRING, allowNull: true })
-  task_description?: string;
+  task_description?: string
 
   @ForeignKey(() => Category)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  category_id: number;
+  category_id: number
 
   @ApiProperty({
     type: () => Task,
     example: CategoryResponse,
-    description: 'Категория задачи',
+    description: AppStrings.CATEGORY,
   })
   @BelongsTo(() => Category)
-  category: Category;
+  category: Category
 
   @ForeignKey(() => Periodicity)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  periodicity_id: number;
+  periodicity_id: number
 
   @ApiProperty({
     type: () => Periodicity,
     example: PeriodicityResponse,
-    description: 'Периодичность задачи',
+    description: AppStrings.PERIODICITY,
   })
   @BelongsTo(() => Periodicity)
-  periodicity: Periodicity;
+  periodicity: Periodicity
 
   @ApiProperty({
-    example: '01.01.2024',
-    description: 'Начало периода',
+    example: AppStrings.TASK_PERIOD_START_EXAMPLE,
+    description: AppStrings.TASK_PERIOD_START_DESCRIPTION,
   })
   @Column({ type: DataType.DATEONLY, allowNull: false })
-  period_start: Date;
+  period_start: Date
 
   @ApiProperty({
-    example: '31.12.2024',
-    description: 'Конец периода',
+    example: AppStrings.TASK_PERIOD_END_EXAMPLE,
+    description: AppStrings.TASK_PERIOD_END_DESCRIPTION,
   })
   @Column({ type: DataType.DATEONLY, allowNull: false })
-  period_end: Date;
+  period_end: Date
 
-  @HasMany(() => Order, 'task_id')
-  orders: NonAttribute<Order[]>;
+  @HasMany(() => Order, Task.primaryKeyAttribute)
+  orders: NonAttribute<Order[]>
 }

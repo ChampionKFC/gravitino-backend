@@ -9,6 +9,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import * as xlsx from 'xlsx'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class BranchService {
@@ -25,7 +26,7 @@ export class BranchService {
 
     const historyDto = {
       user_id: user_id,
-      comment: `Создан филиал #${newBranch.branch_id}`,
+      comment: `${AppStrings.HISTORY_BRANCH_CREATED}${newBranch.branch_id}`,
     }
     await this.historyService.create(historyDto)
 
@@ -99,7 +100,7 @@ export class BranchService {
       if (foundBranch) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен филиал #${foundBranch.branch_id}`,
+          comment: `${AppStrings.HISTORY_BRANCH_UPDATED}${foundBranch.branch_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -118,7 +119,7 @@ export class BranchService {
     if (deleteBranch) {
       const historyDto = {
         user_id: user_id,
-        comment: `Удален филиал #${branch_id}`,
+        comment: `${AppStrings.HISTORY_BRANCH_DELETED}${branch_id}`,
       }
       await this.historyService.create(historyDto)
 

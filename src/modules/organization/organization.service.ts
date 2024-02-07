@@ -57,21 +57,19 @@ export class OrganizationService {
         `
         SELECT * FROM (
           SELECT 
-            "Organization"."organization_id", 
-            "Organization"."full_name", 
-            "Organization"."short_name", 
-            "Organization"."register_number", 
-            "Organization"."phone", 
-            "Organization"."email", 
-            "Organization"."property_values", 
-            "Organization"."createdAt", 
-            "Organization"."updatedAt", 
-            "organization_type"."organization_type_id" AS "organization_type.organization_type_id", 
-            "organization_type"."organization_type_name" AS "organization_type.organization_type_name", 
-            "organization_type"."createdAt" AS "organization_type.createdAt", 
-            "organization_type"."updatedAt" AS "organization_type.updatedAt" 
-          FROM 
-            "Organizations" AS "Organization" 
+            "Organization"."organization_id",
+            "Organization"."full_name",
+            "Organization"."short_name",
+            "Organization"."phone",
+            "Organization"."property_values",
+            "Organization"."createdAt",
+            "Organization"."updatedAt",
+            "organization_type"."organization_type_id" AS "organization_type.organization_type_id",
+            "organization_type"."organization_type_name" AS "organization_type.organization_type_name",
+            "organization_type"."createdAt" AS "organization_type.createdAt",
+            "organization_type"."updatedAt" AS "organization_type.updatedAt"
+          FROM
+            "Organizations" AS "Organization"
           LEFT JOIN "OrganizationTypes" AS "organization_type" ON "Organization"."organization_type_id" = "organization_type"."organization_type_id"
         )
         ${whereQuery}

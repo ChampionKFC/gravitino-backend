@@ -1,37 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsOptional } from 'class-validator'
-import { GroupFilters, GroupSorts } from 'src/modules/group/dto'
-import { OrganizationFilters, OrganizationSorts } from 'src/modules/organization/dto'
-import { PersonFilters, PersonSorts } from 'src/modules/person/dto'
-import { RoleFilters, RoleSorts } from 'src/modules/roles/dto'
 
 export class CreateUserDto {
   @ApiProperty({ required: false })
-  last_name?: string
+  last_name: string
 
   @ApiProperty({ required: false })
-  first_name?: string
+  first_name: string
 
   @ApiProperty({ required: false })
   patronymic?: string
 
   @ApiProperty({ required: false })
-  phone?: string
+  phone: string
 
-  @IsOptional()
-  person_id?: number
+  person_id: number
 
   @ApiProperty({ default: 1 })
   role_id: number
 
   @ApiProperty({ default: 1, required: false })
-  organization_id?: number
-
-  @ApiProperty({ default: 1, required: false })
   group_id?: number
-
-  @ApiProperty({ default: true, required: false })
-  is_active?: boolean
 
   @ApiProperty()
   email: string
@@ -44,7 +32,7 @@ export class CreateUserDto {
 }
 
 export class UpdateUserDto {
-  @ApiProperty()
+  @ApiProperty({ default: 1 })
   user_id: number
 
   @ApiProperty({ required: false })
@@ -59,20 +47,13 @@ export class UpdateUserDto {
   @ApiProperty({ required: false })
   phone?: string
 
-  @IsOptional()
   person_id?: number
 
   @ApiProperty({ default: 1, required: false })
   role_id?: number
 
   @ApiProperty({ default: 1, required: false })
-  organization_id?: number
-
-  @ApiProperty({ default: 1, required: false })
   group_id?: number
-
-  @ApiProperty({ default: true, required: false })
-  is_active?: boolean
 
   @ApiProperty({ required: false })
   email?: string
@@ -85,61 +66,74 @@ export class UpdateUserDto {
 }
 
 export class UpdateUserStatusDto {
-  @ApiProperty()
+  @ApiProperty({ default: 1 })
   user_id: number
 
   @ApiProperty({ default: true })
   is_active: boolean
 }
 
-export class UserSorts {
-  @ApiProperty({ default: 'ASC', required: false })
-  user_id?: string
-
-  @ApiProperty({ default: 'ASC', required: false })
-  email?: string
-
-  @ApiProperty({ default: 'ASC', required: false })
-  is_active?: string
+export class CreateUserOrganizationDto {
+  @ApiProperty({ required: false })
+  organization_type_id: number
 
   @ApiProperty({ required: false })
-  person?: PersonSorts
+  full_name: string
 
   @ApiProperty({ required: false })
-  role?: RoleSorts
+  short_name: string
 
   @ApiProperty({ required: false })
-  group?: GroupSorts
+  phone: string
 
-  // @ApiProperty()
-  // facility?: FacilitySorts;
+  organization_id: number
 
-  // @ApiProperty()
-  // checkpoint?: CheckpointSorts;
+  @ApiProperty({ default: 1 })
+  role_id: number
 
-  @ApiProperty({ required: false })
-  organization?: OrganizationSorts
+  @ApiProperty({ default: 1, required: false })
+  group_id?: number
+
+  @ApiProperty()
+  email: string
+
+  @ApiProperty()
+  password: string
+
+  @ApiProperty({ default: [], required: false })
+  property_values?: number[]
 }
 
-export class UserFilters {
-  @ApiProperty({ required: false })
-  user_id?: number
+export class UpdateUserOrganizationDto {
+  @ApiProperty({ default: 1 })
+  user_id: number
 
   @ApiProperty({ required: false })
-  person?: PersonFilters
+  organization_type_id?: number
 
   @ApiProperty({ required: false })
-  role?: RoleFilters
+  full_name?: string
 
   @ApiProperty({ required: false })
-  organization?: OrganizationFilters
+  short_name?: string
 
   @ApiProperty({ required: false })
-  group?: GroupFilters
+  phone?: string
 
-  @ApiProperty({ default: true, required: false })
-  is_active?: boolean
+  organization_id?: number
+
+  @ApiProperty({ default: 1, required: false })
+  role_id?: number
+
+  @ApiProperty({ default: 1, required: false })
+  group_id?: number
 
   @ApiProperty({ required: false })
   email?: string
+
+  @ApiProperty({ required: false })
+  password?: string
+
+  @ApiProperty({ default: [], required: false })
+  property_values?: number[]
 }

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { User } from './entities/user.entity'
-import { CreateUserDto, UpdateUserDto, UpdateUserStatusDto } from './dto'
+import { CreateUserDto, CreateUserOrganizationDto, UpdateUserDto, UpdateUserOrganizationDto, UpdateUserStatusDto } from './dto'
 import { Role } from 'src/modules/roles/entities/role.entity'
 import * as bcrypt from 'bcrypt'
 import { Organization } from 'src/modules/organization/entities/organization.entity'
@@ -15,12 +15,16 @@ import { Op, QueryTypes } from 'sequelize'
 import { StatusUserResponse, UserResponse } from './response'
 import { UserFilter } from './filters'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import { OrganizationService } from '../organization/organization.service'
+import { CreateOrganizationDto, UpdateOrganizationDto } from '../organization/dto'
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User) private userRepository: typeof User,
     @InjectModel(Person) private personRepository: typeof Person,
+    @InjectModel(Organization) private organizationRepository: typeof Organization,
+    private readonly organizationService: OrganizationService,
     private readonly historyService: TransactionHistoryService,
     private sequelize: Sequelize,
   ) {}
@@ -69,6 +73,50 @@ export class UsersService {
         data: {
           user_id: newUser.user_id,
           ...user,
+          is_active: true,
+        },
+      }
+    } catch (error) {
+      if (error.code === 409) {
+        throw new Error(error.message)
+      } else {
+        throw new Error(error)
+      }
+    }
+  }
+
+  async createOrganization(organization: CreateUserOrganizationDto): Promise<StatusUserResponse> {
+    try {
+      const transaction = await this.sequelize.transaction()
+
+      const email = organization.email.toLowerCase()
+      organization.email = email
+      organization.password = await bcrypt.hash(organization.password, 10)
+
+      const createOrganizationDto = new CreateOrganizationDto()
+      createOrganizationDto.organization_type_id = organization.organization_type_id
+      createOrganizationDto.full_name = organization.full_name
+      createOrganizationDto.short_name = organization.short_name
+      createOrganizationDto.phone = organization.phone
+
+      const newOrganization = await this.organizationRepository.create({ ...createOrganizationDto }, { transaction: transaction })
+      organization.organization_id = newOrganization.organization_id
+
+      const newUser = await this.userRepository.create({ ...organization }, { transaction: transaction })
+
+      const historyDto = {
+        user_id: newUser.user_id,
+        comment: `Создан подрядчик #${newUser.user_id} (organization_id: ${newUser.organization_id})`,
+      }
+      await this.historyService.create(historyDto, transaction)
+
+      await transaction.commit()
+
+      return {
+        status: true,
+        data: {
+          user_id: newUser.user_id,
+          ...organization,
           is_active: true,
         },
       }
@@ -135,6 +183,60 @@ export class UsersService {
     }
   }
 
+  async updateOrganization(organization: UpdateUserOrganizationDto, user_id: number): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
+    try {
+      if (organization.email != undefined) {
+        const email = organization.email.toLowerCase()
+        organization.email = email
+      }
+
+      if (organization.password != undefined) {
+        organization.password = await bcrypt.hash(organization.password, 10)
+      }
+
+      const user = await this.findById(organization.user_id)
+      const organization_id = user.organization.organization_id
+      const foundOrganization = await this.organizationRepository.findOne({
+        where: { organization_id },
+      })
+      if (!foundOrganization) {
+        await transaction.rollback()
+        throw new HttpException(AppError.PERSON_NOT_FOUND, HttpStatus.BAD_REQUEST)
+      }
+
+      const updateOrganizationDto = new UpdateOrganizationDto()
+      updateOrganizationDto.organization_type_id = organization.organization_type_id
+      updateOrganizationDto.full_name = organization.full_name
+      updateOrganizationDto.short_name = organization.short_name
+      updateOrganizationDto.phone = organization.phone
+
+      await foundOrganization.update(updateOrganizationDto, { transaction: transaction })
+
+      const updateUserOrganization = await this.userRepository.update(
+        { ...organization },
+        { where: { user_id: organization.user_id }, transaction: transaction },
+      )
+
+      if (updateUserOrganization) {
+        const historyDto = {
+          user_id: user_id,
+          comment: `Изменен подрядчик #${organization.user_id}`,
+        }
+        await this.historyService.create(historyDto, transaction)
+
+        await transaction.commit()
+        return { status: true }
+      } else {
+        await transaction.rollback()
+        return { status: false }
+      }
+    } catch (error) {
+      await transaction.rollback()
+      throw new Error(error)
+    }
+  }
+
   async findAll(userFilter: UserFilter) {
     try {
       const offset_count = userFilter.offset?.count == undefined ? 50 : userFilter.offset.count
@@ -166,9 +268,7 @@ export class UsersService {
             "organization_type"."organization_type_name" AS "organization.organization_type.organization_type_name",
             "organization"."full_name" AS "organization.full_name",
             "organization"."short_name" AS "organization.short_name",
-            "organization"."register_number" AS "organization.register_number",
             "organization"."phone" AS "organization.phone",
-            "organization"."email" AS "organization.email",
             "organization"."property_values" AS "organization.property_values",
             "person"."person_id" AS "person.person_id",
             "person"."last_name" AS "person.last_name",
@@ -304,25 +404,32 @@ export class UsersService {
         where: { user_id: id },
         transaction: transaction,
       })
-      const deletePerson = await this.personRepository.destroy({
-        where: { person_id: user.person_id },
-        transaction: transaction,
-      })
+      let deleteData = null
+      if (user.person_id) {
+        deleteData = await this.personRepository.destroy({
+          where: { person_id: user.person_id },
+          transaction: transaction,
+        })
+      } else {
+        deleteData = await this.organizationRepository.destroy({
+          where: { organization_id: user.organization_id },
+          transaction: transaction,
+        })
+      }
 
-      if (deleteUser && deletePerson) {
+      if (deleteUser && deleteData) {
         const historyDto = {
           user_id: user_id,
           comment: `Удален пользователь #${id}`,
         }
-        await this.historyService.create(historyDto)
-
+        await this.historyService.create(historyDto, transaction)
         await transaction.commit()
 
         return { status: true }
+      } else {
+        await transaction.rollback()
+        return { status: false }
       }
-
-      await transaction.rollback()
-      return { status: false }
     } catch (error) {
       throw new Error(error)
     }

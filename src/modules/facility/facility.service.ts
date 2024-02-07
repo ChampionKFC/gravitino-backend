@@ -78,9 +78,7 @@ export class FacilityService {
             "organization_type"."organization_type_name" AS "organization.organization_type.organization_type_name",
             "organization"."full_name" AS "organization.full_name",
             "organization"."short_name" AS "organization.short_name",
-            "organization"."register_number" AS "organization.register_number",
             "organization"."phone" AS "organization.phone",
-            "organization"."email" AS "organization.email",
             "organization"."property_values" AS "organization.property_values"
           FROM
             "Facilities" AS "Facility"

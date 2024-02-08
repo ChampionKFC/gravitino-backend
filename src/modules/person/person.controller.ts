@@ -3,9 +3,9 @@ import { PersonService } from './person.service'
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { Person } from './entities/person.entity'
 import { PersonFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ArrayPersonResponse } from './response'
 
 @ApiBearerAuth()
 @ApiTags('Person')

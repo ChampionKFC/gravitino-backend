@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Role } from './entities/role.entity'
-import { StatusRoleResponse } from './response'
+import { ArrayRoleResponse, StatusRoleResponse } from './response'
 import { RoleFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 

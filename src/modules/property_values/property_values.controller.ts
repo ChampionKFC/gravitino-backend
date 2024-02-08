@@ -7,7 +7,7 @@ import { PropertyNamesService } from '../property_names/property_names.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { PropertyValue } from './entities/property_value.entity'
-import { StatusPropertValueResponse } from './response'
+import { ArrayPropertyValueResponse, StatusPropertValueResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()

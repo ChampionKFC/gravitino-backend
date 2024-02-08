@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { PropertyName } from './entities/property_name.entity'
-import { StatusPropertyNameResponse } from './response'
+import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()

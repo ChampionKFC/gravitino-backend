@@ -371,13 +371,13 @@ export class OrderService {
       let whereQuery = ''
       if (myOrdersFilter?.filter) {
         whereQuery = generateWhereQuery(myOrdersFilter?.filter)
-
-        if (whereQuery == '') {
-          whereQuery = 'WHERE'
-        } else {
-          whereQuery += ' AND'
-        }
       }
+      if (whereQuery.trim() == '') {
+        whereQuery = 'WHERE'
+      } else {
+        whereQuery += ' AND'
+      }
+
       let sortQuery = ''
       if (myOrdersFilter?.sorts) {
         sortQuery = generateSortQuery(myOrdersFilter?.sorts)
@@ -460,8 +460,6 @@ export class OrderService {
 
       return { count: result.length, data: result }
     } catch (error) {
-      console.log(error)
-
       throw new Error(error)
     }
   }

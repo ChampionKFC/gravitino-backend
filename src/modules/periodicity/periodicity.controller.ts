@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { PeriodicityFilter } from './filters'
 import { Periodicity } from './entities/periodicity.entity'
 import { AppStrings } from 'src/common/constants/strings'
+import { ArrayPeriodicityResponse } from './response'
 
 @ApiBearerAuth()
 @Controller('periodicity')

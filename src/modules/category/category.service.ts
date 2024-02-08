@@ -8,6 +8,7 @@ import { CategoryFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { Sequelize } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class CategoryService {

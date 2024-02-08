@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationType } from './entities/organization_type.entity'
-import { StatusOrganizationTypeResponse } from './response'
+import { ArrayOrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
 import { OrganizationTypeFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { FileType } from './entities/file_type.entity'
-import { StatusFileTypeResponse } from './response'
+import { ArrayFileTypeResponse, StatusFileTypeResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()

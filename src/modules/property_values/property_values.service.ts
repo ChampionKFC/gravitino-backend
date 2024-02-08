@@ -3,7 +3,7 @@ import { CreatePropertyValueDto, UpdatePropertyValueDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { PropertyValue } from './entities/property_value.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { PropertyValueResponse, StatusPropertValueResponse } from './response'
+import { ArrayPropertyValueResponse, PropertyValueResponse, StatusPropertValueResponse } from './response'
 import { PropertyName } from '../property_names/entities/property_name.entity'
 import { AppStrings } from 'src/common/constants/strings'
 

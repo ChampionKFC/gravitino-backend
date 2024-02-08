@@ -3,7 +3,6 @@ import { PeriodicityService } from './periodicity.service'
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { PeriodicityFilter } from './filters'
-import { Periodicity } from './entities/periodicity.entity'
 import { AppStrings } from 'src/common/constants/strings'
 import { ArrayPeriodicityResponse } from './response'
 

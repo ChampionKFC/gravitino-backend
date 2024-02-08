@@ -32,9 +32,9 @@ export class PropertyNamesController {
     description: AppStrings.PROPERTY_ALL_RESPONSE,
     type: ArrayPropertyNameResponse,
   })
-  @Get('all')
-  findAll() {
-    return this.propertyNamesService.findAll()
+  @Get('all/:entity')
+  findAll(@Param('entity') entity: string) {
+    return this.propertyNamesService.findAll(entity)
   }
 
   // @UseGuards(JwtAuthGuard)

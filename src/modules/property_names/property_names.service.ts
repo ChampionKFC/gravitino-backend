@@ -73,9 +73,9 @@ export class PropertyNamesService {
     }
   }
 
-  async findAll(): Promise<ArrayPropertyNameResponse> {
+  async findAll(entity: string): Promise<ArrayPropertyNameResponse> {
     try {
-      const result = await this.propertyNameRepository.findAll({ include: [PropertyValue] })
+      const result = await this.propertyNameRepository.findAll({ include: [PropertyValue], where: { entity_name: entity } })
       return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)

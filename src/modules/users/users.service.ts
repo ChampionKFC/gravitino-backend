@@ -393,9 +393,8 @@ export class UsersService {
   }
 
   async remove(id: number, user_id: number): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction()
-
       const user = await this.userRepository.findOne({
         where: { user_id: id },
         attributes: { exclude: ['password'] },
@@ -432,6 +431,7 @@ export class UsersService {
         return { status: false }
       }
     } catch (error) {
+      await transaction.rollback()
       throw new Error(error)
     }
   }

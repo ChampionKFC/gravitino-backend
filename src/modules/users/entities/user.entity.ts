@@ -89,7 +89,7 @@ export class User extends Model {
   @HasMany(() => Order, 'completed_by')
   order_completed_by: NonAttribute<Order[]>
 
-  @HasMany(() => TransactionHistory, User.primaryKeyAttribute)
+  @HasMany(() => TransactionHistory, { foreignKey: User.primaryKeyAttribute, onUpdate: AppStrings.CASCADE, onDelete: AppStrings.CASCADE })
   history: NonAttribute<TransactionHistory[]>
 
   @HasMany(() => RolePermission, User.primaryKeyAttribute)

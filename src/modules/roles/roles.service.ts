@@ -3,7 +3,7 @@ import { CreateRoleDto, UpdateRoleDto } from './dto'
 import { Role } from './entities/role.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { RoleResponse, StatusRoleResponse } from './response'
+import { ArrayRoleResponse, StatusRoleResponse } from './response'
 import { RoleFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -34,7 +34,7 @@ export class RolesService {
     }
   }
 
-  async findAll(roleFilter: RoleFilter): Promise<RoleResponse[]> {
+  async findAll(roleFilter: RoleFilter): Promise<ArrayRoleResponse> {
     try {
       const offset_count = roleFilter.offset?.count == undefined ? 50 : roleFilter.offset.count
       const offset_page = roleFilter.offset?.page == undefined ? 1 : roleFilter.offset.page
@@ -48,7 +48,7 @@ export class RolesService {
         sortQuery = generateSortQuery(roleFilter?.sorts)
       }
 
-      const result = this.sequelize.query<Role>(
+      const result = await this.sequelize.query<Role>(
         `
           SELECT * FROM
           (
@@ -70,7 +70,7 @@ export class RolesService {
         },
       )
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

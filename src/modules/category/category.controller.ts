@@ -9,7 +9,7 @@ import { PermissionsGuard } from '../auth/guards/permission.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Category } from './entities/category.entity'
-import { StatusCategoryResponse } from './response'
+import { ArrayCategoryResponse, StatusCategoryResponse } from './response'
 import { CategoryFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -36,8 +36,7 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
     description: AppStrings.CATEGORY_ALL_RESPONSE,
-    type: Category,
-    isArray: true,
+    type: ArrayCategoryResponse,
   })
   @ApiOperation({ summary: AppStrings.CATEGORY_ALL_OPERATION })
   @ApiBody({ required: false, type: CategoryFilter })

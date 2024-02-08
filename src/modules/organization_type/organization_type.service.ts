@@ -3,7 +3,7 @@ import { CreateOrganizationTypeDto, UpdateOrganizationTypeDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { OrganizationType } from './entities/organization_type.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
+import { ArrayOrganizationTypeResponse, OrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
 import { OrganizationTypeFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -27,7 +27,7 @@ export class OrganizationTypeService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `${AppStrings.HISTORY_ORGANIZATION_TYPE_CREATED}${newType.organization_type_id}`,
+        comment: `Создан тип организации #${newType.organization_type_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -37,7 +37,7 @@ export class OrganizationTypeService {
     }
   }
 
-  async findAll(organizationTypeFilter: OrganizationTypeFilter): Promise<OrganizationTypeResponse[]> {
+  async findAll(organizationTypeFilter: OrganizationTypeFilter): Promise<ArrayOrganizationTypeResponse> {
     try {
       const offset_count = organizationTypeFilter.offset?.count == undefined ? 50 : organizationTypeFilter.offset.count
       const offset_page = organizationTypeFilter.offset?.page == undefined ? 1 : organizationTypeFilter.offset.page
@@ -70,7 +70,7 @@ export class OrganizationTypeService {
         },
       )
 
-      return foundTypes
+      return { count: foundTypes.length, data: foundTypes }
     } catch (error) {
       throw new Error(error)
     }

@@ -12,7 +12,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
 import { Op, QueryTypes } from 'sequelize'
-import { StatusUserResponse, UserResponse } from './response'
+import { ArrayUserResponse, StatusUserResponse, UserResponse } from './response'
 import { UserFilter } from './filters'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { OrganizationService } from '../organization/organization.service'
@@ -238,7 +238,7 @@ export class UsersService {
     }
   }
 
-  async findAll(userFilter: UserFilter) {
+  async findAll(userFilter: UserFilter): Promise<ArrayUserResponse> {
     try {
       const offset_count = userFilter.offset?.count == undefined ? 50 : userFilter.offset.count
       const offset_page = userFilter.offset?.page == undefined ? 1 : userFilter.offset.page
@@ -252,7 +252,7 @@ export class UsersService {
         sortQuery = generateSortQuery(userFilter?.sorts)
       }
 
-      const foundUsers = this.sequelize.query<User>(
+      const foundUsers = await this.sequelize.query<User>(
         `
         SELECT *
         FROM (
@@ -299,7 +299,7 @@ export class UsersService {
           type: QueryTypes.SELECT,
         },
       )
-      return foundUsers
+      return { count: foundUsers.length, data: foundUsers }
     } catch (error) {
       throw new Error(error)
     }

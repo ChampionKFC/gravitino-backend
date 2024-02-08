@@ -7,7 +7,7 @@ import { CategoryService } from '../category/category.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Task } from './entities/task.entity'
-import { StatusTaskResponse } from './response'
+import { ArrayTaskResponse, StatusTaskResponse } from './response'
 import { TaskFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
@@ -98,8 +98,7 @@ export class TaskController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_ALL_RESPONSE,
-    type: Task,
-    isArray: true,
+    type: ArrayTaskResponse,
   })
   @ApiOperation({ summary: AppStrings.TASK_ALL_OPERATION })
   @ApiBody({ required: false, type: TaskFilter })

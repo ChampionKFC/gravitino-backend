@@ -3,7 +3,7 @@ import { CreateFileDto, UpdateFileDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { File } from './entities/file.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { FileResponse, StatusFileResponse } from './response'
+import { ArrayFileResponse, FileResponse, StatusFileResponse } from './response'
 import { FileType } from '../file_type/entities/file_type.entity'
 import { Order } from '../order/entities/order.entity'
 import { AppStrings } from 'src/common/constants/strings'
@@ -27,13 +27,13 @@ export class FilesService {
     return { status: true, data: newFile }
   }
 
-  async findAll(): Promise<FileResponse[]> {
+  async findAll(): Promise<ArrayFileResponse> {
     try {
       const result = await this.fileRepository.findAll({
         include: [FileType, Order],
         attributes: { exclude: ['file_type_id', 'order_id'] },
       })
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

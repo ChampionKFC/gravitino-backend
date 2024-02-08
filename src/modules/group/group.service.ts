@@ -3,7 +3,7 @@ import { CreateGroupDto, UpdateGroupDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Group } from './entities/group.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { GroupResponse, StatusGroupResponse } from './response'
+import { ArrayGroupResponse, GroupResponse, StatusGroupResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
@@ -29,10 +29,10 @@ export class GroupService {
     }
   }
 
-  async findAll(): Promise<GroupResponse[]> {
+  async findAll(): Promise<ArrayGroupResponse> {
     try {
       const foundGroups = await this.groupRepository.findAll()
-      return foundGroups
+      return { count: foundGroups.length, data: foundGroups }
     } catch (error) {
       throw new Error(error)
     }

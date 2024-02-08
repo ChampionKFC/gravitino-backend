@@ -1,42 +1,52 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
 
 export class TaskResponse {
   @IsString()
   @ApiProperty()
-  task_id: number;
+  task_id: number
 
   @IsString()
   @ApiProperty()
-  task_name: string;
+  task_name: string
 
   @IsString()
   @ApiProperty({ required: false })
-  task_description?: string;
+  task_description?: string
 
   @IsString()
   @ApiProperty({ default: 1 })
-  category_id: number;
+  category_id: number
 
   @IsString()
   @ApiProperty({ default: 1 })
-  periodicity_id: number;
+  periodicity_id: number
 
   @IsString()
   @ApiProperty()
-  period_start: Date;
+  period_start: Date
 
   @IsString()
   @ApiProperty()
-  period_end: Date;
+  period_end: Date
+}
+
+export class ArrayTaskResponse {
+  @IsInt()
+  @ApiProperty()
+  count: number
+
+  @IsArray()
+  @ApiProperty({ required: false, type: TaskResponse, isArray: true })
+  data: TaskResponse[]
 }
 
 export class StatusTaskResponse {
   @IsBoolean()
   @ApiProperty()
-  status: boolean;
+  status: boolean
 
   @IsOptional()
   @ApiProperty({ required: false })
-  data?: TaskResponse;
+  data?: TaskResponse
 }

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { BranchService } from '../branch/branch.service'
-import { StatusCheckpointResponse } from './response'
+import { ArrayCheckpointResponse, StatusCheckpointResponse } from './response'
 import { Checkpoint } from './entities/checkpoint.entity'
 import { CheckpointFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
@@ -40,8 +40,7 @@ export class CheckpointController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_ALL_RESPONSE,
-    type: Checkpoint,
-    isArray: true,
+    type: ArrayCheckpointResponse,
   })
   @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_RESPONSE })
   @ApiBody({ required: false, type: CheckpointFilter })
@@ -54,8 +53,7 @@ export class CheckpointController {
   @ApiResponse({
     status: 200,
     description: AppStrings.CHECKPOINT_ALL_BY_BRANCH_RESPONSE,
-    type: Checkpoint,
-    isArray: true,
+    type: ArrayCheckpointResponse,
   })
   @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: CheckpointFilter })

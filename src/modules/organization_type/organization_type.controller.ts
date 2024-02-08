@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationType } from './entities/organization_type.entity'
-import { StatusOrganizationTypeResponse } from './response'
+import { ArrayOrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
 import { OrganizationTypeFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -32,8 +32,7 @@ export class OrganizationTypeController {
   @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORGANIZATION_TYPE_ALL_RESPONSE,
-    type: OrganizationType,
-    isArray: true,
+    type: ArrayOrganizationTypeResponse,
   })
   @ApiBody({ required: false, type: OrganizationTypeFilter })
   findAll(@Body() organizationTypeFilter: OrganizationTypeFilter) {
@@ -44,8 +43,7 @@ export class OrganizationTypeController {
   @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORGANIZATION_TYPE_ALL_RESPONSE,
-    type: OrganizationType,
-    isArray: true,
+    type: ArrayOrganizationTypeResponse,
   })
   getAll() {
     return this.organizationTypeService.findAll({})

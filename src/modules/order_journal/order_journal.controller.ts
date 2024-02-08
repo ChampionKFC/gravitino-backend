@@ -3,8 +3,8 @@ import { OrderJournalService } from './order_journal.service'
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { OrderJournal } from './entities/order_journal.entity'
 import { AppStrings } from 'src/common/constants/strings'
+import { ArrayOrderJournalResponse } from './response'
 
 @ApiTags('Order Journal')
 @Controller('order-journal')
@@ -15,8 +15,7 @@ export class OrderJournalController {
 
   @ApiOkResponse({
     description: AppStrings.ORDER_JOURNAL_ALL_RESPONSE,
-    type: OrderJournal,
-    isArray: true,
+    type: ArrayOrderJournalResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_JOURNAL_ALL_OPERATION })
   @UseGuards(JwtAuthGuard)

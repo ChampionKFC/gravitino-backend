@@ -3,7 +3,7 @@ import { CreateFacilityDto, UpdateFacilityDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Facility } from './entities/facility.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { FacilityResponse, StatusFacilityResponse } from './response'
+import { ArrayFacilityResponse, FacilityResponse, StatusFacilityResponse } from './response'
 import { FacilityFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -34,7 +34,7 @@ export class FacilityService {
     }
   }
 
-  async findAll(facilityFilter?: FacilityFilter): Promise<FacilityResponse[]> {
+  async findAll(facilityFilter?: FacilityFilter): Promise<ArrayFacilityResponse> {
     try {
       const offset_count = facilityFilter.offset?.count == undefined ? 50 : facilityFilter.offset.count
       const offset_page = facilityFilter.offset?.page == undefined ? 1 : facilityFilter.offset.page
@@ -48,7 +48,7 @@ export class FacilityService {
         sortQuery = generateSortQuery(facilityFilter?.sorts)
       }
 
-      const result = this.sequelize.query<Facility>(
+      const result = await this.sequelize.query<Facility>(
         `
         SELECT * FROM (
           SELECT
@@ -102,7 +102,7 @@ export class FacilityService {
         },
       )
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -124,7 +124,7 @@ export class FacilityService {
     }
   }
 
-  async findAllByBranch(branch_ids: number[], facilityFilter: FacilityFilter) {
+  async findAllByBranch(branch_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
     try {
       let result = []
 
@@ -138,16 +138,16 @@ export class FacilityService {
         facilityFilter.filter.checkpoint = {
           branch: { branch_id: +id },
         }
-        result = [...result, ...(await this.findAll(facilityFilter))]
+        result = [...result, ...(await this.findAll(facilityFilter)).data]
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findAllByCheckpoint(checkpoint_ids: number[], facilityFilter: FacilityFilter) {
+  async findAllByCheckpoint(checkpoint_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
     try {
       let result = []
 
@@ -159,10 +159,10 @@ export class FacilityService {
         const id = checkpoint_ids[index]
 
         facilityFilter.filter.checkpoint = { checkpoint_id: +id }
-        result = [...result, ...(await this.findAll(facilityFilter))]
+        result = [...result, ...(await this.findAll(facilityFilter)).data]
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

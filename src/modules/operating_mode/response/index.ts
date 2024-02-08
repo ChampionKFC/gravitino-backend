@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
 
 export class OperatingModeResponse {
   @IsInt()
@@ -9,6 +9,16 @@ export class OperatingModeResponse {
   @IsString()
   @ApiProperty()
   operating_mode_name: string
+}
+
+export class ArrayOperatingModeResponse {
+  @IsInt()
+  @ApiProperty()
+  count: number
+
+  @IsArray()
+  @ApiProperty({ required: false, type: OperatingModeResponse, isArray: true })
+  data: OperatingModeResponse[]
 }
 
 export class StatusOperatingModeResponse {

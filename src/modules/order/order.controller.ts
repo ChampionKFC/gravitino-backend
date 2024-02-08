@@ -12,7 +12,7 @@ import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { Order } from './entities/order.entity'
-import { StatusOrderResponse } from './response'
+import { ArrayOrderResponse, StatusOrderResponse } from './response'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { FacilityService } from '../facility/facility.service'
@@ -105,8 +105,7 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_RESPONSE,
-    type: Order,
-    isArray: true,
+    type: ArrayOrderResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_ALL_OPERATION })
   @ApiBody({ required: false, type: OrderFilter })
@@ -119,10 +118,10 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_BY_BRANCH_RESPONSE,
-    type: Order,
-    isArray: true,
+    type: ArrayOrderResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_ALL_BY_BRANCH_OPERATION })
+  @ApiBody({ required: false, type: OrderFilter })
   @Post('all-by-branch')
   async findAllByBranch(@Query('branch_ids') branch_ids: number[], @Body() orderFilter: OrderFilter) {
     for (let index = 0; index < branch_ids.length; index++) {
@@ -141,10 +140,10 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_BY_CHECKPOINT_RESPONSE,
-    type: Order,
-    isArray: true,
+    type: ArrayOrderResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_ALL_BY_CHECKPOINT_OPERATION })
+  @ApiBody({ required: false, type: OrderFilter })
   @Post('all-by-checkpoint')
   async findAllByCheckpoint(@Query('checkpoint_ids') checkpoint_ids: number[], @Body() orderFilter: OrderFilter) {
     for (let index = 0; index < checkpoint_ids.length; index++) {
@@ -164,8 +163,7 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_MY_RESPONSE,
-    type: Order,
-    isArray: true,
+    type: ArrayOrderResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_ALL_MY_OPERATION })
   @Post('my')

@@ -5,9 +5,8 @@ import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags
 import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { Group } from './entities/group.entity'
 import { BranchService } from '../branch/branch.service'
-import { StatusGroupResponse } from './response'
+import { ArrayGroupResponse, StatusGroupResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
@@ -42,8 +41,7 @@ export class GroupController {
   @ApiOperation({ summary: AppStrings.GROUP_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.GROUP_ALL_RESPONSE,
-    type: Group,
-    isArray: true,
+    type: ArrayGroupResponse,
   })
   @Get('all')
   findAll() {

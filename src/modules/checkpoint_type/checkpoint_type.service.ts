@@ -3,7 +3,7 @@ import { CreateCheckpointTypeDto, UpdateCheckpointTypeDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { CheckpointType } from './entities/checkpoint_type.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { CheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
+import { ArrayCheckpointTypeResponse, CheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
 import { CheckpointTypeFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -37,7 +37,7 @@ export class CheckpointTypeService {
     }
   }
 
-  async findAll(checkpointTypeFilter?: CheckpointTypeFilter): Promise<CheckpointTypeResponse[]> {
+  async findAll(checkpointTypeFilter?: CheckpointTypeFilter): Promise<ArrayCheckpointTypeResponse> {
     try {
       const offset_count = checkpointTypeFilter.offset?.count == undefined ? 50 : checkpointTypeFilter.offset.count
       const offset_page = checkpointTypeFilter.offset?.page == undefined ? 1 : checkpointTypeFilter.offset.page
@@ -70,7 +70,7 @@ export class CheckpointTypeService {
         },
       )
 
-      return foundCheckpointTypes
+      return { count: foundCheckpointTypes.length, data: foundCheckpointTypes }
     } catch (error) {
       throw new Error(error)
     }

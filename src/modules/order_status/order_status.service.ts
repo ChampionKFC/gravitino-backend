@@ -3,7 +3,7 @@ import { CreateOrderStatusDto, UpdateOrderStatusDto } from './dto'
 import { OrderStatus } from './entities/order_status.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OrderStatusResponse, StatusOrderStatusResponse } from './response'
+import { ArrayOrderStatusResponse, OrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { OrderStatusFilter } from './filters'
 import { QueryTypes } from 'sequelize'
@@ -36,7 +36,7 @@ export class OrderStatusService {
     }
   }
 
-  async findAll(orderStatusFilter: OrderStatusFilter): Promise<OrderStatusResponse[]> {
+  async findAll(orderStatusFilter: OrderStatusFilter): Promise<ArrayOrderStatusResponse> {
     try {
       const offset_count = orderStatusFilter.offset?.count == undefined ? 50 : orderStatusFilter.offset.count
       const offset_page = orderStatusFilter.offset?.page == undefined ? 1 : orderStatusFilter.offset.page
@@ -69,7 +69,7 @@ export class OrderStatusService {
         },
       )
 
-      return foundStatuses
+      return { count: foundStatuses.length, data: foundStatuses }
     } catch (error) {
       throw new Error(error)
     }

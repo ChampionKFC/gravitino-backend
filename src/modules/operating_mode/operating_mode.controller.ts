@@ -3,9 +3,8 @@ import { OperatingModeService } from './operating_mode.service'
 import { CreateOperatingModeDto, UpdateOperatingModeDto } from './dto'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { StatusOperatingModeResponse } from './response'
+import { ArrayOperatingModeResponse, StatusOperatingModeResponse } from './response'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { OperatingMode } from './entities/operating_mode.entity'
 import { AppError } from 'src/common/constants/error'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -29,8 +28,7 @@ export class OperatingModeController {
 
   @ApiOkResponse({
     description: AppStrings.OPERATING_MODE_ALL_RESPONSE,
-    type: OperatingMode,
-    isArray: true,
+    type: ArrayOperatingModeResponse,
   })
   @ApiOperation({ summary: AppStrings.OPERATING_MODE_ALL_OPERATION })
   @UseGuards(JwtAuthGuard)

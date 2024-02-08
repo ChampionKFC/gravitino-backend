@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrderPriority } from './entities/priority.entity'
-import { OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
+import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
 import { OrderPriorityFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -32,8 +32,7 @@ export class PriorityController {
   @ApiOperation({ summary: AppStrings.PRIORITY_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PRIORITY_ALL_RESPONSE,
-    type: OrderPriority,
-    isArray: true,
+    type: ArrayOrderPriorityResponse,
   })
   @ApiBody({ required: false, type: OrderPriorityFilter })
   findAll(@Body() orderPriorityFilter: OrderPriorityFilter) {
@@ -44,8 +43,7 @@ export class PriorityController {
   @ApiOperation({ summary: AppStrings.PRIORITY_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PRIORITY_ALL_RESPONSE,
-    type: OrderPriority,
-    isArray: true,
+    type: ArrayOrderPriorityResponse,
   })
   getAll() {
     return this.priorityService.findAll({})

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrderStatus } from './entities/order_status.entity'
-import { StatusOrderStatusResponse } from './response'
+import { ArrayOrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { OrderStatusFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -31,8 +31,7 @@ export class OrderStatusController {
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORDER_STATUS_ALL_RESPONSE,
-    type: OrderStatus,
-    isArray: true,
+    type: ArrayOrderStatusResponse,
   })
   @ApiBody({ required: false, type: OrderStatusFilter })
   @Post('all')

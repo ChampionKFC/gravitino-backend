@@ -3,7 +3,7 @@ import { CreatePropertyNameDto, UpdatePropertyNameDto } from './dto'
 import { PropertyName } from './entities/property_name.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { StatusPropertyNameResponse } from './response'
+import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
@@ -32,10 +32,10 @@ export class PropertyNamesService {
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<ArrayPropertyNameResponse> {
     try {
       const result = await this.propertyNameRepository.findAll()
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

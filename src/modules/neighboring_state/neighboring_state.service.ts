@@ -4,7 +4,7 @@ import { NeighboringState } from './entities/neighboring_state.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { NeighboringStateResponse, StatusNeighboringStateResponse } from './response'
+import { ArrayNeighboringStateResponse, StatusNeighboringStateResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
@@ -34,11 +34,11 @@ export class NeighboringStateService {
     }
   }
 
-  async findAll(): Promise<NeighboringStateResponse[]> {
+  async findAll(): Promise<ArrayNeighboringStateResponse> {
     try {
       const foundNeighboringStates = await this.neighboringStateRepository.findAll()
 
-      return foundNeighboringStates
+      return { count: foundNeighboringStates.length, data: foundNeighboringStates }
     } catch (error) {
       throw new Error(error)
     }

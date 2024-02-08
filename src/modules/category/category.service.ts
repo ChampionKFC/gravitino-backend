@@ -3,7 +3,7 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Category } from './entities/category.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { CategoryResponse, StatusCategoryResponse } from './response'
+import { ArrayCategoryResponse, CategoryResponse, StatusCategoryResponse } from './response'
 import { CategoryFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -34,7 +34,7 @@ export class CategoryService {
     }
   }
 
-  async findAll(categoryFilter?: CategoryFilter): Promise<CategoryResponse[]> {
+  async findAll(categoryFilter?: CategoryFilter): Promise<ArrayCategoryResponse> {
     try {
       const offset_count = categoryFilter.offset?.count == undefined ? 50 : categoryFilter.offset.count
       const offset_page = categoryFilter.offset?.page == undefined ? 1 : categoryFilter.offset.page
@@ -67,7 +67,7 @@ export class CategoryService {
         },
       )
 
-      return foundCategories
+      return { count: foundCategories.length, data: foundCategories }
     } catch (error) {
       throw new Error(error)
     }

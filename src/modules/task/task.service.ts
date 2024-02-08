@@ -3,7 +3,7 @@ import { CreateTaskDto, UpdateTaskDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Task } from './entities/task.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { StatusTaskResponse, TaskResponse } from './response'
+import { ArrayTaskResponse, StatusTaskResponse, TaskResponse } from './response'
 import { TaskFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -64,7 +64,7 @@ export class TaskService {
         } else if (task.checkpoint_ids && task.checkpoint_ids.length > 0) {
           const facilities = await this.facilityService.findAllByCheckpoint(task.checkpoint_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
+          for (let index = 0; index < facilities.count; index++) {
             const facility_id = facilities[index].facility_id
 
             for (let index = 0; index < dates.length; index++) {
@@ -83,7 +83,7 @@ export class TaskService {
         } else {
           const facilities = await this.facilityService.findAllByBranch(task.branch_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
+          for (let index = 0; index < facilities.count; index++) {
             const facility_id = facilities[index].facility_id
 
             for (let index = 0; index < dates.length; index++) {
@@ -116,7 +116,7 @@ export class TaskService {
     }
   }
 
-  async findAll(taskFilter: TaskFilter): Promise<TaskResponse[]> {
+  async findAll(taskFilter: TaskFilter): Promise<ArrayTaskResponse> {
     try {
       const offset_count = taskFilter.offset?.count == undefined ? 50 : taskFilter.offset.count
       const offset_page = taskFilter.offset?.page == undefined ? 1 : taskFilter.offset.page
@@ -160,7 +160,7 @@ export class TaskService {
         },
       )
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

@@ -21,7 +21,7 @@ import { OrganizationService } from '../organization/organization.service'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Branch } from './entities/branch.entity'
-import { StatusBranchResponse } from './response'
+import { ArrayBranchResponse, StatusBranchResponse } from './response'
 import { BranchFilter } from './filters'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AppStrings } from 'src/common/constants/strings'
@@ -50,8 +50,7 @@ export class BranchController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_ALL_RESPONSE,
-    type: Branch,
-    isArray: true,
+    type: ArrayBranchResponse,
   })
   @ApiOperation({ summary: AppStrings.BRANCH_ALL_OPERATION })
   @ApiBody({ required: false, type: BranchFilter })

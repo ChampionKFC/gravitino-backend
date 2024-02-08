@@ -3,7 +3,7 @@ import { CreatePriorityDto, UpdatePriorityDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { OrderPriority } from './entities/priority.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
+import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
 import { OrderPriorityFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -37,7 +37,7 @@ export class PriorityService {
     }
   }
 
-  async findAll(orderPriorityFilter: OrderPriorityFilter): Promise<OrderPriorityResponse[]> {
+  async findAll(orderPriorityFilter: OrderPriorityFilter): Promise<ArrayOrderPriorityResponse> {
     try {
       const offset_count = orderPriorityFilter.offset?.count == undefined ? 50 : orderPriorityFilter.offset.count
       const offset_page = orderPriorityFilter.offset?.page == undefined ? 1 : orderPriorityFilter.offset.page
@@ -70,7 +70,7 @@ export class PriorityService {
         },
       )
 
-      return foundPriorities
+      return { count: foundPriorities.length, data: foundPriorities }
     } catch (error) {
       throw new Error(error)
     }

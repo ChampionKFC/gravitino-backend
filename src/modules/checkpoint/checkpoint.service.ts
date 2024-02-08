@@ -3,7 +3,7 @@ import { CreateCheckpointDto, UpdateCheckpointDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Checkpoint } from './entities/checkpoint.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { CheckpointResponse, StatusCheckpointResponse } from './response'
+import { ArrayCheckpointResponse, CheckpointResponse, StatusCheckpointResponse } from './response'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { CheckpointFilter } from './filters'
 import { QueryTypes } from 'sequelize'
@@ -32,7 +32,7 @@ export class CheckpointService {
     return { status: true, data: newCheckpoint }
   }
 
-  async findAll(checkpointFilter?: CheckpointFilter): Promise<CheckpointResponse[]> {
+  async findAll(checkpointFilter?: CheckpointFilter): Promise<ArrayCheckpointResponse> {
     try {
       const offset_count = checkpointFilter.offset?.count == undefined ? 50 : checkpointFilter.offset.count
       const offset_page = checkpointFilter.offset?.page == undefined ? 1 : checkpointFilter.offset.page
@@ -46,7 +46,7 @@ export class CheckpointService {
         sortQuery = generateSortQuery(checkpointFilter?.sorts)
       }
 
-      const result = this.sequelize.query<Checkpoint>(
+      const result = await this.sequelize.query<Checkpoint>(
         `
         SELECT * FROM (
           SELECT
@@ -85,7 +85,7 @@ export class CheckpointService {
         },
       )
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -107,7 +107,7 @@ export class CheckpointService {
     }
   }
 
-  async findAllByBranch(branch_ids: number[], checkpointFilter?: CheckpointFilter) {
+  async findAllByBranch(branch_ids: number[], checkpointFilter?: CheckpointFilter): Promise<ArrayCheckpointResponse> {
     try {
       let result = []
 
@@ -121,10 +121,10 @@ export class CheckpointService {
         checkpointFilter.filter.branch = {
           branch_id: +id,
         }
-        result = [...result, ...(await this.findAll(checkpointFilter))]
+        result = [...result, ...(await this.findAll(checkpointFilter)).data]
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

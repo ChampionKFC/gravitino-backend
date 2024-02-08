@@ -4,7 +4,7 @@ import { OperatingMode } from './entities/operating_mode.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OperatingModeResponse, StatusOperatingModeResponse } from './response'
+import { ArrayOperatingModeResponse, StatusOperatingModeResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
@@ -34,11 +34,11 @@ export class OperatingModeService {
     }
   }
 
-  async findAll(): Promise<OperatingModeResponse[]> {
+  async findAll(): Promise<ArrayOperatingModeResponse> {
     try {
       const foundOperatingModes = await this.operatingModeRepository.findAll()
 
-      return foundOperatingModes
+      return { count: foundOperatingModes.length, data: foundOperatingModes }
     } catch (error) {
       throw new Error(error)
     }

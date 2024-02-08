@@ -10,7 +10,7 @@ import { GroupService } from '../group/group.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { UserFilter } from './filters'
-import { StatusUserResponse } from './response'
+import { ArrayUserResponse, StatusUserResponse } from './response'
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -100,8 +100,7 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: AppStrings.USER_ALL_RESPONSE,
-    type: User,
-    isArray: true,
+    type: ArrayUserResponse,
   })
   @ApiBody({ required: false, type: UserFilter })
   findAll(@Body() userFilter: UserFilter) {

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { AppError } from 'src/common/constants/error'
 import { Facility } from './entities/facility.entity'
-import { StatusFacilityResponse } from './response'
+import { ArrayFacilityResponse, StatusFacilityResponse } from './response'
 import { FacilityFilter } from './filters'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationService } from '../organization/organization.service'
@@ -49,8 +49,7 @@ export class FacilityController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_ALL_RESPONSE,
-    type: Facility,
-    isArray: true,
+    type: ArrayFacilityResponse,
   })
   @ApiOperation({ summary: AppStrings.FACILITY_ALL_OPERATION })
   @ApiBody({ required: false, type: FacilityFilter })
@@ -63,8 +62,7 @@ export class FacilityController {
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_BRANCH_RESPONSE,
-    type: Facility,
-    isArray: true,
+    type: ArrayFacilityResponse,
   })
   @ApiOperation({ summary: AppStrings.FACILITY_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: FacilityFilter })

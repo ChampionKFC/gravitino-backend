@@ -3,7 +3,7 @@ import { CreateBranchDto, UpdateBranchDto } from './dto'
 import { Branch } from './entities/branch.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { BranchResponse, StatusBranchResponse } from './response'
+import { ArrayBranchResponse, BranchResponse, StatusBranchResponse } from './response'
 import { BranchFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { QueryTypes } from 'sequelize'
@@ -32,7 +32,7 @@ export class BranchService {
     return { status: true, data: newBranch }
   }
 
-  async findAll(branchFilter?: BranchFilter): Promise<BranchResponse[]> {
+  async findAll(branchFilter?: BranchFilter): Promise<ArrayBranchResponse> {
     try {
       const offset_count = branchFilter.offset?.count == undefined ? 50 : branchFilter.offset.count
       const offset_page = branchFilter.offset?.page == undefined ? 1 : branchFilter.offset.page
@@ -65,7 +65,7 @@ export class BranchService {
           type: QueryTypes.SELECT,
         },
       )
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

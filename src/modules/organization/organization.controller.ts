@@ -3,8 +3,8 @@ import { OrganizationService } from './organization.service'
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { Organization } from './entities/organization.entity'
 import { OrganizationFilter } from './filters'
+import { ArrayOrganizationResponse } from './response'
 
 @ApiBearerAuth()
 @ApiTags('Organization')
@@ -39,8 +39,7 @@ export class OrganizationController {
   @ApiOperation({ summary: 'Список всех организаций' })
   @ApiOkResponse({
     description: 'Список организаций',
-    type: Organization,
-    isArray: true,
+    type: ArrayOrganizationResponse,
   })
   @ApiBody({ required: false, type: OrganizationFilter })
   findAll(@Body() organizationFilter: OrganizationFilter) {
@@ -52,8 +51,7 @@ export class OrganizationController {
   @ApiOperation({ summary: 'Список всех организаций по пункту пропуска' })
   @ApiOkResponse({
     description: 'Список организаций по пункту пропуска',
-    type: Organization,
-    isArray: true,
+    type: ArrayOrganizationResponse,
   })
   findAllByCheckpoint(@Param('checkpoint_id') checkpoint_id: number) {
     return this.organizationService.findAllByCheckpoint(checkpoint_id)

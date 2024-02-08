@@ -3,9 +3,8 @@ import { NeighboringStateService } from './neighboring_state.service'
 import { CreateNeighboringStateDto, UpdateNeighboringStateDto } from './dto'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { StatusNeighboringStateResponse } from './response'
+import { ArrayNeighboringStateResponse, StatusNeighboringStateResponse } from './response'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { NeighboringState } from './entities/neighboring_state.entity'
 import { AppError } from 'src/common/constants/error'
 
 @ApiTags('Neighboring State')
@@ -28,8 +27,7 @@ export class NeighboringStateController {
 
   @ApiOkResponse({
     description: 'Список приграничных государств',
-    type: NeighboringState,
-    isArray: true,
+    type: ArrayNeighboringStateResponse,
   })
   @ApiOperation({ summary: 'Получение списка приграничных государств' })
   @UseGuards(JwtAuthGuard)

@@ -1,11 +1,10 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseFilters, UseGuards, Req, HttpException, HttpStatus } from '@nestjs/common'
 import { WorkingHoursService } from './working_hours.service'
 import { CreateWorkingHourDto, UpdateWorkingHourDto } from './dto'
-import { StatusWorkingHoursResponse } from './response'
+import { ArrayWorkingHoursResponse, StatusWorkingHoursResponse } from './response'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { WorkingHours } from './entities/working_hour.entity'
 import { AppError } from 'src/common/constants/error'
 
 @ApiTags('Working Hours')
@@ -28,8 +27,7 @@ export class WorkingHoursController {
 
   @ApiOkResponse({
     description: 'Список часов работы',
-    type: WorkingHours,
-    isArray: true,
+    type: ArrayWorkingHoursResponse,
   })
   @ApiOperation({ summary: 'Получение списка часов работы' })
   @UseGuards(JwtAuthGuard)

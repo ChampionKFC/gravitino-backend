@@ -3,7 +3,7 @@ import { CreateOrganizationDto, UpdateOrganizationDto } from './dto'
 import { Organization } from './entities/organization.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OrganizationResponse, StatusOrganizationResponse } from './response'
+import { ArrayOrganizationResponse, OrganizationResponse, StatusOrganizationResponse } from './response'
 import { OrganizationFilter } from './filters'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { Op, QueryTypes } from 'sequelize'
@@ -39,7 +39,7 @@ export class OrganizationService {
     }
   }
 
-  async findAll(organizationFilter: OrganizationFilter): Promise<OrganizationResponse[]> {
+  async findAll(organizationFilter: OrganizationFilter): Promise<ArrayOrganizationResponse> {
     try {
       const offset_count = organizationFilter.offset?.count == undefined ? 50 : organizationFilter.offset.count
       const offset_page = organizationFilter.offset?.page == undefined ? 1 : organizationFilter.offset.page
@@ -53,7 +53,7 @@ export class OrganizationService {
         sortQuery = generateSortQuery(organizationFilter?.sorts)
       }
 
-      const result = this.sequelize.query<Organization>(
+      const result = await this.sequelize.query<Organization>(
         `
         SELECT * FROM (
           SELECT 
@@ -82,13 +82,13 @@ export class OrganizationService {
         },
       )
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findAllByCheckpoint(checkpoint_id: number): Promise<OrganizationResponse[]> {
+  async findAllByCheckpoint(checkpoint_id: number): Promise<ArrayOrganizationResponse> {
     try {
       const result = await this.organizationRepository.findAll({
         include: [
@@ -97,7 +97,7 @@ export class OrganizationService {
         ],
       })
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

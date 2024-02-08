@@ -1,15 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { PeriodicityService } from './periodicity.service';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/auth.guard';
-import { PeriodicityFilter } from './filters';
-import { Periodicity } from './entities/periodicity.entity';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
+import { PeriodicityService } from './periodicity.service'
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
+import { JwtAuthGuard } from '../auth/guards/auth.guard'
+import { PeriodicityFilter } from './filters'
+import { ArrayPeriodicityResponse } from './response'
 
 @ApiBearerAuth()
 @Controller('periodicity')
@@ -20,25 +14,23 @@ export class PeriodicityController {
   @ApiOperation({ summary: 'Список всех периодичностей задач' })
   @ApiOkResponse({
     description: 'Список периодичностей задач',
-    type: Periodicity,
-    isArray: true,
+    type: ArrayPeriodicityResponse,
   })
   @UseGuards(JwtAuthGuard)
   @ApiBody({ required: false, type: PeriodicityFilter })
   @Post('all')
   findAll(@Body() periodicityFilter: PeriodicityFilter) {
-    return this.periodicityService.findAll(periodicityFilter);
+    return this.periodicityService.findAll(periodicityFilter)
   }
 
   @ApiOperation({ summary: 'Список всех периодичностей задач' })
   @ApiOkResponse({
     description: 'Список периодичностей задач',
-    type: Periodicity,
-    isArray: true,
+    type: ArrayPeriodicityResponse,
   })
   @UseGuards(JwtAuthGuard)
   @Get('all')
   getAll() {
-    return this.periodicityService.findAll({});
+    return this.periodicityService.findAll({})
   }
 }

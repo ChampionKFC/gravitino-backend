@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { CreateOrderStatusDto, UpdateOrderStatusDto } from './dto';
-import { OrderStatus } from './entities/order_status.entity';
-import { InjectModel } from '@nestjs/sequelize';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { OrderStatusResponse, StatusOrderStatusResponse } from './response';
-import { Sequelize } from 'sequelize-typescript';
-import { OrderStatusFilter } from './filters';
-import { QueryTypes } from 'sequelize';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
+import { Injectable } from '@nestjs/common'
+import { CreateOrderStatusDto, UpdateOrderStatusDto } from './dto'
+import { OrderStatus } from './entities/order_status.entity'
+import { InjectModel } from '@nestjs/sequelize'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { ArrayOrderStatusResponse, OrderStatusResponse, StatusOrderStatusResponse } from './response'
+import { Sequelize } from 'sequelize-typescript'
+import { OrderStatusFilter } from './filters'
+import { QueryTypes } from 'sequelize'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 
 @Injectable()
 export class OrderStatusService {
@@ -20,47 +17,36 @@ export class OrderStatusService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(
-    orderStatus: CreateOrderStatusDto,
-    user_id: number,
-  ): Promise<StatusOrderStatusResponse> {
+  async create(orderStatus: CreateOrderStatusDto, user_id: number): Promise<StatusOrderStatusResponse> {
     try {
       const newOrderStatus = await this.orderStatusRepository.create({
         ...orderStatus,
-      });
+      })
 
       const historyDto = {
         user_id: user_id,
         comment: `Создан статус заказа #${newOrderStatus.order_status_id}`,
-      };
-      await this.historyService.create(historyDto);
+      }
+      await this.historyService.create(historyDto)
 
-      return { status: true, data: newOrderStatus };
+      return { status: true, data: newOrderStatus }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async findAll(
-    orderStatusFilter: OrderStatusFilter,
-  ): Promise<OrderStatusResponse[]> {
+  async findAll(orderStatusFilter: OrderStatusFilter): Promise<ArrayOrderStatusResponse> {
     try {
-      const offset_count =
-        orderStatusFilter.offset?.count == undefined
-          ? 50
-          : orderStatusFilter.offset.count;
-      const offset_page =
-        orderStatusFilter.offset?.page == undefined
-          ? 1
-          : orderStatusFilter.offset.page;
+      const offset_count = orderStatusFilter.offset?.count == undefined ? 50 : orderStatusFilter.offset.count
+      const offset_page = orderStatusFilter.offset?.page == undefined ? 1 : orderStatusFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (orderStatusFilter?.filter) {
-        whereQuery = generateWhereQuery(orderStatusFilter?.filter);
+        whereQuery = generateWhereQuery(orderStatusFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (orderStatusFilter?.sorts) {
-        sortQuery = generateSortQuery(orderStatusFilter?.sorts);
+        sortQuery = generateSortQuery(orderStatusFilter?.sorts)
       }
 
       const foundStatuses = await this.sequelize.query<OrderStatus>(
@@ -80,11 +66,11 @@ export class OrderStatusService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return foundStatuses;
+      return { count: foundStatuses.length, data: foundStatuses }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -92,68 +78,59 @@ export class OrderStatusService {
     try {
       const result = await this.orderStatusRepository.findOne({
         where: { order_status_id },
-      });
+      })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async update(
-    updatedOrderStatus: UpdateOrderStatusDto,
-    user_id: number,
-  ): Promise<OrderStatusResponse> {
+  async update(updatedOrderStatus: UpdateOrderStatusDto, user_id: number): Promise<OrderStatusResponse> {
     try {
-      await this.orderStatusRepository.update(
-        { ...updatedOrderStatus },
-        { where: { order_status_id: updatedOrderStatus.order_status_id } },
-      );
+      await this.orderStatusRepository.update({ ...updatedOrderStatus }, { where: { order_status_id: updatedOrderStatus.order_status_id } })
 
       const foundOrderStatus = await this.orderStatusRepository.findOne({
         where: { order_status_id: updatedOrderStatus.order_status_id },
-      });
+      })
 
       if (foundOrderStatus) {
         const historyDto = {
           user_id: user_id,
           comment: `Изменен статус заказа #${foundOrderStatus.order_status_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
       }
 
-      return foundOrderStatus;
+      return foundOrderStatus
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async remove(
-    order_status_id: number,
-    user_id: number,
-  ): Promise<StatusOrderStatusResponse> {
+  async remove(order_status_id: number, user_id: number): Promise<StatusOrderStatusResponse> {
     try {
       const deleteOrderStatus = await this.orderStatusRepository.destroy({
         where: { order_status_id },
-      });
+      })
 
       if (deleteOrderStatus) {
         const historyDto = {
           user_id: user_id,
           comment: `Удален статус заказа #${order_status_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
 
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

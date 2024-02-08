@@ -10,7 +10,7 @@ import { GroupService } from '../group/group.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { UserFilter } from './filters'
-import { StatusUserResponse } from './response'
+import { ArrayUserResponse, StatusUserResponse } from './response'
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
 
 @ApiBearerAuth()
@@ -108,8 +108,7 @@ export class UsersController {
   @ApiResponse({
     status: 200,
     description: 'Список всех пользователей',
-    type: User,
-    isArray: true,
+    type: ArrayUserResponse,
   })
   @ApiBody({ required: false, type: UserFilter })
   findAll(@Body() userFilter: UserFilter) {

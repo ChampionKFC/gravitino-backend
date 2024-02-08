@@ -1,14 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { Periodicity } from './entities/periodicity.entity';
-import { PeriodicityResponse } from './response';
-import { PeriodicityFilter } from './filters';
-import { Sequelize } from 'sequelize-typescript';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
-import { QueryTypes } from 'sequelize';
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+import { Periodicity } from './entities/periodicity.entity'
+import { ArrayPeriodicityResponse } from './response'
+import { PeriodicityFilter } from './filters'
+import { Sequelize } from 'sequelize-typescript'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import { QueryTypes } from 'sequelize'
 
 @Injectable()
 export class PeriodicityService {
@@ -17,26 +14,18 @@ export class PeriodicityService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async findAll(
-    periodicityFilter: PeriodicityFilter,
-  ): Promise<PeriodicityResponse[]> {
+  async findAll(periodicityFilter: PeriodicityFilter): Promise<ArrayPeriodicityResponse> {
     try {
-      const offset_count =
-        periodicityFilter.offset?.count == undefined
-          ? 50
-          : periodicityFilter.offset.count;
-      const offset_page =
-        periodicityFilter.offset?.page == undefined
-          ? 1
-          : periodicityFilter.offset.page;
+      const offset_count = periodicityFilter.offset?.count == undefined ? 50 : periodicityFilter.offset.count
+      const offset_page = periodicityFilter.offset?.page == undefined ? 1 : periodicityFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (periodicityFilter?.filter) {
-        whereQuery = generateWhereQuery(periodicityFilter?.filter);
+        whereQuery = generateWhereQuery(periodicityFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (periodicityFilter?.sorts) {
-        sortQuery = generateSortQuery(periodicityFilter?.sorts);
+        sortQuery = generateSortQuery(periodicityFilter?.sorts)
       }
 
       const foundPeriodicity = await this.sequelize.query<Periodicity>(
@@ -56,11 +45,11 @@ export class PeriodicityService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return foundPeriodicity;
+      return { count: foundPeriodicity.length, data: foundPeriodicity }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

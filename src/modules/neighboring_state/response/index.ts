@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
 
 export class NeighboringStateResponse {
   @IsInt()
@@ -9,6 +9,16 @@ export class NeighboringStateResponse {
   @IsString()
   @ApiProperty()
   neighboring_state_name: string
+}
+
+export class ArrayNeighboringStateResponse {
+  @IsInt()
+  @ApiProperty()
+  count: number
+
+  @IsArray()
+  @ApiProperty({ required: false, type: NeighboringStateResponse, isArray: true })
+  data: NeighboringStateResponse[]
 }
 
 export class StatusNeighboringStateResponse {

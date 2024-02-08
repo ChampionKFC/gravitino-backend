@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePriorityDto, UpdatePriorityDto } from './dto';
-import { InjectModel } from '@nestjs/sequelize';
-import { OrderPriority } from './entities/priority.entity';
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service';
-import { OrderPriorityResponse, StatusOrderPriorityResponse } from './response';
-import { OrderPriorityFilter } from './filters';
-import { Sequelize } from 'sequelize-typescript';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
-import { QueryTypes } from 'sequelize';
+import { Injectable } from '@nestjs/common'
+import { CreatePriorityDto, UpdatePriorityDto } from './dto'
+import { InjectModel } from '@nestjs/sequelize'
+import { OrderPriority } from './entities/priority.entity'
+import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
+import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
+import { OrderPriorityFilter } from './filters'
+import { Sequelize } from 'sequelize-typescript'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import { QueryTypes } from 'sequelize'
 
 @Injectable()
 export class PriorityService {
@@ -21,47 +18,36 @@ export class PriorityService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(
-    createPriorityDto: CreatePriorityDto,
-    user_id: number,
-  ): Promise<StatusOrderPriorityResponse> {
+  async create(createPriorityDto: CreatePriorityDto, user_id: number): Promise<StatusOrderPriorityResponse> {
     try {
       const newPriority = await this.orderPriorityRepository.create({
         ...createPriorityDto,
-      });
+      })
 
       const historyDto = {
         user_id: user_id,
         comment: `Создан приоритет #${newPriority.priority_id}`,
-      };
-      await this.historyService.create(historyDto);
+      }
+      await this.historyService.create(historyDto)
 
-      return { status: true, data: newPriority };
+      return { status: true, data: newPriority }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async findAll(
-    orderPriorityFilter: OrderPriorityFilter,
-  ): Promise<OrderPriorityResponse[]> {
+  async findAll(orderPriorityFilter: OrderPriorityFilter): Promise<ArrayOrderPriorityResponse> {
     try {
-      const offset_count =
-        orderPriorityFilter.offset?.count == undefined
-          ? 50
-          : orderPriorityFilter.offset.count;
-      const offset_page =
-        orderPriorityFilter.offset?.page == undefined
-          ? 1
-          : orderPriorityFilter.offset.page;
+      const offset_count = orderPriorityFilter.offset?.count == undefined ? 50 : orderPriorityFilter.offset.count
+      const offset_page = orderPriorityFilter.offset?.page == undefined ? 1 : orderPriorityFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (orderPriorityFilter?.filter) {
-        whereQuery = generateWhereQuery(orderPriorityFilter?.filter);
+        whereQuery = generateWhereQuery(orderPriorityFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (orderPriorityFilter?.sorts) {
-        sortQuery = generateSortQuery(orderPriorityFilter?.sorts);
+        sortQuery = generateSortQuery(orderPriorityFilter?.sorts)
       }
 
       const foundPriorities = await this.sequelize.query<OrderPriority>(
@@ -81,11 +67,11 @@ export class PriorityService {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return foundPriorities;
+      return { count: foundPriorities.length, data: foundPriorities }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -93,69 +79,60 @@ export class PriorityService {
     try {
       const result = await this.orderPriorityRepository.findOne({
         where: { priority_id: id },
-      });
+      })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async update(
-    updatePriorityDto: UpdatePriorityDto,
-    user_id: number,
-  ): Promise<OrderPriorityResponse> {
+  async update(updatePriorityDto: UpdatePriorityDto, user_id: number): Promise<OrderPriorityResponse> {
     try {
-      let foundPriority = null;
-      await this.orderPriorityRepository.update(
-        { ...updatePriorityDto },
-        { where: { priority_id: updatePriorityDto.priority_id } },
-      );
+      let foundPriority = null
+      await this.orderPriorityRepository.update({ ...updatePriorityDto }, { where: { priority_id: updatePriorityDto.priority_id } })
 
       foundPriority = await this.orderPriorityRepository.findOne({
         where: { priority_id: updatePriorityDto.priority_id },
-      });
+      })
 
       if (foundPriority) {
         const historyDto = {
           user_id: user_id,
           comment: `Изменен приоритет #${foundPriority.priority_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
       }
 
-      return foundPriority;
+      return foundPriority
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async remove(
-    priority_id: number,
-    user_id: number,
-  ): Promise<StatusOrderPriorityResponse> {
+  async remove(priority_id: number, user_id: number): Promise<StatusOrderPriorityResponse> {
     try {
       const deletePriority = await this.orderPriorityRepository.destroy({
         where: { priority_id },
-      });
+      })
 
       if (deletePriority) {
         const historyDto = {
           user_id: user_id,
           comment: `Удален приоритет #${priority_id}`,
-        };
-        await this.historyService.create(historyDto);
+        }
+        await this.historyService.create(historyDto)
 
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

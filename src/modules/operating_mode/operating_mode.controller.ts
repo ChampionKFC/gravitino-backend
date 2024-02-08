@@ -3,9 +3,8 @@ import { OperatingModeService } from './operating_mode.service'
 import { CreateOperatingModeDto, UpdateOperatingModeDto } from './dto'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { StatusOperatingModeResponse } from './response'
+import { ArrayOperatingModeResponse, StatusOperatingModeResponse } from './response'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { OperatingMode } from './entities/operating_mode.entity'
 import { AppError } from 'src/common/constants/error'
 
 @ApiTags('Operating Mode')
@@ -28,19 +27,13 @@ export class OperatingModeController {
 
   @ApiOkResponse({
     description: 'Список режимов работы',
-    type: OperatingMode,
-    isArray: true,
+    type: ArrayOperatingModeResponse,
   })
   @ApiOperation({ summary: 'Получение списка режимов работы' })
   @UseGuards(JwtAuthGuard)
   @Get('all')
   findAll() {
     return this.operatingModeService.findAll()
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.operatingModeService.findOne(+id)
   }
 
   @ApiOkResponse({

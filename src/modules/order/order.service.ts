@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Order } from './entities/order.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
-import { OrderResponse, StatusOrderResponse } from './response'
+import { ArrayOrderResponse, OrderResponse, StatusOrderResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { generateSortQuery, generateWhereQuery } from 'src/common/utlis/generate_sort_query'
@@ -210,7 +210,7 @@ export class OrderService {
         } else if (order.checkpoint_ids && order.checkpoint_ids.length > 0) {
           const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
+          for (let index = 0; index < facilities.count; index++) {
             const facility_id = facilities[index].facility_id
 
             orderDto.facility_id = facility_id
@@ -225,7 +225,7 @@ export class OrderService {
         } else {
           const facilities = await this.facilityService.findAllByBranch(order.branch_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
+          for (let index = 0; index < facilities.count; index++) {
             const facility_id = facilities[index].facility_id
 
             orderDto.facility_id = facility_id
@@ -248,7 +248,7 @@ export class OrderService {
     }
   }
 
-  async findAll(orderFilter: OrderFilter): Promise<OrderResponse[]> {
+  async findAll(orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
       const order_offset_count = orderFilter.offset?.count == undefined ? 50 : orderFilter.offset.count
       const order_offset_page = orderFilter.offset?.page == undefined ? 1 : orderFilter.offset.page
@@ -274,13 +274,13 @@ export class OrderService {
           type: QueryTypes.SELECT,
         },
       )
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findAllByBranch(branch_ids: number[], orderFilter: OrderFilter) {
+  async findAllByBranch(branch_ids: number[], orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
       let result = []
 
@@ -294,10 +294,10 @@ export class OrderService {
         orderFilter.filter.facility = {
           checkpoint: { branch: { branch_id: +id } },
         }
-        result = [...result, ...(await this.findAll(orderFilter))]
+        result = [...result, ...(await this.findAll(orderFilter)).data]
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       console.log(error)
 
@@ -305,7 +305,7 @@ export class OrderService {
     }
   }
 
-  async findAllByCheckpoint(checkpoint_ids: number[], orderFilter: OrderFilter) {
+  async findAllByCheckpoint(checkpoint_ids: number[], orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
       let result = []
 
@@ -317,10 +317,10 @@ export class OrderService {
         const id = checkpoint_ids[index]
 
         orderFilter.filter.facility = { checkpoint: { checkpoint_id: +id } }
-        result = [...result, ...(await this.findAll(orderFilter))]
+        result = [...result, ...(await this.findAll(orderFilter)).data]
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       console.log(error)
 
@@ -328,7 +328,7 @@ export class OrderService {
     }
   }
 
-  async findMy(myOrdersFilter: MyOrdersFilter, user: any): Promise<OrderResponse[]> {
+  async findMy(myOrdersFilter: MyOrdersFilter, user: any): Promise<ArrayOrderResponse> {
     try {
       const foundUser = await this.sequelize.query(
         `
@@ -457,7 +457,7 @@ export class OrderService {
         }
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       console.log(error)
 

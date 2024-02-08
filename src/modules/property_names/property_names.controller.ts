@@ -6,7 +6,8 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { PropertyName } from './entities/property_name.entity'
-import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
+import { StatusPropertyNameResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Property names')
@@ -16,9 +17,9 @@ export class PropertyNamesController {
   constructor(private readonly propertyNamesService: PropertyNamesService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Создание названия характеристики' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Название характеристики успешно создано',
+    description: AppStrings.PROPERTY_NAME_CREATED_RESPONSE,
     type: StatusPropertyNameResponse,
   })
   @Post()
@@ -27,9 +28,9 @@ export class PropertyNamesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Список всех названий характеристик' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список всех названий характеристик',
+    description: AppStrings.PROPERTY_NAME_ALL_RESPONSE,
     type: ArrayPropertyNameResponse,
   })
   @Get('all')
@@ -38,9 +39,9 @@ export class PropertyNamesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Изменение названия характеристики' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_UPDATE_OPERATION })
   @ApiOkResponse({
-    description: 'Название характеристики успешно изменено',
+    description: AppStrings.PROPERTY_NAME_UPDATE_RESPONSE,
     type: PropertyName,
   })
   @Patch()
@@ -57,9 +58,9 @@ export class PropertyNamesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Удаление названия характеристики' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_DELETE_OPERATION })
   @ApiOkResponse({
-    description: 'Название характеристики успешно удалено',
+    description: AppStrings.PROPERTY_NAME_DELETE_RESPONSE,
     type: StatusPropertyNameResponse,
   })
   @Delete(':id')

@@ -1,18 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { FilterOffset } from 'src/common/classes/filter_offset'
+import { AppStrings } from 'src/common/constants/strings'
 import { GroupSorts, GroupFilters } from 'src/modules/group/dto'
 import { OrganizationSorts, OrganizationFilters } from 'src/modules/organization/dto'
 import { PersonSorts, PersonFilters } from 'src/modules/person/dto'
 import { RoleSorts, RoleFilters } from 'src/modules/roles/dto'
 
 export class UserSorts {
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   user_id?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   email?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   is_active?: string
 
   @ApiProperty({ required: false })

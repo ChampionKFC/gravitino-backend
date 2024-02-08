@@ -3,11 +3,12 @@ import { CreateCheckpointTypeDto, UpdateCheckpointTypeDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { CheckpointType } from './entities/checkpoint_type.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayCheckpointTypeResponse, CheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
+import { CheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
 import { CheckpointTypeFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { Sequelize } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class CheckpointTypeService {
@@ -26,7 +27,7 @@ export class CheckpointTypeService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан тип пункта пропуска #${newCheckpointType.checkpoint_type_id}`,
+        comment: `${AppStrings.HISTORY_CHECKPOINT_TYPE_CREATED}${newCheckpointType.checkpoint_type_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -112,7 +113,7 @@ export class CheckpointTypeService {
       if (foundCheckpointType) {
         const historyDto = {
           user_id: user_id,
-          comment: `Создан тип пункта пропуска #${updateCheckpointTypeDto.checkpoint_type_id}`,
+          comment: `${AppStrings.HISTORY_CHECKPOINT_TYPE_UPDATED}${updateCheckpointTypeDto.checkpoint_type_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -132,7 +133,7 @@ export class CheckpointTypeService {
       if (deleteCheckpointType) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален тип пункта пропуска #${checkpoint_type_id}`,
+          comment: `${AppStrings.HISTORY_CHECKPOINT_TYPE_DELETED}${checkpoint_type_id}`,
         }
         await this.historyService.create(historyDto)
 

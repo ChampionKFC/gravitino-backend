@@ -3,7 +3,9 @@ import { CreatePermissionDto, UpdatePermissionDto } from './dto'
 import { Permission } from './entities/permission.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayPermissionResponse, PermissionResponse, StatusPermissionResponse } from './response'
+import { PermissionResponse, StatusPermissionResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
+import { AppError } from 'src/common/constants/error'
 
 @Injectable()
 export class PermissionsService {
@@ -20,7 +22,7 @@ export class PermissionsService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создано разрешение #${newPermission.permission_id}`,
+        comment: `${AppStrings.HISTORY_PERMISSION_CREATED}${newPermission.permission_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -64,7 +66,7 @@ export class PermissionsService {
       if (foundPermission) {
         return foundPermission
       } else {
-        throw new HttpException('Разрешение не найдено', HttpStatus.NOT_FOUND)
+        throw new HttpException(AppError.PERMISSION_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
     } catch (error) {
       throw new Error(error)
@@ -82,7 +84,7 @@ export class PermissionsService {
       if (foundPermission) {
         const historyDto = {
           user_id: user_id,
-          comment: `Разрешение #${foundPermission.permission_id} изменено`,
+          comment: `${AppStrings.HISTORY_PERMISSION_UPDATED}${foundPermission.permission_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -102,7 +104,7 @@ export class PermissionsService {
       if (deletePermission) {
         const historyDto = {
           user_id: user_id,
-          comment: `Разрешение #${permission_id} удалено`,
+          comment: `${AppStrings.HISTORY_PERMISSION_DELETED}${permission_id}`,
         }
         await this.historyService.create(historyDto)
 

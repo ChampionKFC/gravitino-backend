@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { NonAttribute } from 'sequelize'
 import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 import { Facility } from 'src/modules/facility/entities/facility.entity'
 import { Order } from 'src/modules/order/entities/order.entity'
 import { OrganizationType } from 'src/modules/organization_type/entities/organization_type.entity'
@@ -19,7 +20,7 @@ export class Organization extends Model {
 
   @ApiProperty({
     type: () => OrganizationType,
-    description: 'Тип организации',
+    description: AppStrings.ORGANIZATION_TYPE,
   })
   @BelongsTo(() => OrganizationType)
   organization_type: OrganizationType
@@ -33,22 +34,22 @@ export class Organization extends Model {
   short_name: string
 
   @ApiProperty({
-    example: '79001234567',
-    description: 'Номер телефона организации',
+    example: AppStrings.PHONE_EXAMPLE,
+    description: AppStrings.PHONE_DESCRIPTION,
   })
   @Column({ type: DataType.STRING, allowNull: false })
   phone: string
 
-  @ApiProperty({ example: '[1,2,3]', description: 'ID характеристик', required: false })
+  @ApiProperty({ example: AppStrings.PROPERTY_VALUES_EXAMPLE, description: AppStrings.PROPERTY_VALUES_DESCRIPTION, required: false })
   @Column({ type: DataType.ARRAY(DataType.INTEGER), allowNull: true })
   property_values?: number[]
 
-  @HasMany(() => User, 'organization_id')
+  @HasMany(() => User, Organization.primaryKeyAttribute)
   users: NonAttribute<User[]>
 
   @HasMany(() => Order, 'executor_id')
   orders: NonAttribute<Order[]>
 
-  @HasMany(() => Facility, 'organization_id')
+  @HasMany(() => Facility, Organization.primaryKeyAttribute)
   facilities: NonAttribute<Facility[]>
 }

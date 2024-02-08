@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { IsOptional } from 'class-validator'
 import { NonAttribute } from 'sequelize'
 import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { AppStrings } from 'src/common/constants/strings'
 import { Facility } from 'src/modules/facility/entities/facility.entity'
 import { File } from 'src/modules/files/entities/file.entity'
 import { OrderJournal } from 'src/modules/order_journal/entities/order_journal.entity'
@@ -26,7 +27,7 @@ export class Order extends Model {
   @ApiProperty({
     type: () => Task,
     required: false,
-    description: 'Задача',
+    description: AppStrings.TASK,
   })
   @BelongsTo(() => Task)
   task?: Task
@@ -45,7 +46,7 @@ export class Order extends Model {
 
   @ApiProperty({
     type: () => Facility,
-    description: 'Объект обслуживания',
+    description: AppStrings.FACILITY,
   })
   @BelongsTo(() => Facility)
   facility: Facility
@@ -56,7 +57,7 @@ export class Order extends Model {
 
   @ApiProperty({
     type: () => Organization,
-    description: 'Организация',
+    description: AppStrings.ORGANIZATION,
   })
   @BelongsTo(() => Organization)
   executor: Organization
@@ -68,7 +69,7 @@ export class Order extends Model {
   @ApiProperty({
     type: () => User,
     required: false,
-    description: 'Выполнен (кем)',
+    description: AppStrings.ORDER_EXECUTOR,
   })
   @BelongsTo(() => User)
   completed_by_user?: User
@@ -79,7 +80,7 @@ export class Order extends Model {
 
   @ApiProperty({
     type: () => User,
-    description: 'Создатель заказа',
+    description: AppStrings.ORDER_CREATOR,
   })
   @BelongsTo(() => User, 'creator_id')
   creator: User
@@ -90,7 +91,7 @@ export class Order extends Model {
 
   @ApiProperty({
     type: () => OrderStatus,
-    description: 'Статус заказа',
+    description: AppStrings.ORDER_STATUS,
   })
   @BelongsTo(() => OrderStatus)
   order_status: OrderStatus
@@ -113,18 +114,18 @@ export class Order extends Model {
 
   @ApiProperty({
     type: () => OrderPriority,
-    description: 'Приоритет',
+    description: AppStrings.ORDER_PRIORITY,
   })
   @BelongsTo(() => OrderPriority)
   priority: OrderPriority
 
-  @ApiProperty({ example: '[1,2,3]', description: 'ID характеристик', required: false })
+  @ApiProperty({ example: AppStrings.PROPERTY_VALUES_EXAMPLE, description: AppStrings.PROPERTY_VALUES_DESCRIPTION, required: false })
   @Column({ type: DataType.ARRAY(DataType.INTEGER) })
   property_values?: number[]
 
-  @HasMany(() => File, { foreignKey: 'order_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @HasMany(() => File, { foreignKey: Order.primaryKeyAttribute, onDelete: AppStrings.CASCADE, onUpdate: AppStrings.CASCADE })
   files: NonAttribute<File[]>
 
-  @HasMany(() => OrderJournal, { foreignKey: 'order_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @HasMany(() => OrderJournal, { foreignKey: Order.primaryKeyAttribute, onDelete: AppStrings.CASCADE, onUpdate: AppStrings.CASCADE })
   order_journals: NonAttribute<OrderJournal[]>
 }

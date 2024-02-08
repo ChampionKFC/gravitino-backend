@@ -11,6 +11,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Category } from './entities/category.entity'
 import { ArrayCategoryResponse, StatusCategoryResponse } from './response'
 import { CategoryFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiTags('Category (Task)')
 @Controller('category')
@@ -22,10 +23,10 @@ export class CategoryController {
   @HasPermissions(PermissionEnum.CategoryCreate)
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiCreatedResponse({
-    description: 'Категория успешно создана',
+    description: AppStrings.CATEGORY_CREATED_RESPONSE,
     type: StatusCategoryResponse,
   })
-  @ApiOperation({ summary: 'Создание категории' })
+  @ApiOperation({ summary: AppStrings.CATEGORY_CREATE_OPERATION })
   @Post()
   async create(@Body() createCategoryDto: CreateCategoryDto, @Req() request) {
     return this.categoryService.create(createCategoryDto, request.user.user_id)
@@ -34,10 +35,10 @@ export class CategoryController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Список категорий',
+    description: AppStrings.CATEGORY_ALL_RESPONSE,
     type: ArrayCategoryResponse,
   })
-  @ApiOperation({ summary: 'Список всех категорий' })
+  @ApiOperation({ summary: AppStrings.CATEGORY_ALL_OPERATION })
   @ApiBody({ required: false, type: CategoryFilter })
   @Post('all')
   async findAll(@Body() categoryFilter?: CategoryFilter) {
@@ -48,10 +49,10 @@ export class CategoryController {
   @HasPermissions(PermissionEnum.CategoryUpdate)
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOkResponse({
-    description: 'Категория успешно изменена',
+    description: AppStrings.CATEGORY_UPDATE_RESPONSE,
     type: Category,
   })
-  @ApiOperation({ summary: 'Изменение категории' })
+  @ApiOperation({ summary: AppStrings.CATEGORY_UPDATE_OPERATION })
   @Patch()
   async update(@Body() updateCategoryDto: UpdateCategoryDto, @Req() request) {
     let foundCategory = null
@@ -69,10 +70,10 @@ export class CategoryController {
   @HasPermissions(PermissionEnum.CategoryDelete)
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOkResponse({
-    description: 'Категория успешно удалена',
+    description: AppStrings.CATEGORY_DELETE_RESPONSE,
     type: StatusCategoryResponse,
   })
-  @ApiOperation({ summary: 'Удаление категории' })
+  @ApiOperation({ summary: AppStrings.CATEGORY_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundCategory = await this.categoryService.findOne(id)

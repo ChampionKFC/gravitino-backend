@@ -3,11 +3,12 @@ import { CreatePriorityDto, UpdatePriorityDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { OrderPriority } from './entities/priority.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
+import { OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
 import { OrderPriorityFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { QueryTypes } from 'sequelize'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class PriorityService {
@@ -26,7 +27,7 @@ export class PriorityService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан приоритет #${newPriority.priority_id}`,
+        comment: `${AppStrings.HISTORY_PRIORITY_CREATED}${newPriority.priority_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -103,7 +104,7 @@ export class PriorityService {
       if (foundPriority) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен приоритет #${foundPriority.priority_id}`,
+          comment: `${AppStrings.HISTORY_PRIORITY_UPDATED}${foundPriority.priority_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -123,7 +124,7 @@ export class PriorityService {
       if (deletePriority) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален приоритет #${priority_id}`,
+          comment: `${AppStrings.HISTORY_PRIORITY_DELETED}${priority_id}`,
         }
         await this.historyService.create(historyDto)
 

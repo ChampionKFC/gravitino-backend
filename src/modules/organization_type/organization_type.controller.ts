@@ -6,8 +6,9 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationType } from './entities/organization_type.entity'
-import { ArrayOrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
+import { StatusOrganizationTypeResponse } from './response'
 import { OrganizationTypeFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Organization Type')
@@ -17,9 +18,9 @@ export class OrganizationTypeController {
   constructor(private readonly organizationTypeService: OrganizationTypeService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Создание вида деятельности организации' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Вид деятельности организации успешно создан',
+    description: AppStrings.ORGANIZATION_TYPE_CREATED_RESPONSE,
     type: StatusOrganizationTypeResponse,
   })
   @Post()
@@ -28,9 +29,9 @@ export class OrganizationTypeController {
   }
 
   @Post('all')
-  @ApiOperation({ summary: 'Список всех видов деятельности организаций' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список видов деятельности организаций',
+    description: AppStrings.ORGANIZATION_TYPE_ALL_RESPONSE,
     type: ArrayOrganizationTypeResponse,
   })
   @ApiBody({ required: false, type: OrganizationTypeFilter })
@@ -39,9 +40,9 @@ export class OrganizationTypeController {
   }
 
   @Get('all')
-  @ApiOperation({ summary: 'Список всех видов деятельности организаций' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список видов деятельности организаций',
+    description: AppStrings.ORGANIZATION_TYPE_ALL_RESPONSE,
     type: ArrayOrganizationTypeResponse,
   })
   getAll() {
@@ -49,9 +50,9 @@ export class OrganizationTypeController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Изменение вида деятельности организации' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_UPDATE_OPERATION })
   @ApiOkResponse({
-    description: 'Вид деятельности организации успешно изменен',
+    description: AppStrings.ORGANIZATION_TYPE_UPDATE_RESPONSE,
     type: OrganizationType,
   })
   @Patch()
@@ -68,9 +69,9 @@ export class OrganizationTypeController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Удаление вида деятельности организации' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_DELETE_OPERATION })
   @ApiOkResponse({
-    description: 'Вид деятельности организации успешно удален',
+    description: AppStrings.ORGANIZATION_DELETE_RESPONSE,
     type: StatusOrganizationTypeResponse,
   })
   @Delete(':id')

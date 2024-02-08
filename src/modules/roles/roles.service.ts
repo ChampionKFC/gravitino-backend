@@ -3,11 +3,12 @@ import { CreateRoleDto, UpdateRoleDto } from './dto'
 import { Role } from './entities/role.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayRoleResponse, StatusRoleResponse } from './response'
+import { RoleResponse, StatusRoleResponse } from './response'
 import { RoleFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { QueryTypes } from 'sequelize'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class RolesService {
@@ -23,7 +24,7 @@ export class RolesService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана роль #${newRole.role_id}`,
+        comment: `${AppStrings.HISTORY_ROLE_CREATED}${newRole.role_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -102,7 +103,7 @@ export class RolesService {
       if (foundRole) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена роль #${foundRole.role_id}`,
+          comment: `${AppStrings.HISTORY_ROLE_UPDATED}${foundRole.role_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -122,7 +123,7 @@ export class RolesService {
       if (deleteRole) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена роль #${role_id}`,
+          comment: `${AppStrings.HISTORY_ROLE_DELETED}${role_id}`,
         }
         await this.historyService.create(historyDto)
 

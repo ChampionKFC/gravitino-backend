@@ -3,9 +3,10 @@ import { CreateRolesPermissionDto, UpdateRolesPermissionDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { RolePermission } from './entities/roles_permission.entity'
-import { ArrayRolePermissionResponse, RolePermissionResponse, StatusRolePermissionResponse } from './response'
+import { RolePermissionResponse, StatusRolePermissionResponse } from './response'
 import { UsersService } from '../users/users.service'
 import { PermissionsService } from '../permissions/permissions.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class RolesPermissionsService {
@@ -25,7 +26,7 @@ export class RolesPermissionsService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Выдано разрешение #${newRolePermission.permission_id} со значением ${newRolePermission.rights} роли #${newRolePermission.role_id}`,
+        comment: `${AppStrings.HISTORY_ROLES_PERMISSIONS_CREATED}${newRolePermission.permission_id} ${AppStrings.HISTORY_ROLES_PERMISSIONS_VALUE} ${newRolePermission.rights} ${AppStrings.HISTORY_ROLES_PERMISSIONS_ROLE}${newRolePermission.role_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -74,7 +75,7 @@ export class RolesPermissionsService {
       if (foundRolePermission) {
         const historyDto = {
           user_id: user_id,
-          comment: `Обновлено разрешение #${foundRolePermission.permission_id} со значением ${foundRolePermission.rights} роли #${foundRolePermission.role_id}`,
+          comment: `${AppStrings.HISTORY_ROLES_PERMISSIONS_UPDATED}${foundRolePermission.permission_id} ${AppStrings.HISTORY_ROLES_PERMISSIONS_VALUE} ${foundRolePermission.rights} ${AppStrings.HISTORY_ROLES_PERMISSIONS_ROLE}${foundRolePermission.role_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -94,7 +95,7 @@ export class RolesPermissionsService {
       if (deleteRolePermission) {
         const historyDto = {
           user_id: user_id,
-          comment: `Отозвано разрешение #${role_permission_id}`,
+          comment: `${AppStrings.HISTORY_ROLES_PERMISSIONS_DELETED}${role_permission_id}`,
         }
         await this.historyService.create(historyDto)
 

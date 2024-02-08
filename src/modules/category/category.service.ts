@@ -23,7 +23,7 @@ export class CategoryService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана категория #${newCategory.category_id}`,
+        comment: `${AppStrings.HISTORY_CATEGORY_CREATED}${newCategory.category_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -100,7 +100,7 @@ export class CategoryService {
       if (foundCategory) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена категория #${foundCategory.category_id}`,
+          comment: `${AppStrings.HISTORY_CATEGORY_UPDATED}${foundCategory.category_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -120,7 +120,7 @@ export class CategoryService {
       if (deleteCategory) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена категория #${category_id}`,
+          comment: `${AppStrings.HISTORY_CATEGORY_DELETED}${category_id}`,
         }
         await this.historyService.create(historyDto)
 

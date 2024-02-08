@@ -6,11 +6,12 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { AppError } from 'src/common/constants/error'
 import { Facility } from './entities/facility.entity'
-import { ArrayFacilityResponse, StatusFacilityResponse } from './response'
+import { StatusFacilityResponse } from './response'
 import { FacilityFilter } from './filters'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationService } from '../organization/organization.service'
 import { BranchService } from '../branch/branch.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Facility')
@@ -26,10 +27,10 @@ export class FacilityController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Объект обслуживания успешно создан',
+    description: AppStrings.FACILITY_CREATED_RESPONSE,
     type: StatusFacilityResponse,
   })
-  @ApiOperation({ summary: 'Создание объекта обслуживания' })
+  @ApiOperation({ summary: AppStrings.FACILITY_CREATE_OPERATION })
   @Post()
   async create(@Body() createFacilityDto: CreateFacilityDto, @Req() request) {
     const foundCheckpoint = await this.checkpointService.findOne(createFacilityDto.checkpoint_id)
@@ -47,10 +48,10 @@ export class FacilityController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Список объектов обслуживания',
+    description: AppStrings.FACILITY_ALL_RESPONSE,
     type: ArrayFacilityResponse,
   })
-  @ApiOperation({ summary: 'Список всех объектов обслуживания' })
+  @ApiOperation({ summary: AppStrings.FACILITY_ALL_OPERATION })
   @ApiBody({ required: false, type: FacilityFilter })
   @Post('all')
   async findAll(@Body() facilityFilter?: FacilityFilter) {
@@ -60,11 +61,10 @@ export class FacilityController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех объектов обслуживания по ID филиалов',
-    type: Facility,
-    isArray: true,
+    description: AppStrings.FACILITY_ALL_BY_BRANCH_RESPONSE,
+    type: ArrayFacilityResponse,
   })
-  @ApiOperation({ summary: 'Список всех объектов обслуживания по ID филиалов' })
+  @ApiOperation({ summary: AppStrings.FACILITY_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: FacilityFilter })
   @Post('all-by-branch')
   async findAllByBranch(@Query('branch_ids') branch_ids: number[], @Body() facilityFilter?: FacilityFilter) {
@@ -83,12 +83,12 @@ export class FacilityController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех объектов обслуживания по ID пунктов пропуска',
+    description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
     type: Facility,
     isArray: true,
   })
   @ApiOperation({
-    summary: 'Список всех объектов обслуживания по ID пунктов пропуска',
+    summary: AppStrings.FACILITY_ALL_BY_CHECKPOINT_OPERATION,
   })
   @ApiBody({ required: false, type: FacilityFilter })
   @Post('all-by-checkpoint')
@@ -107,10 +107,10 @@ export class FacilityController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Объект обслуживания успешно изменен',
+    description: AppStrings.FACILITY_UPDATE_RESPONSE,
     type: Facility,
   })
-  @ApiOperation({ summary: 'Изменение объекта обслуживания' })
+  @ApiOperation({ summary: AppStrings.FACILITY_UPDATE_OPERATION })
   @Patch()
   async update(@Body() updateFacilityDto: UpdateFacilityDto, @Req() request) {
     let foundFacility = null
@@ -140,10 +140,10 @@ export class FacilityController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Объект обслуживания успешно удален',
+    description: AppStrings.FACILITY_DELETE_RESPONSE,
     type: StatusFacilityResponse,
   })
-  @ApiOperation({ summary: 'Удаление объекта обслуживания' })
+  @ApiOperation({ summary: AppStrings.FACILITY_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundFacility = await this.facilityService.findOne(id)

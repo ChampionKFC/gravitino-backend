@@ -11,6 +11,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { Checkpoint } from '../checkpoint/entities/checkpoint.entity'
 import { Facility } from '../facility/entities/facility.entity'
 import { OrganizationType } from '../organization_type/entities/organization_type.entity'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OrganizationService {
@@ -29,7 +30,7 @@ export class OrganizationService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана организация #${newOrganization.organization_id}`,
+        comment: `${AppStrings.HISTORY_ORGANIZATION_CREATED}${newOrganization.organization_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -131,7 +132,7 @@ export class OrganizationService {
       if (foundOrganization) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена организация #${foundOrganization.organization_id}`,
+          comment: `${AppStrings.HISTORY_ORGANIZATION_UPDATED}${foundOrganization.organization_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -151,7 +152,7 @@ export class OrganizationService {
       if (deleteOrganization) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена организация #${organization_id}`,
+          comment: `${AppStrings.HISTORY_ORGANIZATION_DELETED}${organization_id}`,
         }
         await this.historyService.create(historyDto)
 

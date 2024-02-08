@@ -7,7 +7,8 @@ import { PropertyNamesService } from '../property_names/property_names.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { PropertyValue } from './entities/property_value.entity'
-import { ArrayPropertyValueResponse, StatusPropertValueResponse } from './response'
+import { StatusPropertValueResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Property values')
@@ -20,9 +21,9 @@ export class PropertyValuesController {
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Создание значения характеристики' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_VALUE_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Значение характеристики успешно создано',
+    description: AppStrings.PROPERTY_VALUE_CREATED_RESPONSE,
     type: StatusPropertValueResponse,
   })
   @Post()
@@ -36,9 +37,9 @@ export class PropertyValuesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Список всех значений характеристик' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_VALUE_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список значений характеристик',
+    description: AppStrings.PROPERTY_VALUE_ALL_RESPONSE,
     type: ArrayPropertyValueResponse,
   })
   @Get('all')
@@ -47,9 +48,9 @@ export class PropertyValuesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Изменение значения характеристики' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_VALUE_UPDATE_OPERATION })
   @ApiOkResponse({
-    description: 'Значение характеристики успешно изменено',
+    description: AppStrings.PROPERTY_VALUE_UPDATE_RESPONSE,
     type: PropertyValue,
   })
   @Patch()
@@ -72,9 +73,9 @@ export class PropertyValuesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Удаление значения характеристики' })
+  @ApiOperation({ summary: AppStrings.PROPERTY_VALUE_DELETE_OPERATION })
   @ApiOkResponse({
-    description: 'Значение характеристики успешно удалено',
+    description: AppStrings.PROPERTY_VALUE_DELETE_RESPONSE,
     type: StatusPropertValueResponse,
   })
   @Delete(':id')

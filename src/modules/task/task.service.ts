@@ -3,7 +3,7 @@ import { CreateTaskDto, UpdateTaskDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Task } from './entities/task.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayTaskResponse, StatusTaskResponse, TaskResponse } from './response'
+import { StatusTaskResponse, TaskResponse } from './response'
 import { TaskFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -12,6 +12,7 @@ import getPeriodDates from 'src/common/utlis/get_period_dates'
 import { CreateOrderDto } from '../order/dto'
 import { FacilityService } from '../facility/facility.service'
 import { OrderService } from '../order/order.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class TaskService {
@@ -103,7 +104,7 @@ export class TaskService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана задача #${newTask.task_id}`,
+        comment: `${AppStrings.HISTORY_TASK_CREATED}${newTask.task_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -192,7 +193,7 @@ export class TaskService {
       if (foundTask) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменена задача #${foundTask.task_id}`,
+          comment: `${AppStrings.HISTORY_TASK_UPDATED}${foundTask.task_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -212,7 +213,7 @@ export class TaskService {
       if (deleteTask) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удалена задача #${task_id}`,
+          comment: `${AppStrings.HISTORY_TASK_DELETED}${task_id}`,
         }
         await this.historyService.create(historyDto)
 

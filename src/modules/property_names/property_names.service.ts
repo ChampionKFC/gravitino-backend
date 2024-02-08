@@ -3,7 +3,8 @@ import { CreatePropertyNameDto, UpdatePropertyNameDto } from './dto'
 import { PropertyName } from './entities/property_name.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
+import { StatusPropertyNameResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class PropertyNamesService {
@@ -21,7 +22,7 @@ export class PropertyNamesService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создано название характеристики #${newPropertyName.property_name_id}`,
+        comment: `${AppStrings.HISTORY_PROPERTY_NAME_CREATED}${newPropertyName.property_name_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -68,7 +69,7 @@ export class PropertyNamesService {
       if (foundPropertyName) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменено название характеристики #${foundPropertyName.property_name_id}`,
+          comment: `${AppStrings.HISTORY_PROPERTY_NAME_UPDATED}${foundPropertyName.property_name_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -87,7 +88,7 @@ export class PropertyNamesService {
     if (deletePropertyName) {
       const historyDto = {
         user_id: user_id,
-        comment: `Удалено название характеристики #${property_name_id}`,
+        comment: `${AppStrings.HISTORY_PROPERTY_NAME_DELETED}${property_name_id}`,
       }
       await this.historyService.create(historyDto)
 

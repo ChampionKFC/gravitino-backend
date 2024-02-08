@@ -12,10 +12,11 @@ import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { Order } from './entities/order.entity'
-import { ArrayOrderResponse, StatusOrderResponse } from './response'
+import { StatusOrderResponse } from './response'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { FacilityService } from '../facility/facility.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Controller('order')
 @ApiTags('Order')
@@ -36,10 +37,10 @@ export class OrderController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Заказ успешно создан',
+    description: AppStrings.ORDER_CREATED_RESPONSE,
     type: StatusOrderResponse,
   })
-  @ApiOperation({ summary: 'Создание заказа' })
+  @ApiOperation({ summary: AppStrings.ORDER_CREATE_OPERATION })
   @Post()
   async create(@Body() createOrderDto: BulkCreateOrderDto, @Req() request) {
     const branch_ids = createOrderDto.branch_ids
@@ -103,36 +104,23 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех заказов',
+    description: AppStrings.ORDER_ALL_RESPONSE,
     type: ArrayOrderResponse,
   })
-  @ApiOperation({ summary: 'Список всех заказов' })
+  @ApiOperation({ summary: AppStrings.ORDER_ALL_OPERATION })
   @ApiBody({ required: false, type: OrderFilter })
   @Post('all')
   async findAll(@Body() orderFilter: OrderFilter) {
     return this.orderService.findAll(orderFilter)
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Список всех заказов по ID пользователя',
-  //   type: Order,
-  //   isArray: true,
-  // })
-  // @ApiOperation({ summary: 'Список всех заказов по ID пользователя' })
-  // @Get('all-by-user/:user_id')
-  // findAllByUser(@Param('user_id') user_id: number) {
-  //   return this.orderService.findAllByUser(user_id);
-  // }
-
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех заказов по ID филиала',
+    description: AppStrings.ORDER_ALL_BY_BRANCH_RESPONSE,
     type: ArrayOrderResponse,
   })
-  @ApiOperation({ summary: 'Список всех заказов по ID филиала' })
+  @ApiOperation({ summary: AppStrings.ORDER_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: OrderFilter })
   @Post('all-by-branch')
   async findAllByBranch(@Query('branch_ids') branch_ids: number[], @Body() orderFilter: OrderFilter) {
@@ -151,10 +139,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех заказов по ID пункта пропуска',
+    description: AppStrings.ORDER_ALL_BY_CHECKPOINT_RESPONSE,
     type: ArrayOrderResponse,
   })
-  @ApiOperation({ summary: 'Список всех заказов по ID пункта пропуска' })
+  @ApiOperation({ summary: AppStrings.ORDER_ALL_BY_CHECKPOINT_OPERATION })
   @ApiBody({ required: false, type: OrderFilter })
   @Post('all-by-checkpoint')
   async findAllByCheckpoint(@Query('checkpoint_ids') checkpoint_ids: number[], @Body() orderFilter: OrderFilter) {
@@ -174,10 +162,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех заказов текущего пользователя',
+    description: AppStrings.ORDER_ALL_MY_RESPONSE,
     type: ArrayOrderResponse,
   })
-  @ApiOperation({ summary: 'Список всех заказов текущего пользователя' })
+  @ApiOperation({ summary: AppStrings.ORDER_ALL_MY_OPERATION })
   @Post('my')
   findMy(@Body() myOrdersFilter: MyOrdersFilter, @Req() request) {
     return this.orderService.findMy(myOrdersFilter, request.user)
@@ -186,10 +174,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Изменение заказа',
+    description: AppStrings.ORDER_UPDATE_RESPONSE,
     type: Order,
   })
-  @ApiOperation({ summary: 'Изменение заказа' })
+  @ApiOperation({ summary: AppStrings.ORDER_UPDATE_OPERATION })
   @Patch()
   async update(@Body() updateOrderDto: UpdateOrderDto, @Req() request) {
     let foundOrder = null
@@ -249,10 +237,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Изменение статуса заказа',
+    description: AppStrings.ORDER_STATUS_UPDATE_RESPONSE,
     type: StatusOrderResponse,
   })
-  @ApiOperation({ summary: 'Изменение статуса заказа' })
+  @ApiOperation({ summary: AppStrings.ORDER_STATUS_UPDATE_OPERATION })
   @Patch('update_status')
   async updateStatus(@Body() updateOrderStatusDto: UpdateStatusDto, @Req() request) {
     let foundOrder = null
@@ -275,10 +263,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Удаление заказа',
+    description: AppStrings.ORDER_DELETE_RESPONSE,
     type: StatusOrderResponse,
   })
-  @ApiOperation({ summary: 'Удаление заказа' })
+  @ApiOperation({ summary: AppStrings.ORDER_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundOrder = await this.orderService.findOne(id)

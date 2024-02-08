@@ -3,11 +3,12 @@ import { CreateOrganizationTypeDto, UpdateOrganizationTypeDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { OrganizationType } from './entities/organization_type.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayOrganizationTypeResponse, OrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
+import { OrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
 import { OrganizationTypeFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { QueryTypes } from 'sequelize'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OrganizationTypeService {
@@ -112,7 +113,7 @@ export class OrganizationTypeService {
       if (foundType) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен тип организации #${foundType.organization_type_id}`,
+          comment: `${AppStrings.HISTORY_ORGANIZATION_TYPE_UPDATED}${foundType.organization_type_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -132,7 +133,7 @@ export class OrganizationTypeService {
       if (deleteType) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален тип организации #${organization_type_id}`,
+          comment: `${AppStrings.HISTORY_ORGANIZATION_TYPE_DELETED}${organization_type_id}`,
         }
         await this.historyService.create(historyDto)
 

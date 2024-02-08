@@ -24,6 +24,7 @@ import { Branch } from './entities/branch.entity'
 import { ArrayBranchResponse, StatusBranchResponse } from './response'
 import { BranchFilter } from './filters'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Branch')
@@ -37,10 +38,10 @@ export class BranchController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Филиал успешно создан',
+    description: AppStrings.BRANCH_CREATED_RESPONSE,
     type: StatusBranchResponse,
   })
-  @ApiOperation({ summary: 'Создание филиала' })
+  @ApiOperation({ summary: AppStrings.BRANCH_CREATE_OPERATION })
   @Post()
   async create(@Body() createBranchDto: CreateBranchDto, @Req() request) {
     return this.branchService.create(createBranchDto, request.user.user_id)
@@ -48,10 +49,10 @@ export class BranchController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Список филиалов',
+    description: AppStrings.BRANCH_ALL_RESPONSE,
     type: ArrayBranchResponse,
   })
-  @ApiOperation({ summary: 'Список всех филиалов' })
+  @ApiOperation({ summary: AppStrings.BRANCH_ALL_OPERATION })
   @ApiBody({ required: false, type: BranchFilter })
   @Post('all')
   findAll(@Body() branchFilter?: BranchFilter) {
@@ -60,10 +61,10 @@ export class BranchController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Филиал успешно изменен',
+    description: AppStrings.BRANCH_UPDATE_RESPONSE,
     type: Branch,
   })
-  @ApiOperation({ summary: 'Изменение филиала' })
+  @ApiOperation({ summary: AppStrings.BRANCH_UPDATE_OPERATION })
   @Patch()
   async update(@Body() updateBranchDto: UpdateBranchDto, @Req() request) {
     let foundBranch = null
@@ -79,10 +80,10 @@ export class BranchController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Филиал успешно удален',
+    description: AppStrings.BRANCH_DELETE_RESPONSE,
     type: StatusBranchResponse,
   })
-  @ApiOperation({ summary: 'Удаление филиала' })
+  @ApiOperation({ summary: AppStrings.BRANCH_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundBranch = await this.branchService.findOne(id)
@@ -95,10 +96,10 @@ export class BranchController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Филиалы импортированы',
+    description: AppStrings.BRANCH_IMPORT_RESPONSE,
     type: StatusBranchResponse,
   })
-  @ApiOperation({ summary: 'Импорт филиалов' })
+  @ApiOperation({ summary: AppStrings.BRANCH_IMPORT_OPERATION })
   @UseInterceptors(
     FileInterceptor('file', {
       fileFilter: (req, file, callback) => {
@@ -117,10 +118,10 @@ export class BranchController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Файл импорта загружен',
+    description: AppStrings.BRANCH_IMPORT_UPLOAD_RESPONSE,
     type: StatusBranchResponse,
   })
-  @ApiOperation({ summary: 'Загрузка файла импорта' })
+  @ApiOperation({ summary: AppStrings.BRANCH_IMPORT_UPLOAD_OPERATION })
   @UseInterceptors(
     FileInterceptor('file', {
       fileFilter: (req, file, callback) => {

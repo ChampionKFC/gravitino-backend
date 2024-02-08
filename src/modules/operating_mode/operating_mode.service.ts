@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { ArrayOperatingModeResponse, StatusOperatingModeResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OperatingModeService {
@@ -23,7 +24,7 @@ export class OperatingModeService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан режим работы #${newOperatingMode.operating_mode_id}`,
+        comment: `${AppStrings.HISTORY_OPERATING_MODE_CREATED}${newOperatingMode.operating_mode_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -69,7 +70,7 @@ export class OperatingModeService {
       if (updateOperatingMode) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен режим работы #${updateOperatingModeDto.operating_mode_id}`,
+          comment: `${AppStrings.HISTORY_OPERATING_MODE_UPDATED}${updateOperatingModeDto.operating_mode_id}`,
         }
         await this.historyService.create(historyDto)
 
@@ -91,7 +92,7 @@ export class OperatingModeService {
       if (deleteOperatingMode) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален режим работы  #${operating_mode_id}`,
+          comment: `${AppStrings.HISTORY_OPERATING_MODE_DELETED}${operating_mode_id}`,
         }
         await this.historyService.create(historyDto)
 

@@ -3,8 +3,9 @@ import { CreatePropertyValueDto, UpdatePropertyValueDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { PropertyValue } from './entities/property_value.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayPropertyValueResponse, PropertyValueResponse, StatusPropertValueResponse } from './response'
+import { PropertyValueResponse, StatusPropertValueResponse } from './response'
 import { PropertyName } from '../property_names/entities/property_name.entity'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class PropertyValuesService {
@@ -22,7 +23,7 @@ export class PropertyValuesService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создано значение характеристики #${newPropertyValue.property_value_id}`,
+        comment: `${AppStrings.HISTORY_PROPERTY_VALUE_CREATED}${newPropertyValue.property_value_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -76,7 +77,7 @@ export class PropertyValuesService {
       if (foundPropertyValue) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменено значение характеристики #${foundPropertyValue.property_value_id}`,
+          comment: `${AppStrings.HISTORY_PROPERTY_VALUE_UPDATED}${foundPropertyValue.property_value_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -95,7 +96,7 @@ export class PropertyValuesService {
     if (deletePropertyValue) {
       const historyDto = {
         user_id: user_id,
-        comment: `Удалено значение характеристики #${property_value_id}`,
+        comment: `${AppStrings.HISTORY_PROPERTY_VALUE_DELETED}${property_value_id}`,
       }
       await this.historyService.create(historyDto)
 

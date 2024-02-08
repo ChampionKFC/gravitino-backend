@@ -4,6 +4,7 @@ import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@n
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 import { ArrayOrganizationResponse } from './response'
 
 @ApiBearerAuth()
@@ -36,9 +37,9 @@ export class OrganizationController {
 
   //@UseGuards(JwtAuthGuard)
   @Post('all')
-  @ApiOperation({ summary: 'Список всех организаций' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список организаций',
+    description: AppStrings.ORGANIZATION_ALL_RESPONSE,
     type: ArrayOrganizationResponse,
   })
   @ApiBody({ required: false, type: OrganizationFilter })
@@ -48,9 +49,9 @@ export class OrganizationController {
 
   //@UseGuards(JwtAuthGuard)
   @Get('all/:checkpoint_id')
-  @ApiOperation({ summary: 'Список всех организаций по пункту пропуска' })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_ALL_BY_CHECKPOINT_OPERATION })
   @ApiOkResponse({
-    description: 'Список организаций по пункту пропуска',
+    description: AppStrings.ORGANIZATION_ALL_BY_CHECKPOINT_RESPONSE,
     type: ArrayOrganizationResponse,
   })
   findAllByCheckpoint(@Param('checkpoint_id') checkpoint_id: number) {

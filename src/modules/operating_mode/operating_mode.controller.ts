@@ -6,6 +6,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { ArrayOperatingModeResponse, StatusOperatingModeResponse } from './response'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiTags('Operating Mode')
 @Controller('operating-mode')
@@ -15,10 +16,10 @@ export class OperatingModeController {
   constructor(private readonly operatingModeService: OperatingModeService) {}
 
   @ApiCreatedResponse({
-    description: 'Режим работы успешно создан',
+    description: AppStrings.OPERATING_MODE_CREATED_RESPONSE,
     type: StatusOperatingModeResponse,
   })
-  @ApiOperation({ summary: 'Создание режима работы' })
+  @ApiOperation({ summary: AppStrings.OPERATING_MODE_CREATE_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createOperatingModeDto: CreateOperatingModeDto, @Req() request) {
@@ -26,10 +27,10 @@ export class OperatingModeController {
   }
 
   @ApiOkResponse({
-    description: 'Список режимов работы',
+    description: AppStrings.OPERATING_MODE_ALL_RESPONSE,
     type: ArrayOperatingModeResponse,
   })
-  @ApiOperation({ summary: 'Получение списка режимов работы' })
+  @ApiOperation({ summary: AppStrings.OPERATING_MODE_ALL_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Get('all')
   findAll() {
@@ -37,10 +38,10 @@ export class OperatingModeController {
   }
 
   @ApiOkResponse({
-    description: 'Режим работы успешно изменен',
+    description: AppStrings.OPERATING_MODE_UPDATE_RESPONSE,
     type: StatusOperatingModeResponse,
   })
-  @ApiOperation({ summary: 'Изменение режима работы' })
+  @ApiOperation({ summary: AppStrings.OPERATING_MODE_UPDATE_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Patch()
   async update(@Body() updateOperatingModeDto: UpdateOperatingModeDto, @Req() request) {
@@ -54,10 +55,10 @@ export class OperatingModeController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Реждим работы успешно удален',
+    description: AppStrings.OPERATING_MODE_DELETE_RESPONSE,
     type: StatusOperatingModeResponse,
   })
-  @ApiOperation({ summary: 'Удаление режима работы' })
+  @ApiOperation({ summary: AppStrings.OPERATING_MODE_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() request) {
     const foundOperatingMode = await this.operatingModeService.findOne(+id)

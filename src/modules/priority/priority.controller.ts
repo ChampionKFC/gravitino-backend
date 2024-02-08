@@ -6,8 +6,9 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrderPriority } from './entities/priority.entity'
-import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
+import { OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
 import { OrderPriorityFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @Controller('priority')
@@ -17,9 +18,9 @@ export class PriorityController {
   constructor(private readonly priorityService: PriorityService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Создание приоритета' })
+  @ApiOperation({ summary: AppStrings.PRIORITY_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Приоритет успешно создан',
+    description: AppStrings.PRIORITY_CREATED_RESPONSE,
     type: StatusOrderPriorityResponse,
   })
   @Post()
@@ -28,9 +29,9 @@ export class PriorityController {
   }
 
   @Post('all')
-  @ApiOperation({ summary: 'Список всех приоритетов' })
+  @ApiOperation({ summary: AppStrings.PRIORITY_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список приоритетов',
+    description: AppStrings.PRIORITY_ALL_RESPONSE,
     type: ArrayOrderPriorityResponse,
   })
   @ApiBody({ required: false, type: OrderPriorityFilter })
@@ -39,9 +40,9 @@ export class PriorityController {
   }
 
   @Get('all')
-  @ApiOperation({ summary: 'Список всех приоритетов' })
+  @ApiOperation({ summary: AppStrings.PRIORITY_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список приоритетов',
+    description: AppStrings.PRIORITY_ALL_RESPONSE,
     type: ArrayOrderPriorityResponse,
   })
   getAll() {
@@ -49,9 +50,9 @@ export class PriorityController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Изменение приоритета' })
+  @ApiOperation({ summary: AppStrings.PRIORITY_UPDATE_OPERATION })
   @ApiOkResponse({
-    description: 'Приоритет успешно изменен',
+    description: AppStrings.PRIORITY_UPDATE_RESPONSE,
     type: OrderPriority,
   })
   @Patch()
@@ -67,9 +68,9 @@ export class PriorityController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Удаление приоритета' })
+  @ApiOperation({ summary: AppStrings.PRIORITY_DELETE_OPERATION })
   @ApiOkResponse({
-    description: 'Приоритет успешно удален',
+    description: AppStrings.PRIORITY_DELETE_RESPONSE,
     type: OrderPriorityResponse,
   })
   @Delete(':id')

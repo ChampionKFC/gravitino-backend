@@ -3,8 +3,9 @@ import { PersonService } from './person.service'
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
+import { Person } from './entities/person.entity'
 import { PersonFilter } from './filters'
-import { ArrayPersonResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Person')
@@ -14,9 +15,9 @@ export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Список всех данных пользователей' })
+  @ApiOperation({ summary: AppStrings.PERSON_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список данных пользователей',
+    description: AppStrings.PERSON_ALL_RESPONSE,
     type: ArrayPersonResponse,
   })
   @ApiBody({ required: false, type: PersonFilter })

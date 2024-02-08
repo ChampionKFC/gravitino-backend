@@ -1,13 +1,14 @@
 import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpException, HttpStatus, UseFilters, Get } from '@nestjs/common'
 import { RolesService } from './roles.service'
 import { CreateRoleDto, UpdateRoleDto } from './dto'
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Role } from './entities/role.entity'
-import { ArrayRoleResponse, StatusRoleResponse } from './response'
+import { StatusRoleResponse } from './response'
 import { RoleFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Roles')
@@ -17,9 +18,9 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Создание роли' })
+  @ApiOperation({ summary: AppStrings.ROLE_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Роль успешно создана',
+    description: AppStrings.ROLE_CREATED_RESPONSE,
     type: StatusRoleResponse,
   })
   @Post()
@@ -27,9 +28,9 @@ export class RolesController {
     return this.rolesService.create(createRoleDto, request.user.user_id)
   }
 
-  @ApiOperation({ summary: 'Список всех ролей' })
+  @ApiOperation({ summary: AppStrings.ROLE_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список ролей',
+    description: AppStrings.ROLE_ALL_RESPONSE,
     type: ArrayRoleResponse,
   })
   @ApiBody({ required: false, type: RoleFilter })
@@ -38,9 +39,9 @@ export class RolesController {
     return this.rolesService.findAll(roleFilter)
   }
 
-  @ApiOperation({ summary: 'Список всех ролей' })
+  @ApiOperation({ summary: AppStrings.ROLE_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список ролей',
+    description: AppStrings.ROLE_ALL_RESPONSE,
     type: ArrayRoleResponse,
   })
   @Get('all')
@@ -49,12 +50,11 @@ export class RolesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Изменение роли' })
+  @ApiOperation({ summary: AppStrings.ROLE_UPDATE_OPERATION })
   @ApiOkResponse({
-    description: 'Роль успешно изменена',
+    description: AppStrings.ROLE_UPDATE_RESPONSE,
     type: Role,
   })
-  @ApiResponse({ status: 404, description: 'Роль не существует!' })
   @Patch()
   async update(@Body() updateRoleDto: UpdateRoleDto, @Req() request) {
     let foundRole = null
@@ -70,12 +70,11 @@ export class RolesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Удаление роли' })
+  @ApiOperation({ summary: AppStrings.ROLE_DELETE_OPERATION })
   @ApiOkResponse({
-    description: 'Роль успешно удалена',
+    description: AppStrings.ROLE_DELETE_RESPONSE,
     type: StatusRoleResponse,
   })
-  @ApiResponse({ status: 404, description: 'Роль не существует!' })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundRole = await this.rolesService.findOne(id)

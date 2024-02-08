@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { AppStrings } from 'src/common/constants/strings'
 import { FacilityFilters, FacilitySorts } from 'src/modules/facility/dto'
 import { OrderStatusFilters, OrderStatusSorts } from 'src/modules/order_status/dto'
 import { OrganizationFilters, OrganizationSorts } from 'src/modules/organization/dto'
@@ -124,13 +125,13 @@ export class UpdateStatusDto {
 }
 
 export class OrderSorts {
-  @ApiProperty({ default: 'ASC' })
+  @ApiProperty({ default: AppStrings.ASC })
   order_id: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   order_name?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   order_description?: string
 
   @ApiProperty({ required: false })
@@ -139,13 +140,13 @@ export class OrderSorts {
   @ApiProperty({ required: false })
   creator?: UserSorts
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   planned_datetime?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   task_end_datetime?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   ended_at_datetime?: string
 
   @ApiProperty({ required: false })
@@ -203,7 +204,7 @@ export class OrderFilters {
 
   @ApiProperty({
     required: false,
-    default: [{ order_status_id: 1, order_status_name: 'Создан' }],
+    default: [{ order_status_id: 1, order_status_name: AppStrings.CREATED }],
   })
   order_status?: OrderStatusFilters[]
 }

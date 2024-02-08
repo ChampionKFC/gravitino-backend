@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { AppStrings } from 'src/common/constants/strings'
 import { BranchFilters, BranchSorts } from 'src/modules/branch/dto'
 import { CheckpointTypeFilters, CheckpointTypeSorts } from 'src/modules/checkpoint_type/dto'
 import { NeighboringStateFilters, NeighboringStateSorts } from 'src/modules/neighboring_state/filters'
@@ -73,22 +74,22 @@ export class UpdateCheckpointDto {
 }
 
 export class CheckpointSorts {
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   checkpoint_id?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   checkpoint_name?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   address?: string
 
   @ApiProperty({ required: false })
   neighboring_state?: NeighboringStateSorts
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   district?: string
 
-  @ApiProperty({ default: 'ASC', required: false })
+  @ApiProperty({ default: AppStrings.ASC, required: false })
   region?: string
 
   @ApiProperty({ required: false })

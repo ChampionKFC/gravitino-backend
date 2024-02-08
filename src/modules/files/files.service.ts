@@ -3,9 +3,10 @@ import { CreateFileDto, UpdateFileDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { File } from './entities/file.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayFileResponse, FileResponse, StatusFileResponse } from './response'
+import { FileResponse, StatusFileResponse } from './response'
 import { FileType } from '../file_type/entities/file_type.entity'
 import { Order } from '../order/entities/order.entity'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class FilesService {
@@ -19,7 +20,7 @@ export class FilesService {
 
     const historyDto = {
       user_id: user_id,
-      comment: `Создан файл #${newFile.file_id}`,
+      comment: `${AppStrings.HISTORY_FILE_CREATED}${newFile.file_id}`,
     }
     await this.historyService.create(historyDto)
 
@@ -66,7 +67,7 @@ export class FilesService {
       if (foundFile) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен филиал #${foundFile.file_id}`,
+          comment: `${AppStrings.HISTORY_FILE_UPDATED}${foundFile.file_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -85,7 +86,7 @@ export class FilesService {
     if (deleteFile) {
       const historyDto = {
         user_id: user_id,
-        comment: `Удален файл #${file_id}`,
+        comment: `${AppStrings.HISTORY_FILE_DELETED}${file_id}`,
       }
       await this.historyService.create(historyDto)
 

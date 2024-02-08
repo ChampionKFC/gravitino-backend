@@ -3,7 +3,8 @@ import { PeriodicityService } from './periodicity.service'
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { PeriodicityFilter } from './filters'
-import { ArrayPeriodicityResponse } from './response'
+import { Periodicity } from './entities/periodicity.entity'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @Controller('periodicity')
@@ -11,9 +12,9 @@ import { ArrayPeriodicityResponse } from './response'
 export class PeriodicityController {
   constructor(private readonly periodicityService: PeriodicityService) {}
 
-  @ApiOperation({ summary: 'Список всех периодичностей задач' })
+  @ApiOperation({ summary: AppStrings.PERIODICITY_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список периодичностей задач',
+    description: AppStrings.PERIODICITY_ALL_RESPONSE,
     type: ArrayPeriodicityResponse,
   })
   @UseGuards(JwtAuthGuard)
@@ -23,9 +24,9 @@ export class PeriodicityController {
     return this.periodicityService.findAll(periodicityFilter)
   }
 
-  @ApiOperation({ summary: 'Список всех периодичностей задач' })
+  @ApiOperation({ summary: AppStrings.PERIODICITY_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список периодичностей задач',
+    description: AppStrings.PERIODICITY_ALL_RESPONSE,
     type: ArrayPeriodicityResponse,
   })
   @UseGuards(JwtAuthGuard)

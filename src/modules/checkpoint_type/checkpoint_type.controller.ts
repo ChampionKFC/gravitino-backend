@@ -4,9 +4,10 @@ import { CreateCheckpointTypeDto, UpdateCheckpointTypeDto } from './dto'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { CheckpointType } from './entities/checkpoint_type.entity'
-import { ArrayCheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
+import { StatusCheckpointTypeResponse } from './response'
 import { CheckpointTypeFilter } from './filters'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Checkpoint Type')
@@ -17,10 +18,10 @@ export class CheckpointTypeController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Тип пункта пропуска успешно создан',
+    description: AppStrings.CHECKPOINT_TYPE_CREATED_RESPONSE,
     type: StatusCheckpointTypeResponse,
   })
-  @ApiOperation({ summary: 'Создание типа пункта пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_TYPE_CREATE_OPERATION })
   @Post()
   create(@Body() createCheckpointTypeDto: CreateCheckpointTypeDto, @Req() request) {
     return this.checkpointTypeService.create(createCheckpointTypeDto, request.user.user_id)
@@ -28,10 +29,10 @@ export class CheckpointTypeController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Список типов пунктов пропуска',
+    description: AppStrings.CHECKPOINT_TYPE_ALL_RESPONSE,
     type: ArrayCheckpointTypeResponse,
   })
-  @ApiOperation({ summary: 'Список всех типов пунктов пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_TYPE_ALL_OPERATION })
   @ApiBody({ required: false, type: CheckpointTypeFilter })
   @Post('all')
   findAll(@Body() checkpointTypeFilter?: CheckpointTypeFilter) {
@@ -40,10 +41,10 @@ export class CheckpointTypeController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Тип пункта пропуска успешно изменен',
+    description: AppStrings.CHECKPOINT_TYPE_UPDATE_RESPONSE,
     type: CheckpointType,
   })
-  @ApiOperation({ summary: 'Изменение типа пунтка пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_TYPE_UPDATE_OPERATION })
   @Patch()
   update(@Body() updateCheckpointTypeDto: UpdateCheckpointTypeDto, @Req() request) {
     return this.checkpointTypeService.update(updateCheckpointTypeDto, request.user.user_id)
@@ -51,10 +52,10 @@ export class CheckpointTypeController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Тип пункта пропуска успешно удален',
+    description: AppStrings.CHECKPOINT_TYPE_DELETE_RESPONSE,
     type: CheckpointType,
   })
-  @ApiOperation({ summary: 'Удаление типа пунтка пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_TYPE_DELETE_OPERATION })
   @Delete(':id')
   remove(@Param('id') id: number, @Req() request) {
     return this.checkpointTypeService.remove(+id, request.user.user_id)

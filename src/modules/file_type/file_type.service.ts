@@ -3,7 +3,8 @@ import { CreateFileTypeDto, UpdateFileTypeDto } from './dto'
 import { FileType } from './entities/file_type.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayFileTypeResponse, FileTypeResponse, StatusFileTypeResponse } from './response'
+import { FileTypeResponse, StatusFileTypeResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class FileTypeService {
@@ -18,7 +19,7 @@ export class FileTypeService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создана тип файла #${newFileType.file_type_id}`,
+        comment: `${AppStrings.HISTORY_FILE_TYPE_CREATED}${newFileType.file_type_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -64,7 +65,7 @@ export class FileTypeService {
       if (foundFileType) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен тип файла #${foundFileType.file_type_id}`,
+          comment: `${AppStrings.HISTORY_FILE_TYPE_UPDATED}${foundFileType.file_type_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -83,7 +84,7 @@ export class FileTypeService {
     if (deleteFileType) {
       const historyDto = {
         user_id: user_id,
-        comment: `Удален тип файла #${file_type_id}`,
+        comment: `${AppStrings.HISTORY_FILE_TYPE_DELETED}${file_type_id}`,
       }
       await this.historyService.create(historyDto)
 

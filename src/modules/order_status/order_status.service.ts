@@ -3,11 +3,12 @@ import { CreateOrderStatusDto, UpdateOrderStatusDto } from './dto'
 import { OrderStatus } from './entities/order_status.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { ArrayOrderStatusResponse, OrderStatusResponse, StatusOrderStatusResponse } from './response'
+import { OrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { OrderStatusFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class OrderStatusService {
@@ -25,7 +26,7 @@ export class OrderStatusService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Создан статус заказа #${newOrderStatus.order_status_id}`,
+        comment: `${AppStrings.HISTORY_ORDER_STATUS_CREATED}${newOrderStatus.order_status_id}`,
       }
       await this.historyService.create(historyDto)
 
@@ -101,7 +102,7 @@ export class OrderStatusService {
       if (foundOrderStatus) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен статус заказа #${foundOrderStatus.order_status_id}`,
+          comment: `${AppStrings.HISTORY_ORDER_STATUS_UPDATED} #${foundOrderStatus.order_status_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -121,7 +122,7 @@ export class OrderStatusService {
       if (deleteOrderStatus) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален статус заказа #${order_status_id}`,
+          comment: `${AppStrings.HISTORY_ORDER_STATUS_DELETED}${order_status_id}`,
         }
         await this.historyService.create(historyDto)
 

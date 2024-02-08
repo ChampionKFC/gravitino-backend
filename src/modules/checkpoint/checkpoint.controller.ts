@@ -6,9 +6,10 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { BranchService } from '../branch/branch.service'
-import { ArrayCheckpointResponse, StatusCheckpointResponse } from './response'
+import { StatusCheckpointResponse } from './response'
 import { Checkpoint } from './entities/checkpoint.entity'
 import { CheckpointFilter } from './filters'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Checkpoint')
@@ -22,10 +23,10 @@ export class CheckpointController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Пункт пропуска успешно создан',
+    description: AppStrings.CHECKPOINT_CREATED_RESPONSE,
     type: StatusCheckpointResponse,
   })
-  @ApiOperation({ summary: 'Создание пункта пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_CREATE_OPERATION })
   @Post()
   async create(@Body() createCheckpointDto: CreateCheckpointDto, @Req() request) {
     const foundBranch = await this.branchService.findOne(createCheckpointDto.branch_id)
@@ -38,10 +39,10 @@ export class CheckpointController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Список пунтков пропуска',
+    description: AppStrings.CHECKPOINT_ALL_RESPONSE,
     type: ArrayCheckpointResponse,
   })
-  @ApiOperation({ summary: 'Список всех пунтков пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_RESPONSE })
   @ApiBody({ required: false, type: CheckpointFilter })
   @Post('all')
   async findAll(@Body() checkpointFilter?: CheckpointFilter) {
@@ -51,10 +52,10 @@ export class CheckpointController {
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: 200,
-    description: 'Список всех пунктов пропуска по ID филиалов',
+    description: AppStrings.CHECKPOINT_ALL_BY_BRANCH_RESPONSE,
     type: ArrayCheckpointResponse,
   })
-  @ApiOperation({ summary: 'Список всех пунктов пропуска по ID филиалов' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: CheckpointFilter })
   @Post('all-by-branch')
   async findAllByBranch(@Query('branch_ids') branch_ids: number[], @Body() checkpointFilter?: CheckpointFilter) {
@@ -72,10 +73,10 @@ export class CheckpointController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Пункт пропуска успешно изменен',
+    description: AppStrings.CHECKPOINT_UPDATE_RESPONSE,
     type: Checkpoint,
   })
-  @ApiOperation({ summary: 'Изменение пункта пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_UPDATE_OPERATION })
   @Patch()
   async update(@Body() updateCheckpointDto: UpdateCheckpointDto, @Req() request) {
     let foundCheckpoint = null
@@ -98,10 +99,10 @@ export class CheckpointController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Пункт пропуска успешно удалён',
+    description: AppStrings.CHECKPOINT_DELETE_RESPONSE,
     type: StatusCheckpointResponse,
   })
-  @ApiOperation({ summary: 'Удаление пункта пропуска' })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundCheckpoint = await this.checkpointService.findOne(id)

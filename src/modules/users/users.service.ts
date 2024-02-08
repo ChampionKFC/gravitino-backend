@@ -17,6 +17,7 @@ import { UserFilter } from './filters'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { OrganizationService } from '../organization/organization.service'
 import { CreateOrganizationDto, UpdateOrganizationDto } from '../organization/dto'
+import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
 export class UsersService {
@@ -64,7 +65,7 @@ export class UsersService {
 
       const historyDto = {
         user_id: newUser.user_id,
-        comment: `Создан пользователь #${newUser.user_id} (person_id: ${newUser.person_id})`,
+        comment: `${AppStrings.HISTORY_USER_CREATED}${newUser.user_id} (person_id: ${newUser.person_id})`,
       }
       await this.historyService.create(historyDto)
 
@@ -106,7 +107,7 @@ export class UsersService {
 
       const historyDto = {
         user_id: newUser.user_id,
-        comment: `Создан подрядчик #${newUser.user_id} (organization_id: ${newUser.organization_id})`,
+        comment: `${AppStrings.HISTORY_USER_ORGANIZATION_CREATED}${newUser.user_id} (organization_id: ${newUser.organization_id})`,
       }
       await this.historyService.create(historyDto, transaction)
 
@@ -170,7 +171,7 @@ export class UsersService {
       if (foundUser) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен пользователь #${foundUser.user_id}`,
+          comment: `${AppStrings.HISTORY_USER_UPDATED}${foundUser.user_id}`,
         }
         await this.historyService.create(historyDto)
       }
@@ -221,7 +222,7 @@ export class UsersService {
       if (updateUserOrganization) {
         const historyDto = {
           user_id: user_id,
-          comment: `Изменен подрядчик #${organization.user_id}`,
+          comment: `${AppStrings.HISTORY_USER_ORGANIZATION_UPDATED}${organization.user_id}`,
         }
         await this.historyService.create(historyDto, transaction)
 
@@ -420,7 +421,7 @@ export class UsersService {
       if (deleteUser && deleteData) {
         const historyDto = {
           user_id: user_id,
-          comment: `Удален пользователь #${id}`,
+          comment: `${AppStrings.HISTORY_USER_DELETED}${id}`,
         }
         await this.historyService.create(historyDto, transaction)
         await transaction.commit()
@@ -442,7 +443,7 @@ export class UsersService {
 
       const historyDto = {
         user_id: user_id,
-        comment: `Статус пользователя #${updateUserStatusDto.user_id} изменен на ${updateUserStatusDto.is_active}`,
+        comment: `${AppStrings.USER_STATUS} #${updateUserStatusDto.user_id} ${AppStrings.HISTORY_UPDATED} ${updateUserStatusDto.is_active}`,
       }
       await this.historyService.create(historyDto)
 

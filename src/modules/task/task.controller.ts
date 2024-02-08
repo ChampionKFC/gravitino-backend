@@ -7,12 +7,13 @@ import { CategoryService } from '../category/category.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Task } from './entities/task.entity'
-import { ArrayTaskResponse, StatusTaskResponse } from './response'
+import { StatusTaskResponse } from './response'
 import { TaskFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { FacilityService } from '../facility/facility.service'
 import { OrganizationService } from '../organization/organization.service'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -30,10 +31,10 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({
-    description: 'Заказы созданы',
+    description: AppStrings.TASK_CREATED_RESPONSE,
     type: StatusTaskResponse,
   })
-  @ApiOperation({ summary: 'Создание плановой задачи' })
+  @ApiOperation({ summary: AppStrings.TASK_CREATE_OPERATION })
   @Post()
   async create(@Body() createTaskDto: CreateTaskDto, @Req() request) {
     const foundCategory = await this.categoryService.findOne(createTaskDto.category_id)
@@ -96,10 +97,10 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Список задач',
+    description: AppStrings.TASK_ALL_RESPONSE,
     type: ArrayTaskResponse,
   })
-  @ApiOperation({ summary: 'Список всех задач' })
+  @ApiOperation({ summary: AppStrings.TASK_ALL_OPERATION })
   @ApiBody({ required: false, type: TaskFilter })
   @Post('all')
   async findAll(@Body() taskFilter: TaskFilter) {
@@ -108,10 +109,10 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Задача успешно изменена',
+    description: AppStrings.TASK_UPDATE_RESPONSE,
     type: Task,
   })
-  @ApiOperation({ summary: 'Изменение задачи' })
+  @ApiOperation({ summary: AppStrings.TASK_UPDATE_OPERATION })
   @Patch()
   async update(@Body() updateTaskDto: UpdateTaskDto, @Req() request) {
     let foundTask = null
@@ -135,10 +136,10 @@ export class TaskController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Задача успешно удалена',
+    description: AppStrings.TASK_DELETE_RESPONSE,
     type: StatusTaskResponse,
   })
-  @ApiOperation({ summary: 'Удаление задачи' })
+  @ApiOperation({ summary: AppStrings.TASK_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundTask = await this.taskService.findOne(id)

@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiTags('Working Hours')
 @Controller('working-hours')
@@ -15,10 +16,10 @@ export class WorkingHoursController {
   constructor(private readonly workingHoursService: WorkingHoursService) {}
 
   @ApiCreatedResponse({
-    description: 'Часы работы успешно добвлены',
+    description: AppStrings.WORKING_HOURS_CREATED_RESPONSE,
     type: StatusWorkingHoursResponse,
   })
-  @ApiOperation({ summary: 'Добавление часов работы' })
+  @ApiOperation({ summary: AppStrings.WORKING_HOURS_CREATE_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createWorkingHourDto: CreateWorkingHourDto, @Req() request) {
@@ -26,10 +27,10 @@ export class WorkingHoursController {
   }
 
   @ApiOkResponse({
-    description: 'Список часов работы',
+    description: AppStrings.WORKING_HOURS_ALL_RESPONSE,
     type: ArrayWorkingHoursResponse,
   })
-  @ApiOperation({ summary: 'Получение списка часов работы' })
+  @ApiOperation({ summary: AppStrings.WORKING_HOURS_ALL_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Get('all')
   findAll() {
@@ -37,10 +38,10 @@ export class WorkingHoursController {
   }
 
   @ApiOkResponse({
-    description: 'Часы работы успешно изменены',
+    description: AppStrings.WORKING_HOURS_UPDATE_RESPONSE,
     type: StatusWorkingHoursResponse,
   })
-  @ApiOperation({ summary: 'Изменение часов работы' })
+  @ApiOperation({ summary: AppStrings.WORKING_HOURS_UPDATE_OPERATION })
   @UseGuards(JwtAuthGuard)
   @Patch()
   async update(@Body() updateWorkingHourDto: UpdateWorkingHourDto, @Req() request) {
@@ -54,10 +55,10 @@ export class WorkingHoursController {
 
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({
-    description: 'Часы работы успешно удалены',
+    description: AppStrings.WORKING_HOURS_DELETE_RESPONSE,
     type: StatusWorkingHoursResponse,
   })
-  @ApiOperation({ summary: 'Удаление часов работы' })
+  @ApiOperation({ summary: AppStrings.WORKING_HOURS_DELETE_OPERATION })
   @Delete(':id')
   async remove(@Param('id') id: string, @Req() request) {
     const foundWorkingHours = await this.workingHoursService.findOne(+id)

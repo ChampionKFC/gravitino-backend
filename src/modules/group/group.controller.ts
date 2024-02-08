@@ -5,8 +5,10 @@ import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags
 import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
+import { Group } from './entities/group.entity'
 import { BranchService } from '../branch/branch.service'
-import { ArrayGroupResponse, StatusGroupResponse } from './response'
+import { StatusGroupResponse } from './response'
+import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
 @ApiTags('Group')
@@ -19,9 +21,9 @@ export class GroupController {
   ) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Создание группы' })
+  @ApiOperation({ summary: AppStrings.GROUP_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: 'Группа успешно создана',
+    description: AppStrings.GROUP_CREATED_RESPONSE,
     type: StatusGroupResponse,
   })
   @Post()
@@ -37,9 +39,9 @@ export class GroupController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Список всех групп' })
+  @ApiOperation({ summary: AppStrings.GROUP_ALL_OPERATION })
   @ApiOkResponse({
-    description: 'Список групп',
+    description: AppStrings.GROUP_ALL_RESPONSE,
     type: ArrayGroupResponse,
   })
   @Get('all')
@@ -48,9 +50,9 @@ export class GroupController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Изменение группы' })
+  @ApiOperation({ summary: AppStrings.GROUP_UPDATE_OPERATION })
   @ApiOkResponse({
-    description: 'Группа успешно изменена',
+    description: AppStrings.GROUP_UPDATE_RESPONSE,
     type: StatusGroupResponse,
   })
   @Patch()
@@ -74,9 +76,9 @@ export class GroupController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Удаление группы' })
+  @ApiOperation({ summary: AppStrings.GROUP_DELETE_OPERATION })
   @ApiOkResponse({
-    description: 'Группа успешно удалена',
+    description: AppStrings.GROUP_DELETE_RESPONSE,
     type: StatusGroupResponse,
   })
   @Delete(':id')

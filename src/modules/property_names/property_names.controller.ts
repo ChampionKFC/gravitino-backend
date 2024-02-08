@@ -1,36 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, HttpException, HttpStatus, UseFilters } from '@nestjs/common'
+import { Controller, Get, Post, Body, Param, Delete, Req, UseGuards, HttpException, HttpStatus, UseFilters } from '@nestjs/common'
 import { PropertyNamesService } from './property_names.service'
-import { CreatePropertyNameDto, UpdatePropertyNameDto } from './dto'
+import { CreatePropertyDto } from './dto'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { PropertyName } from './entities/property_name.entity'
 import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @ApiBearerAuth()
-@ApiTags('Property names')
-@Controller('property-names')
+@ApiTags('Properties')
+@Controller('property')
 @UseFilters(AllExceptionsFilter)
 export class PropertyNamesController {
   constructor(private readonly propertyNamesService: PropertyNamesService) {}
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_CREATE_OPERATION })
+  @ApiOperation({ summary: AppStrings.PROPERTY_CREATE_OPERATION })
   @ApiCreatedResponse({
-    description: AppStrings.PROPERTY_NAME_CREATED_RESPONSE,
+    description: AppStrings.PROPERTY_CREATED_RESPONSE,
     type: StatusPropertyNameResponse,
   })
   @Post()
-  create(@Body() createPropertyNameDto: CreatePropertyNameDto, @Req() request) {
-    return this.propertyNamesService.create(createPropertyNameDto, request.user.user_id)
+  create(@Body() createPropertiesDto: CreatePropertyDto, @Req() request) {
+    return this.propertyNamesService.bulkCreate(createPropertiesDto, request.user.user_id)
   }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_ALL_OPERATION })
+  @ApiOperation({ summary: AppStrings.PROPERTY_ALL_OPERATION })
   @ApiOkResponse({
-    description: AppStrings.PROPERTY_NAME_ALL_RESPONSE,
+    description: AppStrings.PROPERTY_ALL_RESPONSE,
     type: ArrayPropertyNameResponse,
   })
   @Get('all')
@@ -38,29 +37,29 @@ export class PropertyNamesController {
     return this.propertyNamesService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_UPDATE_OPERATION })
-  @ApiOkResponse({
-    description: AppStrings.PROPERTY_NAME_UPDATE_RESPONSE,
-    type: PropertyName,
-  })
-  @Patch()
-  async update(@Body() updatePropertyNameDto: UpdatePropertyNameDto, @Req() request) {
-    let foundPropertyName = null
-    if (updatePropertyNameDto.property_name_id) {
-      foundPropertyName = await this.propertyNamesService.findOne(updatePropertyNameDto.property_name_id)
-    }
-    if (!foundPropertyName) {
-      throw new HttpException(AppError.PROPERTY_NAME_NOT_FOUND, HttpStatus.NOT_FOUND)
-    }
+  // @UseGuards(JwtAuthGuard)
+  // @ApiOperation({ summary: AppStrings.PROPERTY_UPDATE_OPERATION })
+  // @ApiOkResponse({
+  //   description: AppStrings.PROPERTY_UPDATE_RESPONSE,
+  //   type: PropertyName,
+  // })
+  // @Patch()
+  // async update(@Body() updatePropertyDto: UpdatePropertyDto, @Req() request) {
+  //   let foundPropertyName = null
+  //   if (updatePropertyDto.property_name_id) {
+  //     foundPropertyName = await this.propertyNamesService.findOne(updatePropertyDto.property_name_id)
+  //   }
+  //   if (!foundPropertyName) {
+  //     throw new HttpException(AppError.PROPERTY_NOT_FOUND, HttpStatus.NOT_FOUND)
+  //   }
 
-    return this.propertyNamesService.update(updatePropertyNameDto, request.user.user_id)
-  }
+  //   return this.propertyNamesService.update(updatePropertyDto, request.user.user_id)
+  // }
 
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: AppStrings.PROPERTY_NAME_DELETE_OPERATION })
+  @ApiOperation({ summary: AppStrings.PROPERTY_DELETE_OPERATION })
   @ApiOkResponse({
-    description: AppStrings.PROPERTY_NAME_DELETE_RESPONSE,
+    description: AppStrings.PROPERTY_DELETE_RESPONSE,
     type: StatusPropertyNameResponse,
   })
   @Delete(':id')

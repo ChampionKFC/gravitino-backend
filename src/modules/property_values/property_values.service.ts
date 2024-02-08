@@ -6,6 +6,7 @@ import { TransactionHistoryService } from '../transaction_history/transaction_hi
 import { ArrayPropertyValueResponse, PropertyValueResponse, StatusPropertValueResponse } from './response'
 import { PropertyName } from '../property_names/entities/property_name.entity'
 import { AppStrings } from 'src/common/constants/strings'
+import { Transaction } from 'sequelize'
 
 @Injectable()
 export class PropertyValuesService {
@@ -15,17 +16,20 @@ export class PropertyValuesService {
     private readonly historyService: TransactionHistoryService,
   ) {}
 
-  async create(createPropertyValueDto: CreatePropertyValueDto, user_id: number): Promise<StatusPropertValueResponse> {
+  async create(createPropertyValueDto: CreatePropertyValueDto, user_id: number, transaction?: Transaction): Promise<StatusPropertValueResponse> {
     try {
-      const newPropertyValue = await this.propertyValueRepository.create({
-        ...createPropertyValueDto,
-      })
+      const newPropertyValue = await this.propertyValueRepository.create(
+        {
+          ...createPropertyValueDto,
+        },
+        { transaction },
+      )
 
       const historyDto = {
         user_id: user_id,
         comment: `${AppStrings.HISTORY_PROPERTY_VALUE_CREATED}${newPropertyValue.property_value_id}`,
       }
-      await this.historyService.create(historyDto)
+      await this.historyService.create(historyDto, transaction)
 
       return { status: true, data: newPropertyValue }
     } catch (error) {

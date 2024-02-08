@@ -31,6 +31,7 @@ export const AppError = {
   USER_NOT_FOUND: 'Пользователь не найден!',
   USER_EMAIL_EXISTS: 'Пользователь с таким email уже существует!',
   PROPERTY_NAME_NOT_FOUND: 'Название характеристики не найдено!',
+  PROPERTY_NOT_FOUND: 'Характеристика не найдена!',
   PROPERTY_VALUE_NOT_FOUND: 'Значение характеристики не найдено!',
   PERSON_STATUS_NOT_FOUND: 'Статус пользователя не найден!',
   GENDER_NOT_FOUND: 'Пол не найден!',

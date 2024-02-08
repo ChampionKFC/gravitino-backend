@@ -72,7 +72,7 @@ export class OrganizationService {
           FROM
             "Organizations" AS "Organization"
           LEFT JOIN "OrganizationTypes" AS "organization_type" ON "Organization"."organization_type_id" = "organization_type"."organization_type_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};

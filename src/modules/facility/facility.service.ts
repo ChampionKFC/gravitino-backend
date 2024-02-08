@@ -91,7 +91,7 @@ export class FacilityService {
             LEFT JOIN "WorkingHours" AS "working_hours" ON "checkpoint"."working_hours_id" = "working_hours"."working_hours_id"
             LEFT JOIN "NeighboringStates" AS "neighboring_state" ON "checkpoint"."neighboring_state_id" = "neighboring_state"."neighboring_state_id"
             LEFT JOIN "OperatingModes" AS "operating_mode" ON "checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};

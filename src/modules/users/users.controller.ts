@@ -151,7 +151,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Patch('organization')
   async updateOrganization(@Body() organization: UpdateUserOrganizationDto, @Req() request) {
-    const foundUser = await this.usersService.findByEmail(organization.email)
+    const foundUser = await this.usersService.findById(organization.user_id)
     if (!foundUser) {
       throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
     }

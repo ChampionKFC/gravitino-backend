@@ -149,7 +149,7 @@ export class TaskService {
             "Tasks" AS "Task"
             LEFT OUTER JOIN "Categories" AS "category" ON "Task"."category_id" = "category"."category_id"
             LEFT OUTER JOIN "Periodicities" AS "periodicity" ON "Task"."periodicity_id" = "periodicity"."periodicity_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};

@@ -154,7 +154,7 @@ export class OrderService {
       LEFT JOIN "OrganizationTypes" AS "creator_organization_type" ON "creator_organization".organization_type_id = "creator_organization_type"."organization_type_id"
       LEFT JOIN "Roles" AS "creator_role" ON "creator".role_id = "creator_role"."role_id"
       LEFT JOIN "Groups" AS "creator_group" ON "creator".group_id = "creator_group"."group_id"
-  )`
+  ) AS query`
 
   async create(createOrderDto: CreateOrderDto, user_id: number, transaction?: Transaction): Promise<StatusOrderResponse> {
     try {

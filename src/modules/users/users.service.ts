@@ -289,7 +289,7 @@ export class UsersService {
             LEFT OUTER JOIN "OrganizationTypes" AS "organization_type" ON "organization"."organization_type_id" = "organization_type"."organization_type_id"
             LEFT OUTER JOIN "People" AS "person" ON "User"."person_id" = "person"."person_id"
             LEFT OUTER JOIN "Groups" AS "group" ON "User"."group_id" = "group"."group_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
@@ -393,9 +393,8 @@ export class UsersService {
   }
 
   async remove(id: number, user_id: number): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction()
-
       const user = await this.userRepository.findOne({
         where: { user_id: id },
         attributes: { exclude: ['password'] },
@@ -432,6 +431,7 @@ export class UsersService {
         return { status: false }
       }
     } catch (error) {
+      await transaction.rollback()
       throw new Error(error)
     }
   }

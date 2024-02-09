@@ -23,6 +23,6 @@ export class PropertyName extends Model {
   @Column({ type: DataType.STRING, allowNull: false })
   entity_name: string
 
-  @HasMany(() => PropertyValue, PropertyName.primaryKeyAttribute)
-  orders: NonAttribute<PropertyValue[]>
+  @HasMany(() => PropertyValue, { foreignKey: PropertyName.primaryKeyAttribute, onDelete: AppStrings.CASCADE, onUpdate: AppStrings.CASCADE })
+  property_values: NonAttribute<PropertyValue[]>
 }

@@ -59,7 +59,7 @@ export class RolesService {
               "updatedAt"
             FROM
               "Roles" AS "Role"
-          )
+          ) AS query
           ${whereQuery}
           ${sortQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};

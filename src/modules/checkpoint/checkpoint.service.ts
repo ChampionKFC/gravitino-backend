@@ -46,8 +46,7 @@ export class CheckpointService {
         sortQuery = generateSortQuery(checkpointFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Checkpoint>(
-        `
+      const selectQuery = `
         SELECT * FROM (
           SELECT
             "checkpoint_id",
@@ -77,6 +76,17 @@ export class CheckpointService {
         )
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Checkpoint>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Checkpoint>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -85,7 +95,7 @@ export class CheckpointService {
         },
       )
 
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -107,7 +117,7 @@ export class CheckpointService {
     }
   }
 
-  async findAllByBranch(branch_ids: number[], checkpointFilter?: CheckpointFilter): Promise<ArrayCheckpointResponse> {
+  async findAllByBranch(branch_ids: number[], checkpointFilter?: CheckpointFilter): Promise<CheckpointResponse[]> {
     try {
       let result = []
 
@@ -124,7 +134,7 @@ export class CheckpointService {
         result = [...result, ...(await this.findAll(checkpointFilter)).data]
       }
 
-      return { count: result.length, data: result }
+      return result
     } catch (error) {
       throw new Error(error)
     }

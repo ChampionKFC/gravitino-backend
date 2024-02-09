@@ -48,17 +48,27 @@ export class CategoryService {
         sortQuery = generateSortQuery(categoryFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "category_id",
+          "category_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "Categories" AS "Category"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Category>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundCategories = await this.sequelize.query<Category>(
         `
-          SELECT
-            "category_id",
-            "category_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "Categories" AS "Category"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -67,7 +77,7 @@ export class CategoryService {
         },
       )
 
-      return { count: foundCategories.length, data: foundCategories }
+      return { count: count, data: foundCategories }
     } catch (error) {
       throw new Error(error)
     }

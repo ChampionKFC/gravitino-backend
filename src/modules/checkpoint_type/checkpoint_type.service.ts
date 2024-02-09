@@ -51,17 +51,27 @@ export class CheckpointTypeService {
         sortQuery = generateSortQuery(checkpointTypeFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "checkpoint_type_id",
+          "checkpoint_type_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "CheckpointTypes" AS "CheckpointType"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<CheckpointType>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundCheckpointTypes = await this.sequelize.query<CheckpointType>(
         `
-          SELECT
-            "checkpoint_type_id",
-            "checkpoint_type_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "CheckpointTypes" AS "CheckpointType"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -70,7 +80,7 @@ export class CheckpointTypeService {
         },
       )
 
-      return { count: foundCheckpointTypes.length, data: foundCheckpointTypes }
+      return { count: count, data: foundCheckpointTypes }
     } catch (error) {
       throw new Error(error)
     }

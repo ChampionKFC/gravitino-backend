@@ -263,11 +263,21 @@ export class OrderService {
         sortQuery = generateSortQuery(orderFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Order>(
-        ` 
+      const selectQuery = `
         ${this.includeOrders}
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Order>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Order>(
+        ` 
+        ${selectQuery}
         LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
         `,
         {
@@ -275,7 +285,7 @@ export class OrderService {
           type: QueryTypes.SELECT,
         },
       )
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -364,6 +374,7 @@ export class OrderService {
       }
 
       let result
+      let count = 0
 
       const order_offset_count = myOrdersFilter.offset?.count == undefined ? 50 : myOrdersFilter.offset.count
       const order_offset_page = myOrdersFilter.offset?.page == undefined ? 1 : myOrdersFilter.offset.page
@@ -385,11 +396,21 @@ export class OrderService {
 
       if (!u.group.group_id && !u.group.checkpoint_id && !u.group.facility_id && u.organization.organization_id) {
         //Рабочий
+        const selectQuery = `
+          ${this.includeOrders}
+          ${whereQuery} planned_datetime between '${myOrdersFilter.period.date_start}' AND '${myOrdersFilter.period.date_end}'
+          ${sortQuery}
+        `
+
+        count = (
+          await this.sequelize.query<Order>(selectQuery, {
+            nest: true,
+            type: QueryTypes.SELECT,
+          })
+        ).length
         result = await this.sequelize.query(
           `
-            ${this.includeOrders}
-            ${whereQuery} planned_datetime between '${myOrdersFilter.period.date_start}' AND '${myOrdersFilter.period.date_end}'
-            ${sortQuery}
+           ${selectQuery}
             LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
           `,
           {
@@ -402,11 +423,21 @@ export class OrderService {
 
         if (u.group.facility_id) {
           // Вывод всех задач по всем ПП по объекту обслуживания
+          const selectQuery = `
+            ${this.includeOrders}
+            ${whereQuery} "facility".facility_id = ${u.group.facility_id}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
           result = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${whereQuery} "facility".facility_id = ${u.group.facility_id}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -416,11 +447,21 @@ export class OrderService {
           )
         } else if (u.group.checkpoint_id) {
           // Вывод всех задач по всем объектам обслуживания по ПП
+          const selectQuery = `
+            ${this.includeOrders}
+            ${whereQuery} "checkpoint".checkpoint_id = ${u.group.checkpoint_id}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
           result = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${whereQuery} "checkpoint".checkpoint_id = ${u.group.checkpoint_id}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -430,11 +471,21 @@ export class OrderService {
           )
         } else if (u.group.branch_id) {
           // Вывод всех задач по всем ПП по филиалу
+          const selectQuery = `
+            ${this.includeOrders}
+            ${whereQuery} "branch".branch_id = ${u.group.branch_id}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
           result = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${whereQuery} "branch".branch_id = ${u.group.branch_id}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -444,10 +495,20 @@ export class OrderService {
           )
         } else {
           //Сотрудник ЦА
+          const selectQuery = `
+            ${this.includeOrders}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
           result = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -458,7 +519,7 @@ export class OrderService {
         }
       }
 
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

@@ -48,8 +48,7 @@ export class FacilityService {
         sortQuery = generateSortQuery(facilityFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Facility>(
-        `
+      const selectQuery = `
         SELECT * FROM (
           SELECT
             "Facility"."facility_id",
@@ -94,6 +93,17 @@ export class FacilityService {
         )
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Facility>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Facility>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -102,7 +112,7 @@ export class FacilityService {
         },
       )
 
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

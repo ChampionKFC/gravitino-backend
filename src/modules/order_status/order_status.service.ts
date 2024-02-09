@@ -50,17 +50,27 @@ export class OrderStatusService {
         sortQuery = generateSortQuery(orderStatusFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "order_status_id",
+          "order_status_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "OrderStatuses" AS "OrderStatus"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<OrderStatus>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundStatuses = await this.sequelize.query<OrderStatus>(
         `
-          SELECT
-            "order_status_id",
-            "order_status_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "OrderStatuses" AS "OrderStatus"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -69,7 +79,7 @@ export class OrderStatusService {
         },
       )
 
-      return { count: foundStatuses.length, data: foundStatuses }
+      return { count: count, data: foundStatuses }
     } catch (error) {
       throw new Error(error)
     }

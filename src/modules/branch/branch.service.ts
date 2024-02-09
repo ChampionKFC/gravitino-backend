@@ -47,18 +47,29 @@ export class BranchService {
         sortQuery = generateSortQuery(branchFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "branch_id",
+          "branch_name",
+          "branch_address",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "Branches" AS "Branch"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Branch>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+
       const result = await this.sequelize.query<Branch>(
         `
-          SELECT
-            "branch_id",
-            "branch_name",
-            "branch_address",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "Branches" AS "Branch"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -66,7 +77,7 @@ export class BranchService {
           type: QueryTypes.SELECT,
         },
       )
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

@@ -28,9 +28,8 @@ export class PeriodicityService {
         sortQuery = generateSortQuery(periodicityFilter?.sorts)
       }
 
-      const foundPeriodicity = await this.sequelize.query<Periodicity>(
-        `
-         SELECT
+      const selectQuery = `
+        SELECT
           "periodicity_id", 
           "periodicity_name",
           "createdAt",
@@ -39,6 +38,17 @@ export class PeriodicityService {
           "Periodicities" AS "Periodicity"
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Periodicity>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const foundPeriodicity = await this.sequelize.query<Periodicity>(
+        `
+         ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -47,7 +57,7 @@ export class PeriodicityService {
         },
       )
 
-      return { count: foundPeriodicity.length, data: foundPeriodicity }
+      return { count: count, data: foundPeriodicity }
     } catch (error) {
       throw new Error(error)
     }

@@ -51,17 +51,27 @@ export class PriorityService {
         sortQuery = generateSortQuery(orderPriorityFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "priority_id",
+          "priority_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "OrderPriorities" AS "OrderPriority"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<OrderPriority>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundPriorities = await this.sequelize.query<OrderPriority>(
         `
-          SELECT
-            "priority_id",
-            "priority_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "OrderPriorities" AS "OrderPriority"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -70,7 +80,7 @@ export class PriorityService {
         },
       )
 
-      return { count: foundPriorities.length, data: foundPriorities }
+      return { count: count, data: foundPriorities }
     } catch (error) {
       throw new Error(error)
     }

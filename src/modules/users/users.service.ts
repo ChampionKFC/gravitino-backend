@@ -252,8 +252,7 @@ export class UsersService {
         sortQuery = generateSortQuery(userFilter?.sorts)
       }
 
-      const foundUsers = await this.sequelize.query<User>(
-        `
+      const selectQuery = `
         SELECT *
         FROM (
           SELECT
@@ -292,6 +291,17 @@ export class UsersService {
         ) AS query
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<User>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const foundUsers = await this.sequelize.query<User>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -299,7 +309,7 @@ export class UsersService {
           type: QueryTypes.SELECT,
         },
       )
-      return { count: foundUsers.length, data: foundUsers }
+      return { count: count, data: foundUsers }
     } catch (error) {
       throw new Error(error)
     }

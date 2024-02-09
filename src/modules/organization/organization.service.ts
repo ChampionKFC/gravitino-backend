@@ -54,8 +54,7 @@ export class OrganizationService {
         sortQuery = generateSortQuery(organizationFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Organization>(
-        `
+      const selectQuery = `
         SELECT * FROM (
           SELECT 
             "Organization"."organization_id",
@@ -75,6 +74,17 @@ export class OrganizationService {
         ) AS query
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Organization>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Organization>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -83,7 +93,7 @@ export class OrganizationService {
         },
       )
 
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

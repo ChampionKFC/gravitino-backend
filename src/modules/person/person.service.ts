@@ -38,21 +38,31 @@ export class PersonService {
         sortQuery = generateSortQuery(personFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "person_id",
+          "last_name",
+          "first_name",
+          "patronymic",
+          "phone",
+          "property_values",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "People" AS "Person"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Person>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundPerson = await this.sequelize.query<Person>(
         `
-          SELECT
-            "person_id",
-            "last_name",
-            "first_name",
-            "patronymic",
-            "phone",
-            "property_values",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "People" AS "Person"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -61,7 +71,7 @@ export class PersonService {
         },
       )
 
-      return { count: foundPerson.length, data: foundPerson }
+      return { count: count, data: foundPerson }
     } catch (error) {
       throw new Error(error)
     }

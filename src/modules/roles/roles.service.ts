@@ -48,9 +48,8 @@ export class RolesService {
         sortQuery = generateSortQuery(roleFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Role>(
-        `
-          SELECT * FROM
+      const selectQuery = `
+        SELECT * FROM
           (
             SELECT
               "role_id",
@@ -60,8 +59,19 @@ export class RolesService {
             FROM
               "Roles" AS "Role"
           ) AS query
-          ${whereQuery}
-          ${sortQuery}
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Role>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Role>(
+        `
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -70,7 +80,7 @@ export class RolesService {
         },
       )
 
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

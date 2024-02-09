@@ -51,17 +51,27 @@ export class OrganizationTypeService {
         sortQuery = generateSortQuery(organizationTypeFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "organization_type_id",
+          "organization_type_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "OrganizationTypes" AS "OrganizationType"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<OrganizationType>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundTypes = await this.sequelize.query<OrganizationType>(
         `
-          SELECT
-            "organization_type_id",
-            "organization_type_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "OrganizationTypes" AS "OrganizationType"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -70,7 +80,7 @@ export class OrganizationTypeService {
         },
       )
 
-      return { count: foundTypes.length, data: foundTypes }
+      return { count: count, data: foundTypes }
     } catch (error) {
       throw new Error(error)
     }

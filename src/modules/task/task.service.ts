@@ -130,8 +130,7 @@ export class TaskService {
         sortQuery = generateSortQuery(taskFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Task>(
-        `
+      const selectQuery = `
         SELECT * FROM (
           SELECT
             "Task"."task_id",
@@ -152,6 +151,17 @@ export class TaskService {
         ) AS query
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Task>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Task>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -160,7 +170,7 @@ export class TaskService {
         },
       )
 
-      return { count: result.length, data: result }
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

@@ -1,12 +1,10 @@
-import { Controller, Post, UseGuards, UseInterceptors, Query, Req, UploadedFiles } from '@nestjs/common'
+import { Controller, Post, UseGuards, UseInterceptors, Query, Req, UploadedFiles, Get } from '@nestjs/common'
 import { FilesService } from './files.service'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { OrderService } from '../order/order.service'
 import { FileTypeService } from '../file_type/file_type.service'
 import { FilesInterceptor } from '@nestjs/platform-express'
-import { diskStorage } from 'multer'
-import { extname } from 'path'
 import { StatusFileResponse } from './response'
 import { UploadFileDto } from './dto'
 import { AppStrings } from 'src/common/constants/strings'
@@ -29,19 +27,19 @@ export class FilesController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          const destination = `./uploads/${req.query.directory}`
-          cb(null, `${destination}`)
-        },
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('')
-          return cb(null, `${randomName}${extname(file.originalname)}`)
-        },
-      }),
+      // storage: diskStorage({
+      //   destination: (req, file, cb) => {
+      //     const destination = `./uploads/${req.query.directory}`
+      //     cb(null, `${destination}`)
+      //   },
+      //   filename: (req, file, cb) => {
+      //     const randomName = Array(32)
+      //       .fill(null)
+      //       .map(() => Math.round(Math.random() * 16).toString(16))
+      //       .join('')
+      //     return cb(null, `${randomName}${extname(file.originalname)}`)
+      //   },
+      // }),
       limits: { fileSize: 5242880 },
       fileFilter: (req, file, callback) => {
         if (!Boolean(file.mimetype.match(/(jpg|jpeg|png|gif)/))) callback(null, false)
@@ -56,16 +54,12 @@ export class FilesController {
     files: Array<Express.Multer.File>,
     @Req() request,
   ) {
-    const urls = []
+    return this.filesService.uploadToS3(query, files, request.user.user_id)
+  }
 
-    for (let index = 0; index < files.length; index++) {
-      const file = files[index]
-
-      const url = `${request.protocol}://${request.get('Host')}/file/uploads?path=${file.path}`
-      urls.push(url)
-    }
-
-    return urls
+  @Get('find')
+  async findImage(@Query('file_ids') file_ids: number[]) {
+    return this.filesService.loadFromS3(file_ids)
   }
 
   // @UseGuards(JwtAuthGuard)

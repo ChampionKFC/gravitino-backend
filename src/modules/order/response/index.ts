@@ -52,6 +52,9 @@ export class OrderResponse {
 
   @ApiProperty({ required: false })
   property_values?: number[]
+
+  @ApiProperty({ required: false })
+  files?: string[]
 }
 
 export class ArrayOrderResponse {

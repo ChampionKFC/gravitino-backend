@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Order } from './entities/order.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
-import { ArrayOrderResponse, OrderResponse, StatusOrderResponse } from './response'
+import { ArrayOrderResponse, StatusOrderResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { generateSortQuery, generateWhereQuery } from 'src/common/utlis/generate_sort_query'
@@ -13,11 +13,14 @@ import { OrderJournalService } from '../order_journal/order_journal.service'
 import { CreateOrderJournalDto } from '../order_journal/dto'
 import { FacilityService } from '../facility/facility.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { File } from '../files/entities/file.entity'
+import { S3BUCKET, S3ENDPOINT } from 'src/common/s3Client'
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order) private orderRepository: typeof Order,
+    @InjectModel(File) private fileRepository: typeof File,
     private readonly facilityService: FacilityService,
     private readonly historyService: TransactionHistoryService,
     private readonly orderJournalService: OrderJournalService,
@@ -174,7 +177,7 @@ export class OrderService {
 
       await this.orderJournalService.create(orderJournalDto, transaction)
 
-      return { status: true, data: newOrder }
+      return { status: true, data: { ...newOrder, files: [] } }
     } catch (error) {
       throw new Error(error)
     }
@@ -275,7 +278,7 @@ export class OrderService {
           type: QueryTypes.SELECT,
         })
       ).length
-      const result = await this.sequelize.query<Order>(
+      const orders = await this.sequelize.query<Order>(
         ` 
         ${selectQuery}
         LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
@@ -285,6 +288,27 @@ export class OrderService {
           type: QueryTypes.SELECT,
         },
       )
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        result.push(order)
+      }
+
       return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
@@ -293,7 +317,7 @@ export class OrderService {
 
   async findAllByBranch(branch_ids: number[], orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
-      let result = []
+      let orders = []
 
       if (!orderFilter.filter) {
         orderFilter.filter = {}
@@ -305,7 +329,27 @@ export class OrderService {
         orderFilter.filter.facility = {
           checkpoint: { branch: { branch_id: +id } },
         }
-        result = [...result, ...(await this.findAll(orderFilter)).data]
+        orders = [...orders, ...(await this.findAll(orderFilter)).data]
+      }
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        result.push(order)
       }
 
       return { count: result.length, data: result }
@@ -318,7 +362,7 @@ export class OrderService {
 
   async findAllByCheckpoint(checkpoint_ids: number[], orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
-      let result = []
+      let orders = []
 
       if (!orderFilter.filter) {
         orderFilter.filter = {}
@@ -328,7 +372,27 @@ export class OrderService {
         const id = checkpoint_ids[index]
 
         orderFilter.filter.facility = { checkpoint: { checkpoint_id: +id } }
-        result = [...result, ...(await this.findAll(orderFilter)).data]
+        orders = [...orders, ...(await this.findAll(orderFilter)).data]
+      }
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        result.push(order)
       }
 
       return { count: result.length, data: result }
@@ -373,7 +437,7 @@ export class OrderService {
         throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
 
-      let result
+      let orders
       let count = 0
 
       const order_offset_count = myOrdersFilter.offset?.count == undefined ? 50 : myOrdersFilter.offset.count
@@ -408,7 +472,7 @@ export class OrderService {
             type: QueryTypes.SELECT,
           })
         ).length
-        result = await this.sequelize.query(
+        orders = await this.sequelize.query(
           `
            ${selectQuery}
             LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
@@ -435,7 +499,7 @@ export class OrderService {
               type: QueryTypes.SELECT,
             })
           ).length
-          result = await this.sequelize.query(
+          orders = await this.sequelize.query(
             `
               ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
@@ -459,7 +523,7 @@ export class OrderService {
               type: QueryTypes.SELECT,
             })
           ).length
-          result = await this.sequelize.query(
+          orders = await this.sequelize.query(
             `
               ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
@@ -483,7 +547,7 @@ export class OrderService {
               type: QueryTypes.SELECT,
             })
           ).length
-          result = await this.sequelize.query(
+          orders = await this.sequelize.query(
             `
               ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
@@ -506,7 +570,7 @@ export class OrderService {
               type: QueryTypes.SELECT,
             })
           ).length
-          result = await this.sequelize.query(
+          orders = await this.sequelize.query(
             `
               ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
@@ -517,6 +581,26 @@ export class OrderService {
             },
           )
         }
+      }
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        result.push(order)
       }
 
       return { count: count, data: result }
@@ -537,7 +621,7 @@ export class OrderService {
     }
   }
 
-  async update(updateOrderDto: UpdateOrderDto, user_id: number): Promise<OrderResponse> {
+  async update(updateOrderDto: UpdateOrderDto, user_id: number): Promise<StatusOrderResponse> {
     try {
       const foundOrder = await this.orderRepository.findOne({
         where: { order_id: updateOrderDto.order_id },
@@ -598,9 +682,11 @@ export class OrderService {
           comment: `${AppStrings.HISTORY_ORDER_UPDATED}${foundOrder.order_id}`,
         }
         await this.historyService.create(historyDto)
-      }
 
-      return foundOrder
+        return { status: true }
+      } else {
+        return { status: false }
+      }
     } catch (error) {
       throw new Error(error)
     }

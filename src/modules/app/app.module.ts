@@ -59,6 +59,8 @@ import { OperatingMode } from '../operating_mode/entities/operating_mode.entity'
 import { WorkingHoursModule } from '../working_hours/working_hours.module'
 import { OperatingModeModule } from '../operating_mode/operating_mode.module'
 import { NeighboringStateModule } from '../neighboring_state/neighboring_state.module'
+import { FacilityTypeModule } from '../facility_type/facility_type.module'
+import { FacilityType } from '../facility_type/entities/facility_type.entity'
 
 @Module({
   imports: [
@@ -99,6 +101,7 @@ import { NeighboringStateModule } from '../neighboring_state/neighboring_state.m
           OrderPriority,
           Checkpoint,
           FileType,
+          FacilityType,
           //Report,
           Order,
           Permission,
@@ -131,6 +134,7 @@ import { NeighboringStateModule } from '../neighboring_state/neighboring_state.m
     OrganizationTypeModule,
 
     FacilityModule,
+    FacilityTypeModule,
     CheckpointModule,
     CheckpointTypeModule,
     BranchModule,

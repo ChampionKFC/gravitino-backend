@@ -13,9 +13,9 @@ import { OrganizationService } from '../organization/organization.service'
 import { BranchService } from '../branch/branch.service'
 import { AppStrings } from 'src/common/constants/strings'
 
-@ApiBearerAuth()
 @ApiTags('Facility')
 @Controller('facility')
+@ApiBearerAuth()
 @UseFilters(AllExceptionsFilter)
 export class FacilityController {
   constructor(

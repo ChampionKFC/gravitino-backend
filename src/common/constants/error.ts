@@ -8,6 +8,7 @@ export const AppError = {
   CHECKPOINT_NOT_FOUND: 'Пункт пропуска не найден!',
   BRANCH_NOT_FOUND: 'Филиал не найден!',
   FACILITY_NOT_FOUND: 'Объект обслуживания не найден!',
+  FACILITY_TYPE_NOT_FOUND: 'Тип объекта обслуживания не найден!',
   FILE_TYPE_NOT_FOUND: 'Тип файла не найден!',
   FILE_NOT_FOUND: 'Файл не найден!',
   GROUP_NOT_FOUND: 'Группа не найдена!',

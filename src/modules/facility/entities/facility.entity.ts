@@ -3,6 +3,7 @@ import { NonAttribute } from 'sequelize'
 import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
 import { AppStrings } from 'src/common/constants/strings'
 import { Checkpoint } from 'src/modules/checkpoint/entities/checkpoint.entity'
+import { FacilityType } from 'src/modules/facility_type/entities/facility_type.entity'
 import { Order } from 'src/modules/order/entities/order.entity'
 import { Organization } from 'src/modules/organization/entities/organization.entity'
 
@@ -38,6 +39,17 @@ export class Facility extends Model {
   })
   @BelongsTo(() => Checkpoint)
   checkpoint: Checkpoint
+
+  @ForeignKey(() => FacilityType)
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  facility_type_id: number
+
+  @ApiProperty({
+    type: () => FacilityType,
+    description: AppStrings.CHECKPOINT,
+  })
+  @BelongsTo(() => FacilityType)
+  facility_type: FacilityType
 
   // @ApiProperty({ example: 'улица У.', description: 'Местоположение пункта пропуска' })
   // @Column({ type: DataType.STRING, allowNull: false, })

@@ -50,6 +50,8 @@ export class OrderService {
       "task"."period_end" AS "task.period_end",
       "facility"."facility_id" AS "facility.facility_id",
       "facility"."facility_name" AS "facility.facility_name",
+      "facility_type"."facility_type_id" AS "facility.facility_type.facility_type_id",
+      "facility_type"."facility_type_name" AS "facility.facility_type.facility_type_name",
       "facility_organization"."organization_id" AS "facility.organization.organization_id",
       "facility_organization"."full_name" AS "facility.organization.full_name",
       "facility_organization"."short_name" AS "facility.organization.short_name",
@@ -136,6 +138,7 @@ export class OrderService {
       LEFT JOIN "OrganizationTypes" AS "facility_organization_type" ON "facility_organization".organization_type_id = "facility_organization_type"."organization_type_id"
       LEFT JOIN "Checkpoints" AS "checkpoint" ON "facility"."checkpoint_id" = "checkpoint"."checkpoint_id"
       LEFT JOIN "CheckpointTypes" AS "checkpoint_type" ON "checkpoint"."checkpoint_type_id" = "checkpoint_type"."checkpoint_type_id"
+      LEFT JOIN "FacilityTypes" AS "facility_type" ON "facility"."facility_type_id" = "facility_type"."facility_type_id"
       LEFT JOIN "WorkingHours" AS "working_hours" ON "checkpoint"."working_hours_id" = "working_hours"."working_hours_id"
       LEFT JOIN "NeighboringStates" AS "neighboring_state" ON "checkpoint"."neighboring_state_id" = "neighboring_state"."neighboring_state_id"
       LEFT JOIN "OperatingModes" AS "operating_mode" ON "checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
@@ -184,9 +187,8 @@ export class OrderService {
   }
 
   async bulkCreate(order: BulkCreateOrderDto, user_id: number): Promise<StatusOrderResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction()
-
       for (let index = 0; index < order.executor_ids.length; index++) {
         const executor_id = order.executor_ids[index]
 
@@ -212,10 +214,10 @@ export class OrderService {
             })
           }
         } else if (order.checkpoint_ids && order.checkpoint_ids.length > 0) {
-          const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, {})
+          const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, order.facility_type_ids, {})
 
           for (let index = 0; index < facilities.count; index++) {
-            const facility_id = facilities[index].facility_id
+            const facility_id = facilities.data[index].facility_id
 
             orderDto.facility_id = facility_id
             orderDto.planned_datetime = order.planned_datetime
@@ -227,10 +229,10 @@ export class OrderService {
             })
           }
         } else {
-          const facilities = await this.facilityService.findAllByBranch(order.branch_ids, {})
+          const facilities = await this.facilityService.findAllByBranch(order.branch_ids, order.facility_type_ids, {})
 
           for (let index = 0; index < facilities.count; index++) {
-            const facility_id = facilities[index].facility_id
+            const facility_id = facilities.data[index].facility_id
 
             orderDto.facility_id = facility_id
             orderDto.planned_datetime = order.planned_datetime
@@ -248,6 +250,8 @@ export class OrderService {
 
       return { status: true }
     } catch (error) {
+      console.log(error)
+      transaction.rollback()
       throw new Error(error)
     }
   }

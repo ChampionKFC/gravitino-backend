@@ -14,6 +14,7 @@ import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { FacilityService } from '../facility/facility.service'
 import { OrganizationService } from '../organization/organization.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { FacilityTypeService } from '../facility_type/facility_type.service'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -26,6 +27,7 @@ export class TaskController {
     private readonly branchService: BranchService,
     private readonly checkpointService: CheckpointService,
     private readonly facilityService: FacilityService,
+    private readonly facilityTypeService: FacilityTypeService,
     private readonly organizationService: OrganizationService,
   ) {}
 
@@ -62,6 +64,18 @@ export class TaskController {
         const foundCheckpoint = await this.checkpointService.findOne(+element)
         if (!foundCheckpoint) {
           throw new HttpException(`${AppError.CHECKPOINT_NOT_FOUND} (ID: ${element})`, HttpStatus.NOT_FOUND)
+        }
+      }
+    }
+
+    const facility_type_ids = createTaskDto.facility_type_ids
+    if (facility_type_ids) {
+      for (let index = 0; index < facility_type_ids.length; index++) {
+        const element = facility_type_ids[index]
+
+        const foundFacilityType = await this.facilityTypeService.findOne(+element)
+        if (!foundFacilityType) {
+          throw new HttpException(`${AppError.FACILITY_TYPE_NOT_FOUND} (ID: ${element})`, HttpStatus.NOT_FOUND)
         }
       }
     }

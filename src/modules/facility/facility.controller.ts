@@ -12,6 +12,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationService } from '../organization/organization.service'
 import { BranchService } from '../branch/branch.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { FacilityTypeService } from '../facility_type/facility_type.service'
 
 @ApiTags('Facility')
 @Controller('facility')
@@ -20,6 +21,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class FacilityController {
   constructor(
     private readonly facilityService: FacilityService,
+    private readonly facilityTypeService: FacilityTypeService,
     private readonly branchService: BranchService,
     private readonly checkpointService: CheckpointService,
     private readonly organizationService: OrganizationService,
@@ -77,7 +79,7 @@ export class FacilityController {
       }
     }
 
-    return this.facilityService.findAllByBranch(branch_ids, facilityFilter)
+    return this.facilityService.findAllByBranch(branch_ids, [], facilityFilter) //todo
   }
 
   @UseGuards(JwtAuthGuard)
@@ -102,7 +104,32 @@ export class FacilityController {
       }
     }
 
-    return this.facilityService.findAllByCheckpoint(checkpoint_ids, facilityFilter)
+    return this.facilityService.findAllByCheckpoint(checkpoint_ids, [], facilityFilter) //todo
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: 200,
+    description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
+    type: Facility,
+    isArray: true,
+  })
+  @ApiOperation({
+    summary: AppStrings.FACILITY_ALL_BY_CHECKPOINT_OPERATION,
+  })
+  @ApiBody({ required: false, type: FacilityFilter })
+  @Post('all-by-type')
+  async findAllByType(@Query('type_ids') type_ids: number[], @Body() facilityFilter?: FacilityFilter) {
+    for (let index = 0; index < type_ids.length; index++) {
+      const element = type_ids[index]
+
+      const foundType = await this.facilityTypeService.findOne(+element)
+      if (!foundType) {
+        throw new HttpException(`${AppError.FACILITY_TYPE_NOT_FOUND} (ID: ${element})`, HttpStatus.NOT_FOUND)
+      }
+    }
+
+    return this.facilityService.findAllByType(type_ids, facilityFilter)
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { AppStrings } from 'src/common/constants/strings'
 import { CheckpointFilters, CheckpointSorts } from 'src/modules/checkpoint/dto'
+import { FacilityTypeSorts, FacilityTypeFilters } from 'src/modules/facility_type/filters'
 import { OrganizationFilters, OrganizationSorts } from 'src/modules/organization/dto'
 
 export class CreateFacilityDto {
@@ -12,6 +13,9 @@ export class CreateFacilityDto {
 
   @ApiProperty({ default: 1 })
   checkpoint_id: number
+
+  @ApiProperty({ default: 1 })
+  facility_type_id: number
 }
 
 export class UpdateFacilityDto {
@@ -26,6 +30,9 @@ export class UpdateFacilityDto {
 
   @ApiProperty({ default: 1, required: false })
   checkpoint_id?: number
+
+  @ApiProperty({ default: 1 })
+  facility_type_id?: number
 }
 
 export class FacilitySorts {
@@ -40,6 +47,9 @@ export class FacilitySorts {
 
   @ApiProperty({ required: false })
   checkpoint?: CheckpointSorts
+
+  @ApiProperty({ required: false })
+  facility_type?: FacilityTypeSorts
 }
 
 export class FacilityFilters {
@@ -54,4 +64,7 @@ export class FacilityFilters {
 
   @ApiProperty({ required: false })
   checkpoint?: CheckpointFilters
+
+  @ApiProperty({ required: false })
+  facility_type?: FacilityTypeFilters
 }

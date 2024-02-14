@@ -58,6 +58,8 @@ export class FacilityService {
             "Facility"."updatedAt",
             "checkpoint"."checkpoint_id" AS "checkpoint.checkpoint_id",
             "checkpoint"."checkpoint_name" AS "checkpoint.checkpoint_name",
+            "facility_type"."facility_type_id" AS "facility_type.facility_type_id",
+            "facility_type"."facility_type_name" AS "facility_type.facility_type_name",
             "checkpoint"."address" AS "checkpoint.address",
             "branch"."branch_id" AS "checkpoint.branch.branch_id",
             "branch"."branch_name" AS "checkpoint.branch.branch_name",
@@ -84,6 +86,7 @@ export class FacilityService {
             "Facilities" AS "Facility"
             LEFT JOIN "Checkpoints" AS "checkpoint" ON "Facility"."checkpoint_id" = "checkpoint"."checkpoint_id"
             LEFT JOIN "CheckpointTypes" AS "checkpoint_type" ON "checkpoint"."checkpoint_type_id" = "checkpoint_type"."checkpoint_type_id"
+            LEFT JOIN "FacilityTypes" AS "facility_type" ON "Facility"."facility_type_id" = "facility_type"."facility_type_id"
             LEFT JOIN "Branches" AS "branch" ON "checkpoint"."branch_id" = "branch"."branch_id"
             LEFT JOIN "Organizations" AS "organization" ON "Facility"."organization_id" = "organization"."organization_id"
             LEFT JOIN "OrganizationTypes" AS "organization_type" ON "organization"."organization_type_id" = "organization_type"."organization_type_id"
@@ -134,7 +137,7 @@ export class FacilityService {
     }
   }
 
-  async findAllByBranch(branch_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
+  async findAllByBranch(branch_ids: number[], type_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
     try {
       let result = []
 
@@ -148,7 +151,7 @@ export class FacilityService {
         facilityFilter.filter.checkpoint = {
           branch: { branch_id: +id },
         }
-        result = [...result, ...(await this.findAll(facilityFilter)).data]
+        result = [...result, ...(await this.findAllByType(type_ids, facilityFilter)).data]
       }
 
       return { count: result.length, data: result }
@@ -157,7 +160,7 @@ export class FacilityService {
     }
   }
 
-  async findAllByCheckpoint(checkpoint_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
+  async findAllByCheckpoint(checkpoint_ids: number[], type_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
     try {
       let result = []
 
@@ -169,11 +172,39 @@ export class FacilityService {
         const id = checkpoint_ids[index]
 
         facilityFilter.filter.checkpoint = { checkpoint_id: +id }
-        result = [...result, ...(await this.findAll(facilityFilter)).data]
+        result = [...result, ...(await this.findAllByType(type_ids, facilityFilter)).data]
       }
 
       return { count: result.length, data: result }
     } catch (error) {
+      console.log(error)
+
+      throw new Error(error)
+    }
+  }
+
+  async findAllByType(type_ids: number[], facilityFilter: FacilityFilter): Promise<ArrayFacilityResponse> {
+    try {
+      let result = []
+
+      if (!facilityFilter.filter) {
+        facilityFilter.filter = {}
+      }
+
+      if (type_ids.length > 0) {
+        for (let index = 0; index < type_ids.length; index++) {
+          const id = type_ids[index]
+
+          facilityFilter.filter.facility_type = { facility_type_id: +id }
+          result = [...result, ...(await this.findAll(facilityFilter)).data]
+        }
+      } else {
+        result = (await this.findAll(facilityFilter)).data
+      }
+
+      return { count: result.length, data: result }
+    } catch (error) {
+      console.log(error)
       throw new Error(error)
     }
   }

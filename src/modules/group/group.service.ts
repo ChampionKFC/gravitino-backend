@@ -5,6 +5,11 @@ import { Group } from './entities/group.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { ArrayGroupResponse, GroupResponse, StatusGroupResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
+import { Facility } from '../facility/entities/facility.entity'
+import { Checkpoint } from '../checkpoint/entities/checkpoint.entity'
+import { Branch } from '../branch/entities/branch.entity'
+import { CheckpointType } from '../checkpoint_type/entities/checkpoint_type.entity'
+import { FacilityType } from '../facility_type/entities/facility_type.entity'
 
 @Injectable()
 export class GroupService {
@@ -31,7 +36,17 @@ export class GroupService {
 
   async findAll(): Promise<ArrayGroupResponse> {
     try {
-      const foundGroups = await this.groupRepository.findAll()
+      const foundGroups = await this.groupRepository.findAll({
+        include: [
+          {
+            model: Facility,
+            include: [{ model: Checkpoint, include: [CheckpointType, Branch], attributes: { exclude: ['checkpoint_type_id', 'branch_id'] } }, FacilityType],
+          },
+          { model: Checkpoint, include: [CheckpointType, Branch], attributes: { exclude: ['checkpoint_type_id', 'branch_id'] } },
+          Branch,
+        ],
+        attributes: { exclude: ['facility_id', 'checkpoint_id', 'branch_id'] },
+      })
       return { count: foundGroups.length, data: foundGroups }
     } catch (error) {
       throw new Error(error)

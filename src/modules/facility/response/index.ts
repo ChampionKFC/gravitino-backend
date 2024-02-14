@@ -17,6 +17,10 @@ export class FacilityResponse {
   @IsInt()
   @ApiProperty({ default: 1 })
   checkpoint_id: number
+
+  @IsInt()
+  @ApiProperty({ default: 1 })
+  facility_type_id: number
 }
 
 export class ArrayFacilityResponse {

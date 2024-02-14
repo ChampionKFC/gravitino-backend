@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { Column, DataType, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { NonAttribute } from 'sequelize'
+import { Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import { Facility } from 'src/modules/facility/entities/facility.entity'
 
 @Table
 export class FacilityType extends Model {
@@ -11,4 +13,7 @@ export class FacilityType extends Model {
   @ApiProperty()
   @Column({ type: DataType.STRING, allowNull: false })
   facility_type_name: string
+
+  @HasMany(() => Facility, FacilityType.primaryKeyAttribute)
+  orders: NonAttribute<Facility[]>
 }

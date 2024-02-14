@@ -17,6 +17,7 @@ import { OrderService } from '../order/order.service'
 import { User } from '../users/entities/user.entity'
 import { OrderJournalModule } from '../order_journal/order_journal.module'
 import { File } from '../files/entities/file.entity'
+import { FacilityTypeModule } from '../facility_type/facility_type.module'
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { File } from '../files/entities/file.entity'
     CheckpointModule,
     FacilityModule,
     OrderJournalModule,
+    FacilityTypeModule,
     SeederModule.forFeature([TaskSeeds]),
   ],
   controllers: [TaskController],

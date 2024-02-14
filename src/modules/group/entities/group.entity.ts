@@ -40,7 +40,7 @@ export class Group extends Model {
     required: false,
     description: AppStrings.CHECKPOINT,
   })
-  @BelongsTo(() => Branch)
+  @BelongsTo(() => Checkpoint)
   checkpoint: Checkpoint
 
   @ForeignKey(() => Facility)

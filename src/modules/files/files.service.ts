@@ -164,8 +164,6 @@ export class FilesService {
       return links
     } catch (error) {
       transaction.rollback()
-
-      console.log(error)
       throw new Error(error)
     }
   }

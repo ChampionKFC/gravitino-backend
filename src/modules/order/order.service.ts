@@ -252,7 +252,6 @@ export class OrderService {
 
       return { status: true }
     } catch (error) {
-      console.log(error)
       transaction.rollback()
       throw new Error(error)
     }
@@ -360,8 +359,6 @@ export class OrderService {
 
       return { count: result.length, data: result }
     } catch (error) {
-      console.log(error)
-
       throw new Error(error)
     }
   }
@@ -403,8 +400,6 @@ export class OrderService {
 
       return { count: result.length, data: result }
     } catch (error) {
-      console.log(error)
-
       throw new Error(error)
     }
   }
@@ -489,8 +484,6 @@ export class OrderService {
           },
         )
       } else {
-        console.log(u.group)
-
         if (u.group.facility_id) {
           // Вывод всех задач по всем ПП по объекту обслуживания
           const selectQuery = `

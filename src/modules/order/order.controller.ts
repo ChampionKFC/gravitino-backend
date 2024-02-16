@@ -242,7 +242,7 @@ export class OrderController {
     type: StatusOrderResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_UPDATE_OPERATION })
-  @Patch('update_status')
+  @Patch('update-status')
   async updateStatus(@Body() updateOrderStatusDto: UpdateStatusDto, @Req() request) {
     let foundOrder = null
     if (updateOrderStatusDto.order_id) {

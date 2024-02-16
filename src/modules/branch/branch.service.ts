@@ -160,14 +160,10 @@ export class BranchService {
           branch_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
           branch_address: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
         }
-        console.log(entity)
 
         const pk = ws[xlsx.utils.encode_cell({ c: 0, r: R })].v
-        console.log(pk)
 
         const exists = await this.findOne(pk)
-
-        console.log(exists)
 
         if (exists) {
           await this.branchRepository.update(entity, { where: { branch_id: pk }, transaction })

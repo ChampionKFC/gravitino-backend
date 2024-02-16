@@ -113,8 +113,6 @@ export class TaskService {
 
       return { status: true }
     } catch (error) {
-      console.log(error)
-
       transaction.rollback()
       throw new Error(error)
     }

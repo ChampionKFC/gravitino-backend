@@ -179,8 +179,6 @@ export class FacilityService {
 
       return { count: result.length, data: result }
     } catch (error) {
-      console.log(error)
-
       throw new Error(error)
     }
   }
@@ -206,7 +204,6 @@ export class FacilityService {
 
       return { count: result.length, data: result }
     } catch (error) {
-      console.log(error)
       throw new Error(error)
     }
   }

@@ -119,8 +119,6 @@ export class RolesPermissionsService {
     if (!permission) {
       return false
     }
-    console.log(user.user_id)
-    console.log(user_id)
 
     const rolePermission = await this.rolePermissionRepository.findOne({
       where: {
@@ -133,9 +131,6 @@ export class RolesPermissionsService {
     })
 
     if (!rolePermission || !rolePermission.rights) {
-      console.log(rolePermission)
-      console.log(userPermission)
-
       if (!userPermission || !userPermission.rights) {
         return false
       } else {

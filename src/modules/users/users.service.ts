@@ -372,8 +372,6 @@ export class UsersService {
         attributes: { exclude: ['person_id'] },
       })
 
-      console.log(result)
-
       if (result != null) {
         // const userRoles = await this.rolePermissionRepository.findAll({
         //   where: { role_id: result.role_id },

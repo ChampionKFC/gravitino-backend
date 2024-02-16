@@ -1,11 +1,11 @@
-import { OnSeederInit, Seeder } from 'nestjs-sequelize-seeder';
-import { Order } from '../entities/order.entity';
+import { OnSeederInit, Seeder } from 'nestjs-sequelize-seeder'
+import { Order } from '../entities/order.entity'
 
 @Seeder({
   model: Order,
   unique: ['task_id'],
   containsForeignKeys: true,
-  foreignDelay: 20000,
+  foreignDelay: 22000,
 })
 export class OrderSeeds implements OnSeederInit {
   run() {
@@ -542,7 +542,7 @@ export class OrderSeeds implements OnSeederInit {
         task_end_datetime: new Date('2024-02-29'),
         priority_id: 1,
       },
-    ];
-    return data;
+    ]
+    return data
   }
 }

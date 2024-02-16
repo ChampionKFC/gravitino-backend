@@ -1,6 +1,7 @@
 export const AppStrings = {
   PROJECT_NAME: 'ГРАВИТИНО АСУУП',
   ASC: 'ASC',
+  YMAPS_GEOCODER_URL: `https://geocode-maps.yandex.ru/1.x/?format=json`,
 
   ORGANIZATION: 'Организация',
   ORGANIZATION_TYPE: 'Тип организации',

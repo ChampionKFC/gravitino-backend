@@ -8,28 +8,41 @@ import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate
 import { CheckpointFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { HttpService } from '@nestjs/axios'
 import { AppStrings } from 'src/common/constants/strings'
+import { ConfigService } from '@nestjs/config'
+import { catchError, lastValueFrom, map } from 'rxjs'
 
 @Injectable()
 export class CheckpointService {
   constructor(
     @InjectModel(Checkpoint) private checkpointRepository: typeof Checkpoint,
     private readonly historyService: TransactionHistoryService,
+    private readonly configService: ConfigService,
     private readonly sequelize: Sequelize,
+    private http: HttpService,
   ) {}
 
   async create(checkpoint: CreateCheckpointDto, user_id: number): Promise<StatusCheckpointResponse> {
-    const newCheckpoint = await this.checkpointRepository.create({
-      ...checkpoint,
-    })
+    try {
+      const coordinates = await this.decodeAddress(checkpoint.address)
 
-    const historyDto = {
-      user_id: user_id,
-      comment: `${AppStrings.HISTORY_CHECKPOINT_CREATED}${newCheckpoint.checkpoint_id}`,
+      const newCheckpoint = await this.checkpointRepository.create({
+        ...checkpoint,
+        lat: Number(coordinates[0]),
+        lng: Number(coordinates[1]),
+      })
+
+      const historyDto = {
+        user_id: user_id,
+        comment: `${AppStrings.HISTORY_CHECKPOINT_CREATED}${newCheckpoint.checkpoint_id}`,
+      }
+      await this.historyService.create(historyDto)
+
+      return { status: true, data: newCheckpoint }
+    } catch (error) {
+      throw new Error(error)
     }
-    await this.historyService.create(historyDto)
-
-    return { status: true, data: newCheckpoint }
   }
 
   async findAll(checkpointFilter?: CheckpointFilter): Promise<ArrayCheckpointResponse> {
@@ -181,5 +194,25 @@ export class CheckpointService {
     }
 
     return { status: false }
+  }
+
+  async decodeAddress(address: string): Promise<string[]> {
+    try {
+      const data = this.http
+        .get(`${AppStrings.YMAPS_GEOCODER_URL}&apikey=${this.configService.get('ymaps_api_key')}&geocode=${address}`)
+        .pipe(map((response) => response.data?.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos))
+        .pipe(
+          catchError((e) => {
+            throw new Error(e)
+          }),
+        )
+
+      const rawCoordinates: string = await lastValueFrom(data)
+      const coordinates = rawCoordinates.split(' ')
+
+      return coordinates
+    } catch (error) {
+      throw new Error(error)
+    }
   }
 }

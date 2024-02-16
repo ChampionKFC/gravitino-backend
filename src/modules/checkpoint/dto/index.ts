@@ -29,7 +29,7 @@ export class CreateCheckpointDto {
   checkpoint_type_id: number
 
   @ApiProperty({ default: 1 })
-  operating_mode: number
+  operating_mode_id: number
 
   @ApiProperty({ default: 1 })
   working_hours_id: number

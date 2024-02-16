@@ -18,7 +18,7 @@ export class Checkpoint extends Model {
     example: AppStrings.CHECKPOINT_NAME_EXAMPLE,
     description: AppStrings.CHECKPOINT_NAME_DESCRIPTION,
   })
-  @Column({ type: DataType.STRING(50), allowNull: false })
+  @Column({ type: DataType.STRING, allowNull: false })
   checkpoint_name: string
 
   @ApiProperty({

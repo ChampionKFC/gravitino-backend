@@ -17,6 +17,7 @@ import { MyOrdersFilter, OrderFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { FacilityService } from '../facility/facility.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @Controller('order')
 @ApiTags('Order')
@@ -35,7 +36,7 @@ export class OrderController {
     private readonly branchService: BranchService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.ORDER_CREATED_RESPONSE,
     type: StatusOrderResponse,
@@ -101,7 +102,7 @@ export class OrderController {
     return this.orderService.bulkCreate(createOrderDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_RESPONSE,
@@ -114,7 +115,7 @@ export class OrderController {
     return this.orderService.findAll(orderFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_BY_BRANCH_RESPONSE,
@@ -136,7 +137,7 @@ export class OrderController {
     return this.orderService.findAllByBranch(branch_ids, orderFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_BY_CHECKPOINT_RESPONSE,
@@ -159,7 +160,7 @@ export class OrderController {
     return this.orderService.findAllByCheckpoint(checkpoint_ids, orderFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_ALL_MY_RESPONSE,
@@ -171,7 +172,7 @@ export class OrderController {
     return this.orderService.findMy(myOrdersFilter, request.user)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_UPDATE_RESPONSE,
@@ -234,7 +235,7 @@ export class OrderController {
     return this.orderService.update(updateOrderDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_STATUS_UPDATE_RESPONSE,
@@ -260,7 +261,7 @@ export class OrderController {
     return this.orderService.changeStatus(updateOrderStatusDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.ORDER_DELETE_RESPONSE,

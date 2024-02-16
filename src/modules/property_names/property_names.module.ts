@@ -8,9 +8,10 @@ import { PropertyNameSeeds } from './seeds'
 import { SeederModule } from 'nestjs-sequelize-seeder'
 import { PropertyValuesService } from '../property_values/property_values.service'
 import { PropertyValue } from '../property_values/entities/property_value.entity'
+import { UsersModule } from '../users/users.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([PropertyName, PropertyValue]), TransactionHistoryModule, SeederModule.forFeature([PropertyNameSeeds])],
+  imports: [SequelizeModule.forFeature([PropertyName, PropertyValue]), TransactionHistoryModule, UsersModule, SeederModule.forFeature([PropertyNameSeeds])],
   controllers: [PropertyNamesController],
   providers: [PropertyNamesService, PropertyValuesService],
   exports: [PropertyNamesService],

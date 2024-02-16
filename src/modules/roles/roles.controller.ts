@@ -9,6 +9,7 @@ import { Role } from './entities/role.entity'
 import { ArrayRoleResponse, StatusRoleResponse } from './response'
 import { RoleFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Roles')
@@ -17,7 +18,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ROLE_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ROLE_CREATED_RESPONSE,
@@ -49,7 +50,7 @@ export class RolesController {
     return this.rolesService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ROLE_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ROLE_UPDATE_RESPONSE,
@@ -69,7 +70,7 @@ export class RolesController {
     return this.rolesService.update(updateRoleDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ROLE_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ROLE_DELETE_RESPONSE,

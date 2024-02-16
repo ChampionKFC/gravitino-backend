@@ -30,6 +30,7 @@ export const AppError = {
   ORGANIZATION_EXECUTOR_NULL: 'Исполнители должны быть выбраны!',
   USER_CREATOR_NOT_FOUND: 'Пользователь (создатель) не найден!',
   USER_NOT_FOUND: 'Пользователь не найден!',
+  USER_DEACTIVATED: 'Пользователь деактивирован!',
   USER_EMAIL_EXISTS: 'Пользователь с таким email уже существует!',
   PROPERTY_NAME_NOT_FOUND: 'Название характеристики не найдено!',
   PROPERTY_NOT_FOUND: 'Характеристика не найдена!',

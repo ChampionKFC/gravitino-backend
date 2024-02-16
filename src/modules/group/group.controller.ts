@@ -8,6 +8,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { BranchService } from '../branch/branch.service'
 import { ArrayGroupResponse, StatusGroupResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Group')
@@ -19,7 +20,7 @@ export class GroupController {
     private readonly branchService: BranchService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.GROUP_CREATED_RESPONSE,
@@ -37,7 +38,7 @@ export class GroupController {
     return this.groupService.create(createGroupDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.GROUP_ALL_RESPONSE,
@@ -48,7 +49,7 @@ export class GroupController {
     return this.groupService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.GROUP_UPDATE_RESPONSE,
@@ -74,7 +75,7 @@ export class GroupController {
     return this.groupService.update(updateGroupDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.GROUP_DELETE_RESPONSE,

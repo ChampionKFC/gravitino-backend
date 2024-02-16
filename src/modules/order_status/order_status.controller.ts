@@ -9,6 +9,7 @@ import { OrderStatus } from './entities/order_status.entity'
 import { ArrayOrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { OrderStatusFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Order Status')
@@ -17,7 +18,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class OrderStatusController {
   constructor(private readonly orderStatusService: OrderStatusService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ORDER_STATUS_CREATED_RESPONSE,
@@ -50,7 +51,7 @@ export class OrderStatusController {
     return this.orderStatusService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_UPDATE_OPERATION })
   @ApiOkResponse({
@@ -70,7 +71,7 @@ export class OrderStatusController {
     return this.orderStatusService.update(updateOrderStatusDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Delete(':id')
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_DELETE_OPERATION })
   @ApiOkResponse({

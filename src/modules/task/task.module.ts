@@ -18,6 +18,7 @@ import { User } from '../users/entities/user.entity'
 import { OrderJournalModule } from '../order_journal/order_journal.module'
 import { File } from '../files/entities/file.entity'
 import { FacilityTypeModule } from '../facility_type/facility_type.module'
+import { UsersModule } from '../users/users.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { FacilityTypeModule } from '../facility_type/facility_type.module'
     FacilityModule,
     OrderJournalModule,
     FacilityTypeModule,
+    UsersModule,
     SeederModule.forFeature([TaskSeeds]),
   ],
   controllers: [TaskController],

@@ -5,6 +5,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppStrings } from 'src/common/constants/strings'
 import { ArrayOrderJournalResponse } from './response'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiTags('Order Journal')
 @Controller('order-journal')
@@ -18,7 +19,7 @@ export class OrderJournalController {
     type: ArrayOrderJournalResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_JOURNAL_ALL_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Get(':order_id')
   findByTask(@Param('order_id') order_id: number) {
     return this.orderJournalService.findAll(order_id)

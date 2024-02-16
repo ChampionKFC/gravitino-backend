@@ -15,6 +15,7 @@ import { FacilityService } from '../facility/facility.service'
 import { OrganizationService } from '../organization/organization.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { FacilityTypeService } from '../facility_type/facility_type.service'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -31,7 +32,7 @@ export class TaskController {
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.TASK_CREATED_RESPONSE,
     type: StatusTaskResponse,
@@ -109,7 +110,7 @@ export class TaskController {
     return this.taskService.create(createTaskDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_ALL_RESPONSE,
     type: ArrayTaskResponse,
@@ -121,7 +122,7 @@ export class TaskController {
     return this.taskService.findAll(taskFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_UPDATE_RESPONSE,
     type: Task,
@@ -148,7 +149,7 @@ export class TaskController {
     return this.taskService.update(updateTaskDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_DELETE_RESPONSE,
     type: StatusTaskResponse,

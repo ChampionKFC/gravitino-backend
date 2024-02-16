@@ -348,16 +348,16 @@ export class UsersService {
     }
   }
 
-  async findUser({ user_id = -1, email = '' }: { user_id?: number; email?: string }): Promise<boolean> {
+  async findUser({ user_id = -1, email = '' }: { user_id?: number; email?: string }): Promise<UserResponse> {
     try {
       const foundUser = await this.userRepository.findOne({
         where: { [Op.or]: [{ user_id }, { email }] },
       })
 
       if (foundUser) {
-        return true
+        return foundUser
       } else {
-        return false
+        return null
       }
     } catch (error) {
       throw new Error(error)
@@ -461,6 +461,20 @@ export class UsersService {
       return { status: true }
     } catch (error) {
       await transaction.rollback()
+      throw new Error(error)
+    }
+  }
+
+  async canUserActivate(user_id: number): Promise<boolean> {
+    try {
+      const user = await this.findById(user_id)
+
+      if (user.is_active) {
+        return true
+      } else {
+        return false
+      }
+    } catch (error) {
       throw new Error(error)
     }
   }

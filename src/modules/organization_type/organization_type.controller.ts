@@ -9,6 +9,7 @@ import { OrganizationType } from './entities/organization_type.entity'
 import { ArrayOrganizationTypeResponse, StatusOrganizationTypeResponse } from './response'
 import { OrganizationTypeFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Organization Type')
@@ -17,7 +18,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class OrganizationTypeController {
   constructor(private readonly organizationTypeService: OrganizationTypeService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ORGANIZATION_TYPE_CREATED_RESPONSE,
@@ -49,7 +50,7 @@ export class OrganizationTypeController {
     return this.organizationTypeService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORGANIZATION_TYPE_UPDATE_RESPONSE,
@@ -68,7 +69,7 @@ export class OrganizationTypeController {
     return this.organizationTypeService.update(updateOrganizationTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORGANIZATION_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORGANIZATION_DELETE_RESPONSE,

@@ -8,6 +8,7 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { FileType } from './entities/file_type.entity'
 import { ArrayFileTypeResponse, StatusFileTypeResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('File type')
@@ -16,7 +17,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class FileTypeController {
   constructor(private readonly fileTypeService: FileTypeService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.FILE_TYPE_CREATED_RESPONSE,
     type: StatusFileTypeResponse,
@@ -37,7 +38,7 @@ export class FileTypeController {
     return this.fileTypeService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.FILE_TYPE_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.FILE_TYPE_UPDATE_RESPONSE,
@@ -56,7 +57,7 @@ export class FileTypeController {
     return this.fileTypeService.update(updateFileTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.FILE_TYPE_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.FILE_TYPE_DELETE_RESPONSE,

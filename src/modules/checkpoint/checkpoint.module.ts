@@ -8,9 +8,17 @@ import { CheckpointSeeds } from './seeds'
 import { SeederModule } from 'nestjs-sequelize-seeder'
 import { BranchModule } from '../branch/branch.module'
 import { HttpModule } from '@nestjs/axios'
+import { UsersModule } from '../users/users.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([Checkpoint]), BranchModule, TransactionHistoryModule, HttpModule, SeederModule.forFeature([CheckpointSeeds])],
+  imports: [
+    SequelizeModule.forFeature([Checkpoint]),
+    BranchModule,
+    UsersModule,
+    TransactionHistoryModule,
+    HttpModule,
+    SeederModule.forFeature([CheckpointSeeds]),
+  ],
   controllers: [CheckpointController],
   providers: [CheckpointService],
   exports: [CheckpointService],

@@ -8,6 +8,7 @@ import { FilesInterceptor } from '@nestjs/platform-express'
 import { StatusFileResponse } from './response'
 import { UploadFileDto } from './dto'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Files')
@@ -24,7 +25,7 @@ export class FilesController {
     type: StatusFileResponse,
   })
   @ApiOperation({ summary: AppStrings.FILE_CREATE_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       // storage: diskStorage({

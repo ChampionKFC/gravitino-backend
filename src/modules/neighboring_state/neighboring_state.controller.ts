@@ -7,6 +7,7 @@ import { ArrayNeighboringStateResponse, StatusNeighboringStateResponse } from '.
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiTags('Neighboring State')
 @Controller('neighboring-state')
@@ -20,7 +21,7 @@ export class NeighboringStateController {
     type: StatusNeighboringStateResponse,
   })
   @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_CREATE_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Post()
   create(@Body() createNeighboringStateDto: CreateNeighboringStateDto, @Req() request) {
     return this.neighboringStateService.create(createNeighboringStateDto, request.user.user_id)
@@ -31,7 +32,7 @@ export class NeighboringStateController {
     type: ArrayNeighboringStateResponse,
   })
   @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_ALL_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Get('all')
   findAll() {
     return this.neighboringStateService.findAll()
@@ -42,7 +43,7 @@ export class NeighboringStateController {
     type: StatusNeighboringStateResponse,
   })
   @ApiOperation({ summary: AppStrings.NEIGHBORING_STATE_UPDATE_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   async update(@Body() updateNeighboringStateDto: UpdateNeighboringStateDto, @Req() request) {
     const foundNeighboringState = await this.neighboringStateService.findOne(updateNeighboringStateDto.neighboring_state_id)
@@ -53,7 +54,7 @@ export class NeighboringStateController {
     return this.neighboringStateService.update(updateNeighboringStateDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.NEIGHBORING_STATE_DELETE_RESPONSE,
     type: StatusNeighboringStateResponse,

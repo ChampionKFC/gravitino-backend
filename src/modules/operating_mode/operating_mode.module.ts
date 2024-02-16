@@ -6,9 +6,10 @@ import { OperatingMode } from './entities/operating_mode.entity'
 import { OperatingModeSeeds } from './seeds'
 import { SeederModule } from 'nestjs-sequelize-seeder'
 import { TransactionHistoryModule } from '../transaction_history/transaction_history.module'
+import { UsersModule } from '../users/users.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([OperatingMode]), TransactionHistoryModule, SeederModule.forFeature([OperatingModeSeeds])],
+  imports: [SequelizeModule.forFeature([OperatingMode]), TransactionHistoryModule, UsersModule, SeederModule.forFeature([OperatingModeSeeds])],
   controllers: [OperatingModeController],
   providers: [OperatingModeService],
   exports: [OperatingModeService],

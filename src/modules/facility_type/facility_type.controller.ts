@@ -7,6 +7,7 @@ import { AppStrings } from 'src/common/constants/strings'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { ArrayFacilityTypeResponse, StatusFacilityTypeResponse } from './response'
 import { AppError } from 'src/common/constants/error'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiTags('Facility Type')
 @Controller('facility-type')
@@ -20,13 +21,13 @@ export class FacilityTypeController {
     type: StatusFacilityTypeResponse,
   })
   @ApiOperation({ summary: AppStrings.FILE_TYPE_ALL_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Post()
   create(@Body() createFacilityTypeDto: CreateFacilityTypeDto, @Req() request) {
     return this.facilityTypeService.create(createFacilityTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_TYPE_ALL_RESPONSE,
     type: ArrayFacilityTypeResponse,
@@ -37,7 +38,7 @@ export class FacilityTypeController {
     return this.facilityTypeService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_TYPE_UPDATE_RESPONSE,
     type: StatusFacilityTypeResponse,
@@ -52,7 +53,7 @@ export class FacilityTypeController {
     return this.facilityTypeService.update(updateFacilityTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_TYPE_DELETE_RESPONSE,
     type: StatusFacilityTypeResponse,

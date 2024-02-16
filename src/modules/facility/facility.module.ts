@@ -10,6 +10,7 @@ import { OrganizationModule } from '../organization/organization.module'
 import { FacilitySeeds } from './seeds'
 import { BranchModule } from '../branch/branch.module'
 import { FacilityTypeModule } from '../facility_type/facility_type.module'
+import { UsersModule } from '../users/users.module'
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { FacilityTypeModule } from '../facility_type/facility_type.module'
     TransactionHistoryModule,
     BranchModule,
     FacilityTypeModule,
+    UsersModule,
     SeederModule.forFeature([FacilitySeeds]),
   ],
   controllers: [FacilityController],

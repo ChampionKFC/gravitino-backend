@@ -6,9 +6,10 @@ import { FacilityType } from './entities/facility_type.entity'
 import { FacilityTypeSeeds } from './seeds'
 import { SeederModule } from 'nestjs-sequelize-seeder'
 import { TransactionHistoryModule } from '../transaction_history/transaction_history.module'
+import { UsersModule } from '../users/users.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([FacilityType]), TransactionHistoryModule, SeederModule.forFeature([FacilityTypeSeeds])],
+  imports: [SequelizeModule.forFeature([FacilityType]), UsersModule, TransactionHistoryModule, SeederModule.forFeature([FacilityTypeSeeds])],
   controllers: [FacilityTypeController],
   providers: [FacilityTypeService],
   exports: [FacilityTypeService],

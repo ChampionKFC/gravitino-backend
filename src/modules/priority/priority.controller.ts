@@ -9,6 +9,7 @@ import { OrderPriority } from './entities/priority.entity'
 import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
 import { OrderPriorityFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @Controller('priority')
@@ -17,7 +18,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class PriorityController {
   constructor(private readonly priorityService: PriorityService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PRIORITY_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.PRIORITY_CREATED_RESPONSE,
@@ -49,7 +50,7 @@ export class PriorityController {
     return this.priorityService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PRIORITY_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PRIORITY_UPDATE_RESPONSE,
@@ -67,7 +68,7 @@ export class PriorityController {
     return this.priorityService.update(updatePriorityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PRIORITY_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PRIORITY_DELETE_RESPONSE,

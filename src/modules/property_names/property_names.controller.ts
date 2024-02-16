@@ -7,6 +7,7 @@ import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Properties')
@@ -15,7 +16,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class PropertyNamesController {
   constructor(private readonly propertyNamesService: PropertyNamesService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PROPERTY_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.PROPERTY_CREATED_RESPONSE,
@@ -26,7 +27,7 @@ export class PropertyNamesController {
     return this.propertyNamesService.bulkCreate(createPropertiesDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PROPERTY_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PROPERTY_ALL_RESPONSE,
@@ -56,7 +57,7 @@ export class PropertyNamesController {
   //   return this.propertyNamesService.update(updatePropertyDto, request.user.user_id)
   // }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PROPERTY_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PROPERTY_DELETE_RESPONSE,

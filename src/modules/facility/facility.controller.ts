@@ -13,6 +13,7 @@ import { OrganizationService } from '../organization/organization.service'
 import { BranchService } from '../branch/branch.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { FacilityTypeService } from '../facility_type/facility_type.service'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiTags('Facility')
 @Controller('facility')
@@ -27,7 +28,7 @@ export class FacilityController {
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.FACILITY_CREATED_RESPONSE,
     type: StatusFacilityResponse,
@@ -48,7 +49,7 @@ export class FacilityController {
     return this.facilityService.create(createFacilityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_ALL_RESPONSE,
     type: ArrayFacilityResponse,
@@ -60,7 +61,7 @@ export class FacilityController {
     return this.facilityService.findAll(facilityFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_BRANCH_RESPONSE,
@@ -82,7 +83,7 @@ export class FacilityController {
     return this.facilityService.findAllByBranch(branch_ids, [], facilityFilter) //todo
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
@@ -107,7 +108,7 @@ export class FacilityController {
     return this.facilityService.findAllByCheckpoint(checkpoint_ids, [], facilityFilter) //todo
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
@@ -132,7 +133,7 @@ export class FacilityController {
     return this.facilityService.findAllByType(type_ids, facilityFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_UPDATE_RESPONSE,
     type: Facility,
@@ -165,7 +166,7 @@ export class FacilityController {
     return this.facilityService.update(updateFacilityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_DELETE_RESPONSE,
     type: StatusFacilityResponse,

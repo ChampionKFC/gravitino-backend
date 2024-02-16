@@ -20,6 +20,8 @@ export class CheckpointSeeds implements OnSeederInit {
         checkpoint_type_id: 1,
         working_hours_id: 1,
         operating_mode_id: 1,
+        lat: 55.75222,
+        lng: 37.61556,
       },
       {
         checkpoint_name: 'Пункт пропуска 2',
@@ -31,6 +33,8 @@ export class CheckpointSeeds implements OnSeederInit {
         checkpoint_type_id: 1,
         working_hours_id: 1,
         operating_mode_id: 1,
+        lat: 55.75222,
+        lng: 38.61556,
       },
       {
         checkpoint_name: 'Пункт пропуска 3',
@@ -42,6 +46,8 @@ export class CheckpointSeeds implements OnSeederInit {
         checkpoint_type_id: 1,
         working_hours_id: 1,
         operating_mode_id: 1,
+        lat: 55.75222,
+        lng: 39.61556,
       },
       {
         checkpoint_name: 'Пункт пропуска 4',
@@ -53,6 +59,8 @@ export class CheckpointSeeds implements OnSeederInit {
         checkpoint_type_id: 1,
         working_hours_id: 1,
         operating_mode_id: 1,
+        lat: 56.75222,
+        lng: 40.61556,
       },
       {
         checkpoint_name: 'Пункт пропуска 5',
@@ -64,6 +72,8 @@ export class CheckpointSeeds implements OnSeederInit {
         checkpoint_type_id: 1,
         working_hours_id: 1,
         operating_mode_id: 1,
+        lat: 54.75222,
+        lng: 37.61556,
       },
     ]
     return data

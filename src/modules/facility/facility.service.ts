@@ -61,6 +61,8 @@ export class FacilityService {
             "facility_type"."facility_type_id" AS "facility_type.facility_type_id",
             "facility_type"."facility_type_name" AS "facility_type.facility_type_name",
             "checkpoint"."address" AS "checkpoint.address",
+            "checkpoint"."lat" AS "checkpoint.lat",
+            "checkpoint"."lng" AS "checkpoint.lng",
             "branch"."branch_id" AS "checkpoint.branch.branch_id",
             "branch"."branch_name" AS "checkpoint.branch.branch_name",
             "branch"."branch_address" AS "checkpoint.branch.branch_address",

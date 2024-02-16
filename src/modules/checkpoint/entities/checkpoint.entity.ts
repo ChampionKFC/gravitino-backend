@@ -28,6 +28,14 @@ export class Checkpoint extends Model {
   @Column({ type: DataType.STRING, allowNull: false })
   address: string
 
+  @ApiProperty()
+  @Column({ type: DataType.DOUBLE, allowNull: false })
+  lat: number
+
+  @ApiProperty()
+  @Column({ type: DataType.DOUBLE, allowNull: false })
+  lng: number
+
   @ForeignKey(() => Branch)
   @Column({ type: DataType.INTEGER, allowNull: false })
   branch_id: number

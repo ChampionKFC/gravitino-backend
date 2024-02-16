@@ -64,6 +64,8 @@ export class OrderService {
       "checkpoint_type"."checkpoint_type_name" AS "facility.checkpoint.checkpoint_type.checkpoint_type_name",
       "checkpoint"."checkpoint_name" AS "facility.checkpoint.checkpoint_name",
       "checkpoint"."address" AS "facility.checkpoint.address",
+      "checkpoint"."lat" AS "facility.checkpoint.lat",
+      "checkpoint"."lng" AS "facility.checkpoint.lng",
       "neighboring_state"."neighboring_state_id" AS "facility.checkpoint.neighboring_state.neighboring_state_id",
       "neighboring_state"."neighboring_state_name" AS "facility.checkpoint.neighboring_state.neighboring_state_name",
       "checkpoint"."district" AS "facility.checkpoint.district",

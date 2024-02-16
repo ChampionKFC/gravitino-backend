@@ -52,6 +52,8 @@ export class CheckpointService {
             "checkpoint_id",
             "checkpoint_name",
             "address",
+            "lat",
+            "lng",
             "branch"."branch_id" AS "branch.branch_id",
             "branch"."branch_name" AS "branch.branch_name",
             "branch"."branch_address" AS "branch.branch_address",

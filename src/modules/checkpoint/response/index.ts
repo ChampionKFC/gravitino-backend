@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString } from 'class-validator'
 
 export class CheckpointResponse {
   @IsInt()
@@ -13,6 +13,14 @@ export class CheckpointResponse {
   @IsString()
   @ApiProperty()
   address: string
+
+  @IsNumber()
+  @ApiProperty()
+  lat: number
+
+  @IsNumber()
+  @ApiProperty()
+  lng: number
 
   @IsInt()
   @ApiProperty({ default: 1 })

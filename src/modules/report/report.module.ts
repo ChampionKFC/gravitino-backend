@@ -9,9 +9,10 @@ import { TransactionHistoryService } from '../transaction_history/transaction_hi
 import { OrderModule } from '../order/order.module'
 import { BranchModule } from '../branch/branch.module'
 import { UsersModule } from '../users/users.module'
+import { CheckpointModule } from '../checkpoint/checkpoint.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([Report, FileType, TransactionHistory]), BranchModule, UsersModule, OrderModule],
+  imports: [SequelizeModule.forFeature([Report, FileType, TransactionHistory]), BranchModule, CheckpointModule, UsersModule, OrderModule],
   controllers: [ReportController],
   providers: [ReportService, TransactionHistoryService],
 })

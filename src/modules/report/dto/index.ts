@@ -66,3 +66,8 @@ export class ReportDto {
   @ApiProperty()
   period_end: Date
 }
+
+export class CheckpointReportDto {
+  @ApiProperty()
+  branch_id: number
+}

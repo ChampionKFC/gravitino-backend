@@ -15,12 +15,15 @@ import { FacilityService } from '../facility/facility.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { File } from '../files/entities/file.entity'
 import { S3BUCKET, S3ENDPOINT } from 'src/common/s3Client'
+import { Organization } from '../organization/entities/organization.entity'
+import { OrganizationType } from '../organization_type/entities/organization_type.entity'
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order) private orderRepository: typeof Order,
     @InjectModel(File) private fileRepository: typeof File,
+    @InjectModel(Organization) private organizationRepository: typeof Organization,
     private readonly facilityService: FacilityService,
     private readonly historyService: TransactionHistoryService,
     private readonly orderJournalService: OrderJournalService,
@@ -51,15 +54,9 @@ export class OrderService {
       "task"."period_end" AS "task.period_end",
       "facility"."facility_id" AS "facility.facility_id",
       "facility"."facility_name" AS "facility.facility_name",
+      "facility"."organization_ids" AS "facility.organization_ids",
       "facility_type"."facility_type_id" AS "facility.facility_type.facility_type_id",
       "facility_type"."facility_type_name" AS "facility.facility_type.facility_type_name",
-      "facility_organization"."organization_id" AS "facility.organization.organization_id",
-      "facility_organization"."full_name" AS "facility.organization.full_name",
-      "facility_organization"."short_name" AS "facility.organization.short_name",
-      "facility_organization"."phone" AS "facility.organization.phone",
-      "facility_organization"."property_values" AS "facility.organization.property_values",
-      "facility_organization_type"."organization_type_id" AS "facility.organization.organization_type.organization_type_id",
-      "facility_organization_type"."organization_type_name" AS "facility.organization.organization_type.organization_type_name",
       "checkpoint"."checkpoint_id" AS "facility.checkpoint.checkpoint_id",
       "checkpoint_type"."checkpoint_type_id" AS "facility.checkpoint.checkpoint_type.checkpoint_type_id",
       "checkpoint_type"."checkpoint_type_name" AS "facility.checkpoint.checkpoint_type.checkpoint_type_name",
@@ -137,8 +134,6 @@ export class OrderService {
       LEFT JOIN "Tasks" AS "task" ON "Order"."task_id" = "task"."task_id"
       LEFT JOIN "Periodicities" AS "periodicity" ON "task"."periodicity_id" = "periodicity"."periodicity_id"
       LEFT JOIN "Facilities" AS "facility" ON "Order"."facility_id" = "facility"."facility_id"
-      LEFT JOIN "Organizations" AS "facility_organization" ON "facility"."organization_id" = "facility_organization"."organization_id"
-      LEFT JOIN "OrganizationTypes" AS "facility_organization_type" ON "facility_organization".organization_type_id = "facility_organization_type"."organization_type_id"
       LEFT JOIN "Checkpoints" AS "checkpoint" ON "facility"."checkpoint_id" = "checkpoint"."checkpoint_id"
       LEFT JOIN "CheckpointTypes" AS "checkpoint_type" ON "checkpoint"."checkpoint_type_id" = "checkpoint_type"."checkpoint_type_id"
       LEFT JOIN "FacilityTypes" AS "facility_type" ON "facility"."facility_type_id" = "facility_type"."facility_type_id"
@@ -320,11 +315,19 @@ export class OrderService {
           order['files'] = []
         }
 
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
         result.push(order)
       }
 
       return { count: count, data: result }
     } catch (error) {
+      console.log(error)
+
       throw new Error(error)
     }
   }
@@ -362,6 +365,12 @@ export class OrderService {
         } else {
           order['files'] = []
         }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
 
         result.push(order)
       }
@@ -403,6 +412,57 @@ export class OrderService {
         } else {
           order['files'] = []
         }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
+        result.push(order)
+      }
+
+      return { count: result.length, data: result }
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findAllByOrganization(organization_id: number, orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
+    try {
+      if (!orderFilter.filter) {
+        orderFilter.filter = {}
+      }
+
+      orderFilter.filter = {
+        executor: { organization_id },
+      }
+
+      let orders = []
+      orders = [...(await this.findAll(orderFilter)).data]
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
 
         result.push(order)
       }
@@ -607,6 +667,12 @@ export class OrderService {
         } else {
           order['files'] = []
         }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
 
         result.push(order)
       }

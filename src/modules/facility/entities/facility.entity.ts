@@ -5,7 +5,6 @@ import { AppStrings } from 'src/common/constants/strings'
 import { Checkpoint } from 'src/modules/checkpoint/entities/checkpoint.entity'
 import { FacilityType } from 'src/modules/facility_type/entities/facility_type.entity'
 import { Order } from 'src/modules/order/entities/order.entity'
-import { Organization } from 'src/modules/organization/entities/organization.entity'
 
 @Table
 export class Facility extends Model {
@@ -18,16 +17,16 @@ export class Facility extends Model {
   @Column({ type: DataType.STRING(50), allowNull: false })
   facility_name: string
 
-  @ForeignKey(() => Organization)
-  @Column({ type: DataType.INTEGER, allowNull: false })
-  organization_id: number
+  // @ForeignKey(() => Organization)
+  @Column({ type: DataType.ARRAY(DataType.INTEGER), allowNull: false })
+  organization_ids: number[]
 
-  @ApiProperty({
-    type: () => Organization,
-    description: AppStrings.ORGANIZATION,
-  })
-  @BelongsTo(() => Organization)
-  organization: Organization
+  // @ApiProperty({
+  //   type: () => Organization[],
+  //   description: AppStrings.ORGANIZATION,
+  // })
+  // @BelongsTo(() => Organization)
+  // organization: Organization
 
   @ForeignKey(() => Checkpoint)
   @Column({ type: DataType.INTEGER, allowNull: false })

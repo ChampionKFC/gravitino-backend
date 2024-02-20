@@ -9,14 +9,58 @@ import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { Sequelize } from 'sequelize-typescript'
 import { AppStrings } from 'src/common/constants/strings'
+import { OrganizationService } from '../organization/organization.service'
+import { Organization } from '../organization/entities/organization.entity'
+import { OrganizationType } from '../organization_type/entities/organization_type.entity'
 
 @Injectable()
 export class FacilityService {
   constructor(
     @InjectModel(Facility) private facilityRepository: typeof Facility,
+    @InjectModel(Organization) private organizationRepository: typeof Organization,
+    private readonly organizationService: OrganizationService,
     private readonly historyService: TransactionHistoryService,
     private readonly sequelize: Sequelize,
   ) {}
+
+  selectQuery = `SELECT * FROM (
+    SELECT
+      "Facility"."facility_id",
+      "Facility"."facility_name",
+      "Facility"."organization_ids",
+      "Facility"."createdAt",
+      "Facility"."updatedAt",
+      "checkpoint"."checkpoint_id" AS "checkpoint.checkpoint_id",
+      "checkpoint"."checkpoint_name" AS "checkpoint.checkpoint_name",
+      "facility_type"."facility_type_id" AS "facility_type.facility_type_id",
+      "facility_type"."facility_type_name" AS "facility_type.facility_type_name",
+      "checkpoint"."address" AS "checkpoint.address",
+      "checkpoint"."lat" AS "checkpoint.lat",
+      "checkpoint"."lng" AS "checkpoint.lng",
+      "branch"."branch_id" AS "checkpoint.branch.branch_id",
+      "branch"."branch_name" AS "checkpoint.branch.branch_name",
+      "branch"."branch_address" AS "checkpoint.branch.branch_address",
+      "checkpoint"."district" AS "checkpoint.district",
+      "checkpoint"."region" AS "checkpoint.region",
+      "checkpoint_type"."checkpoint_type_id" AS "checkpoint.checkpoint_type.checkpoint_type_id",
+      "checkpoint_type"."checkpoint_type_name" AS "checkpoint.checkpoint_type.checkpoint_type_name",
+      "neighboring_state"."neighboring_state_id" AS "checkpoint.neighboring_state.neighboring_state_id",
+      "neighboring_state"."neighboring_state_name" AS "checkpoint.neighboring_state.neighboring_state_name",
+      "operating_mode"."operating_mode_id" AS "checkpoint.operating_mode.operating_mode_id",
+      "operating_mode"."operating_mode_name" AS "checkpoint.operating_mode.operating_mode_name",
+      "working_hours"."working_hours_id" AS "checkpoint.working_hours.working_hours_id",
+      "working_hours"."working_hours_name" AS "checkpoint.working_hours.working_hours_name",
+      "checkpoint"."property_values" AS "checkpoint.property_values"
+    FROM
+      "Facilities" AS "Facility"
+      LEFT JOIN "Checkpoints" AS "checkpoint" ON "Facility"."checkpoint_id" = "checkpoint"."checkpoint_id"
+      LEFT JOIN "CheckpointTypes" AS "checkpoint_type" ON "checkpoint"."checkpoint_type_id" = "checkpoint_type"."checkpoint_type_id"
+      LEFT JOIN "FacilityTypes" AS "facility_type" ON "Facility"."facility_type_id" = "facility_type"."facility_type_id"
+      LEFT JOIN "Branches" AS "branch" ON "checkpoint"."branch_id" = "branch"."branch_id"
+      LEFT JOIN "WorkingHours" AS "working_hours" ON "checkpoint"."working_hours_id" = "working_hours"."working_hours_id"
+      LEFT JOIN "NeighboringStates" AS "neighboring_state" ON "checkpoint"."neighboring_state_id" = "neighboring_state"."neighboring_state_id"
+      LEFT JOIN "OperatingModes" AS "operating_mode" ON "checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
+  ) AS query`
 
   async create(facility: CreateFacilityDto, user_id: number): Promise<StatusFacilityResponse> {
     try {
@@ -48,67 +92,21 @@ export class FacilityService {
         sortQuery = generateSortQuery(facilityFilter?.sorts)
       }
 
-      const selectQuery = `
-        SELECT * FROM (
-          SELECT
-            "Facility"."facility_id",
-            "Facility"."facility_name",
-            "Facility"."organization_id",
-            "Facility"."createdAt",
-            "Facility"."updatedAt",
-            "checkpoint"."checkpoint_id" AS "checkpoint.checkpoint_id",
-            "checkpoint"."checkpoint_name" AS "checkpoint.checkpoint_name",
-            "facility_type"."facility_type_id" AS "facility_type.facility_type_id",
-            "facility_type"."facility_type_name" AS "facility_type.facility_type_name",
-            "checkpoint"."address" AS "checkpoint.address",
-            "checkpoint"."lat" AS "checkpoint.lat",
-            "checkpoint"."lng" AS "checkpoint.lng",
-            "branch"."branch_id" AS "checkpoint.branch.branch_id",
-            "branch"."branch_name" AS "checkpoint.branch.branch_name",
-            "branch"."branch_address" AS "checkpoint.branch.branch_address",
-            "checkpoint"."district" AS "checkpoint.district",
-            "checkpoint"."region" AS "checkpoint.region",
-            "checkpoint_type"."checkpoint_type_id" AS "checkpoint.checkpoint_type.checkpoint_type_id",
-            "checkpoint_type"."checkpoint_type_name" AS "checkpoint.checkpoint_type.checkpoint_type_name",
-            "neighboring_state"."neighboring_state_id" AS "checkpoint.neighboring_state.neighboring_state_id",
-            "neighboring_state"."neighboring_state_name" AS "checkpoint.neighboring_state.neighboring_state_name",
-            "operating_mode"."operating_mode_id" AS "checkpoint.operating_mode.operating_mode_id",
-            "operating_mode"."operating_mode_name" AS "checkpoint.operating_mode.operating_mode_name",
-            "working_hours"."working_hours_id" AS "checkpoint.working_hours.working_hours_id",
-            "working_hours"."working_hours_name" AS "checkpoint.working_hours.working_hours_name",
-            "checkpoint"."property_values" AS "checkpoint.property_values",
-            "organization"."organization_id" AS "organization.organization_id",
-            "organization_type"."organization_type_id" AS "organization.organization_type.organization_type_id",
-            "organization_type"."organization_type_name" AS "organization.organization_type.organization_type_name",
-            "organization"."full_name" AS "organization.full_name",
-            "organization"."short_name" AS "organization.short_name",
-            "organization"."phone" AS "organization.phone",
-            "organization"."property_values" AS "organization.property_values"
-          FROM
-            "Facilities" AS "Facility"
-            LEFT JOIN "Checkpoints" AS "checkpoint" ON "Facility"."checkpoint_id" = "checkpoint"."checkpoint_id"
-            LEFT JOIN "CheckpointTypes" AS "checkpoint_type" ON "checkpoint"."checkpoint_type_id" = "checkpoint_type"."checkpoint_type_id"
-            LEFT JOIN "FacilityTypes" AS "facility_type" ON "Facility"."facility_type_id" = "facility_type"."facility_type_id"
-            LEFT JOIN "Branches" AS "branch" ON "checkpoint"."branch_id" = "branch"."branch_id"
-            LEFT JOIN "Organizations" AS "organization" ON "Facility"."organization_id" = "organization"."organization_id"
-            LEFT JOIN "OrganizationTypes" AS "organization_type" ON "organization"."organization_type_id" = "organization_type"."organization_type_id"
-            LEFT JOIN "WorkingHours" AS "working_hours" ON "checkpoint"."working_hours_id" = "working_hours"."working_hours_id"
-            LEFT JOIN "NeighboringStates" AS "neighboring_state" ON "checkpoint"."neighboring_state_id" = "neighboring_state"."neighboring_state_id"
-            LEFT JOIN "OperatingModes" AS "operating_mode" ON "checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
-        ) AS query
+      const query = `
+        ${this.selectQuery}
         ${whereQuery}
         ${sortQuery}
       `
 
       const count = (
-        await this.sequelize.query<Facility>(selectQuery, {
+        await this.sequelize.query<Facility>(query, {
           nest: true,
           type: QueryTypes.SELECT,
         })
       ).length
-      const result = await this.sequelize.query<Facility>(
+      const facilities = await this.sequelize.query<Facility>(
         `
-        ${selectQuery}
+        ${query}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -117,7 +115,70 @@ export class FacilityService {
         },
       )
 
+      const result = []
+      for (const facility of facilities) {
+        const organizations = await this.organizationRepository.findAll({ where: { organization_id: facility.organization_ids }, include: [OrganizationType] })
+        facility['organizations'] = organizations
+
+        result.push(facility)
+      }
+
       return { count: count, data: result }
+    } catch (error) {
+      console.log(error)
+
+      throw new Error(error)
+    }
+  }
+
+  async findByOrganization(organization_id: number) {
+    try {
+      const facilities = await this.sequelize.query<Facility>(
+        `
+          ${this.selectQuery}
+          WHERE ${organization_id} = ANY(organization_ids);
+        `,
+        {
+          nest: true,
+          type: QueryTypes.SELECT,
+        },
+      )
+
+      return facilities
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findOrganizationsByFacility(facility_id: number) {
+    try {
+      const facilities = await this.findAll({ filter: { facility_id } })
+
+      const organizations = []
+      for (const organization of facilities.data[0].organizations) {
+        const facilities = await this.findByOrganization(organization.organization_id)
+        organization.setDataValue('facilities', facilities)
+        organizations.push(organization)
+      }
+
+      return organizations
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findOrganizationsByCheckpoint(checkpoint_id: string) {
+    try {
+      const facilities = await this.findAll({ filter: { checkpoint: { checkpoint_id: +checkpoint_id } } })
+
+      const organizations = []
+      for (const organization of facilities.data[0].organizations) {
+        const facilities = await this.findByOrganization(organization.organization_id)
+        organization.setDataValue('facilities', facilities)
+        organizations.push(organization)
+      }
+
+      return organizations
     } catch (error) {
       throw new Error(error)
     }

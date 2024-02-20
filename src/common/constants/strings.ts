@@ -290,6 +290,10 @@ export const AppStrings = {
 
   REPORT_BRANCH_ALL_RESPONSE: 'Отчет по всем филиалам сгенерирован',
   REPORT_BRANCH_ALL_OPERATION: 'Генерация отчета по всем филиалам',
+  REPORT_CHECKPOINT_ALL_RESPONSE: 'Отчет по пунктам пропуска сгенерирован',
+  REPORT_CHECKPOINT_ALL_OPERATION: 'Генерация отчета по пунктам пропуска',
+  REPORT_ORGANIZATIONS_ALL_RESPONSE: 'Отчет по подрядчикам сгенерирован',
+  REPORT_ORGANIZATIONS_ALL_OPERATION: 'Генерация отчета по подрядчикам',
 
   ROLE_NAME_EXAMPLE: 'Заказчик',
   ROLE_NAME_DESCRIPTION: 'Роль пользователя',

@@ -19,10 +19,11 @@ import { OrderJournalModule } from '../order_journal/order_journal.module'
 import { File } from '../files/entities/file.entity'
 import { FacilityTypeModule } from '../facility_type/facility_type.module'
 import { UsersModule } from '../users/users.module'
+import { Organization } from '../organization/entities/organization.entity'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Task, Order, User, File]),
+    SequelizeModule.forFeature([Task, Order, User, File, Organization]),
     CategoryModule,
     PeriodicityModule,
     TransactionHistoryModule,

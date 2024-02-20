@@ -4,6 +4,7 @@ import { AppStrings } from 'src/common/constants/strings'
 import { CheckpointFilters, CheckpointSorts } from 'src/modules/checkpoint/dto'
 import { ReportDto } from '../dto'
 import { BranchFilters, BranchSorts } from 'src/modules/branch/dto'
+import { OrganizationFilters, OrganizationSorts } from 'src/modules/organization/dto'
 
 export class ReportFilters {
   @ApiProperty({ required: false })
@@ -88,6 +89,36 @@ export class CheckpointReportFilter {
 
   @ApiProperty({ required: false })
   sorts?: CheckpointReportSorts
+
+  @ApiProperty({ required: false })
+  period?: ReportDto
+}
+
+export class OrganizationReportFilters {
+  @ApiProperty({ required: false })
+  report: ReportFilters
+
+  @ApiProperty({ required: false })
+  organization: OrganizationFilters
+}
+
+export class OrganizationReportSorts {
+  @ApiProperty({ required: false })
+  report: ReportSorts
+
+  @ApiProperty({ required: false })
+  organization: OrganizationSorts
+}
+
+export class OrganizationReportFilter {
+  @ApiProperty({ required: false })
+  offset?: FilterOffset
+
+  @ApiProperty({ required: false })
+  filter?: OrganizationReportFilters
+
+  @ApiProperty({ required: false })
+  sorts?: OrganizationReportSorts
 
   @ApiProperty({ required: false })
   period?: ReportDto

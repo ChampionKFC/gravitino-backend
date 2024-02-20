@@ -17,10 +17,11 @@ import { FacilityModule } from '../facility/facility.module'
 import { BranchModule } from '../branch/branch.module'
 import { OrderJournalModule } from '../order_journal/order_journal.module'
 import { File } from '../files/entities/file.entity'
+import { Organization } from '../organization/entities/organization.entity'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Order, User, File]),
+    SequelizeModule.forFeature([Order, User, File, Organization]),
     TaskModule,
     CheckpointModule,
     FacilityModule,

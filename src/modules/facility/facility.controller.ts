@@ -41,9 +41,11 @@ export class FacilityController {
       throw new HttpException(AppError.CHECKPOINT_NOT_FOUND, HttpStatus.NOT_FOUND)
     }
 
-    const foundOrganization = await this.organizationService.findOne(createFacilityDto.organization_id)
-    if (!foundOrganization) {
-      throw new HttpException(AppError.ORGANIZATION_NOT_FOUND, HttpStatus.NOT_FOUND)
+    for (const organization of createFacilityDto.organization_ids) {
+      const foundOrganization = await this.organizationService.findOne(organization)
+      if (!foundOrganization) {
+        throw new HttpException(`${AppError.ORGANIZATION_NOT_FOUND} (ID: ${organization})`, HttpStatus.NOT_FOUND)
+      }
     }
 
     return this.facilityService.create(createFacilityDto, request.user.user_id)
@@ -156,10 +158,12 @@ export class FacilityController {
       }
     }
 
-    if (updateFacilityDto.organization_id) {
-      const foundOrganization = await this.organizationService.findOne(updateFacilityDto.organization_id)
-      if (!foundOrganization) {
-        throw new HttpException(AppError.ORGANIZATION_NOT_FOUND, HttpStatus.NOT_FOUND)
+    if (updateFacilityDto.organization_ids) {
+      for (const organization of updateFacilityDto.organization_ids) {
+        const foundOrganization = await this.organizationService.findOne(organization)
+        if (!foundOrganization) {
+          throw new HttpException(`${AppError.ORGANIZATION_NOT_FOUND} (ID: ${organization})`, HttpStatus.NOT_FOUND)
+        }
       }
     }
 

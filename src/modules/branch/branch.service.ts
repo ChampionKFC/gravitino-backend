@@ -33,7 +33,7 @@ export class BranchService {
     return { status: true, data: newBranch }
   }
 
-  async findAll(branchFilter?: BranchFilter): Promise<ArrayBranchResponse> {
+  async findAll(branchFilter: BranchFilter): Promise<ArrayBranchResponse> {
     try {
       const offset_count = branchFilter.offset?.count == undefined ? 50 : branchFilter.offset.count
       const offset_page = branchFilter.offset?.page == undefined ? 1 : branchFilter.offset.page

@@ -1,147 +1,55 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { CreateReportDto } from './dto/create-report.dto'
-import { UpdateReportDto } from './dto/update-report.dto'
-import { FileType } from 'src/modules/file_type/entities/file_type.entity'
+import { Injectable } from '@nestjs/common'
+import { ReportDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Report } from './entities/report.entity'
-import { User } from 'src/modules/users/entities/user.entity'
-import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { Sequelize } from 'sequelize-typescript'
-import { AppError } from 'src/common/constants/error'
-import { AppStrings } from 'src/common/constants/strings'
+import { ArrayBranchReportResponse } from './response'
+import { OrderService } from '../order/order.service'
+import { BranchService } from '../branch/branch.service'
 
 @Injectable()
 export class ReportService {
   constructor(
     @InjectModel(Report) private reportRepository: typeof Report,
-    @InjectModel(User) private userRepository: typeof User,
-    @InjectModel(FileType) private fileTypeRepository: typeof FileType,
-    private readonly historyService: TransactionHistoryService,
+    private readonly orderService: OrderService,
+    private readonly branchService: BranchService,
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(createReportDto: CreateReportDto, user_id: number) {
-    let result
+  async generateBranchReport(reportDto: ReportDto): Promise<ArrayBranchReportResponse> {
+    try {
+      const branchReport = []
+      const branches = await this.branchService.findAll({})
 
-    await this.sequelize.transaction(async (trx) => {
-      const transactionHost = { transaction: trx }
-
-      const user = await this.userRepository.findOne({
-        where: { user_id: createReportDto.report_user_id },
-      })
-      if (!user) {
-        throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
-      }
-
-      const file_type = await this.fileTypeRepository.findOne({
-        where: { file_type_id: createReportDto.file_type_id },
-      })
-      if (!file_type) {
-        throw new HttpException(AppError.FILE_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST)
-      }
-
-      result = await this.reportRepository.create({ ...createReportDto }, transactionHost).catch((error) => {
-        const errorMessage = error.message
-        const errorCode = HttpStatus.BAD_REQUEST
-
-        throw new HttpException(errorMessage, errorCode)
-      })
-
-      const historyDto = {
-        user_id: user_id,
-        comment: `${AppStrings.HISTORY_REPORT_CREATED}${result.report_id}`,
-      }
-      await this.historyService.create(historyDto)
-    })
-
-    return result
-  }
-
-  async findAll() {
-    const result = await this.reportRepository.findAll({})
-
-    return result
-  }
-
-  async findOne(id: number) {
-    const result = await this.reportRepository.findOne({
-      where: { report_id: id },
-    })
-
-    return result
-  }
-
-  async update(updateReportDto: UpdateReportDto, user_id: number) {
-    let result
-
-    await this.sequelize.transaction(async (trx) => {
-      const transactionHost = { transaction: trx }
-
-      const report = await this.reportRepository.findOne({
-        where: { report_id: updateReportDto.report_id },
-      })
-      if (!report) {
-        throw new HttpException(AppError.REPORT_NOT_FOUND, HttpStatus.NOT_FOUND)
-      }
-
-      if (updateReportDto.report_user_id != undefined) {
-        const user = await this.userRepository.findOne({
-          where: { user_id: updateReportDto.report_user_id },
+      for (const branch of branches.data) {
+        const orders = await this.orderService.findAllByBranch([branch.branch_id], {
+          period: { date_start: reportDto.period_start, date_end: reportDto.period_end },
         })
-        if (!user) {
-          throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
-        }
-      }
 
-      if (updateReportDto.file_type_id != undefined) {
-        const file_type = await this.fileTypeRepository.findOne({
-          where: { file_type_id: updateReportDto.file_type_id },
+        const allCount = orders.data.length
+
+        const completed = orders.data.filter((order) => order.order_status_id === 4 || order.order_status_id === 5)
+        const checked = orders.data.filter((order) => order.order_status_id === 5 || order.order_status_id === 7)
+
+        const completedPercent = (completed.length / allCount) * 100 // Процент отправленных и непроверенных задач (отношение completed к all)
+        const checkedPercent = (checked.length / completed.length) * 100 // Процент проверенных задач (отношение checked к completed)
+
+        console.log(allCount, completed.length, checked.length)
+
+        branchReport.push({
+          branch: branch,
+          completed_count: completed.length,
+          completed_percent: completedPercent,
+          checked_count: checked.length,
+          checked_percent: checkedPercent,
         })
-        if (!file_type) {
-          throw new HttpException(AppError.FILE_TYPE_NOT_FOUND, HttpStatus.BAD_REQUEST)
-        }
       }
 
-      result = await report.update(updateReportDto, transactionHost).catch((error) => {
-        const errorMessage = error.message
-        const errorCode = HttpStatus.BAD_REQUEST
+      return { count: branchReport.length, data: branchReport }
+    } catch (error) {
+      console.log('REPORT:', error)
 
-        throw new HttpException(errorMessage, errorCode)
-      })
-
-      const historyDto = {
-        user_id: user_id,
-        comment: `${AppStrings.HISTORY_REPORT_UPDATED}${result.report_id}`,
-      }
-      await this.historyService.create(historyDto)
-    })
-
-    return result
-  }
-
-  async remove(id: number, user_id: number) {
-    await this.sequelize.transaction(async (trx) => {
-      const result = await this.reportRepository.findOne({
-        where: { report_id: id },
-      })
-      if (result == null) {
-        throw new HttpException(AppError.REPORT_NOT_FOUND, HttpStatus.NOT_FOUND)
-      }
-
-      await this.reportRepository.destroy({ where: { report_id: id }, transaction: trx }).catch((error) => {
-        const errorMessage = error.message
-        const errorCode = HttpStatus.BAD_REQUEST
-
-        throw new HttpException(errorMessage, errorCode)
-      })
-
-      const historyDto = {
-        user_id: user_id,
-        comment: `${AppStrings.HISTORY_REPORT_DELETED}${id}`,
-      }
-      await this.historyService.create(historyDto)
-    })
-
-    return { statusCode: 200, message: AppStrings.SUCCESS_ROW_DELETE }
+      throw new Error(error)
+    }
   }
 }

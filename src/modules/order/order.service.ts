@@ -37,6 +37,7 @@ export class OrderService {
       "Order"."task_end_datetime",
       "Order"."ended_at_datetime",
       "Order"."property_values",
+      "Order"."order_status_id",
       "Order"."createdAt",
       "Order"."updatedAt",
       "task"."task_id" AS "task.task_id",
@@ -269,6 +270,14 @@ export class OrderService {
       let sortQuery = ''
       if (orderFilter?.sorts) {
         sortQuery = generateSortQuery(orderFilter?.sorts)
+      }
+
+      if (orderFilter.period) {
+        if (whereQuery.trim() == '') {
+          whereQuery = `WHERE planned_datetime between '${orderFilter.period.date_start}' AND '${orderFilter.period.date_end}'`
+        } else {
+          whereQuery += ` AND planned_datetime between '${orderFilter.period.date_start}' AND '${orderFilter.period.date_end}'`
+        }
       }
 
       const selectQuery = `

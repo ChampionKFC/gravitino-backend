@@ -288,6 +288,9 @@ export const AppStrings = {
   PROPERTY_VALUE_DELETE_RESPONSE: 'Значение характеристики удалено',
   PROPERTY_VALUE_DELETE_OPERATION: 'Удаление значения характеристики',
 
+  REPORT_BRANCH_ALL_RESPONSE: 'Отчет по всем филиалам сгенерирован',
+  REPORT_BRANCH_ALL_OPERATION: 'Генерация отчета по всем филиалам',
+
   ROLE_NAME_EXAMPLE: 'Заказчик',
   ROLE_NAME_DESCRIPTION: 'Роль пользователя',
   ROLE_DESCRIPTION: 'Роль пользователя (пользователь, администратор и т.д.)',

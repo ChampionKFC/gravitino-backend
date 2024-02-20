@@ -61,6 +61,8 @@ import { OperatingModeModule } from '../operating_mode/operating_mode.module'
 import { NeighboringStateModule } from '../neighboring_state/neighboring_state.module'
 import { FacilityTypeModule } from '../facility_type/facility_type.module'
 import { FacilityType } from '../facility_type/entities/facility_type.entity'
+import { ReportModule } from '../report/report.module'
+import { Report } from '../report/entities/report.entity'
 
 @Module({
   imports: [
@@ -83,7 +85,7 @@ import { FacilityType } from '../facility_type/entities/facility_type.entity'
         password: configService.get('db_password'),
         database: configService.get('db_name'),
         autoLoadModels: true,
-        logging: true,
+        logging: false,
         synchronize: true,
         models: [
           User,
@@ -102,7 +104,7 @@ import { FacilityType } from '../facility_type/entities/facility_type.entity'
           Checkpoint,
           FileType,
           FacilityType,
-          //Report,
+          Report,
           Order,
           Permission,
           RolePermission,
@@ -150,7 +152,7 @@ import { FacilityType } from '../facility_type/entities/facility_type.entity'
 
     FileTypeModule,
     FilesModule,
-    //ReportModule,
+    ReportModule,
 
     PermissionsModule,
     RolesPermissionsModule,

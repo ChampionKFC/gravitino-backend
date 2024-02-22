@@ -116,7 +116,7 @@ export class FilesService {
           .map(() => Math.round(Math.random() * 16).toString(16))
           .join('')
 
-        const fileKey = `${uploadFilesDto.directory}/${uploadFilesDto.order_id}/${randomName}${extname(file.originalname)}`
+        const fileKey = `${uploadFilesDto.directory}/${uploadFilesDto.order_ids[0]}/${randomName}${extname(file.originalname)}`
 
         const params = {
           Bucket: bucketName,
@@ -126,13 +126,15 @@ export class FilesService {
 
         await s3Client.send(new PutObjectCommand(params))
 
-        const createFileDto = new CreateFileDto()
-        createFileDto.file_sku = fileKey
-        createFileDto.file_alt = randomName
-        createFileDto.order_id = uploadFilesDto.order_id
-        createFileDto.file_type_id = 2 // TODO
+        for (const order_id of uploadFilesDto.order_ids) {
+          const createFileDto = new CreateFileDto()
+          createFileDto.file_sku = fileKey
+          createFileDto.file_alt = randomName
+          createFileDto.order_id = order_id
+          createFileDto.file_type_id = 2 // IMAGE TODO
 
-        await this.create(createFileDto, user_id, transaction)
+          await this.create(createFileDto, user_id, transaction)
+        }
 
         links.push(`${S3ENDPOINT}/${bucketName}/${fileKey}`)
       }

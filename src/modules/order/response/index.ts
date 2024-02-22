@@ -4,6 +4,10 @@ import { IsArray, IsBoolean, IsDate, IsInt, IsOptional, IsString } from 'class-v
 export class OrderResponse {
   @IsInt()
   @ApiProperty({ default: 1, required: false })
+  order_id?: number
+
+  @IsInt()
+  @ApiProperty({ default: 1, required: false })
   task_id?: number
 
   @IsString()
@@ -75,4 +79,14 @@ export class StatusOrderResponse {
   @IsOptional()
   @ApiProperty({ required: false })
   data?: OrderResponse
+}
+
+export class StatusArrayOrderResponse {
+  @IsBoolean()
+  @ApiProperty()
+  status: boolean
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  data?: ArrayOrderResponse
 }

@@ -45,9 +45,9 @@ export class ReportService {
           branch: branch,
           all_count: allCount,
           completed_count: completed.length,
-          completed_percent: completedPercent,
+          completed_percent: completedPercent.toPrecision(2),
           checked_count: checked.length,
-          checked_percent: checkedPercent,
+          checked_percent: checkedPercent.toPrecision(2),
         })
       }
 
@@ -134,9 +134,9 @@ export class ReportService {
           checkpoint: checkpoint,
           all_count: allCount,
           completed_count: completed.length,
-          completed_percent: completedPercent,
+          completed_percent: completedPercent.toPrecision(2),
           checked_count: checked.length,
-          checked_percent: checkedPercent,
+          checked_percent: checkedPercent.toPrecision(2),
         })
       }
 
@@ -229,9 +229,9 @@ export class ReportService {
           organization: organization,
           all_count: allCount,
           completed_count: completed.length,
-          completed_percent: completedPercent,
+          completed_percent: completedPercent.toPrecision(2),
           checked_count: checked.length,
-          checked_percent: checkedPercent,
+          checked_percent: checkedPercent.toPrecision(2),
         })
       }
 

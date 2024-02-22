@@ -51,6 +51,18 @@ export class OrderStatusController {
     return this.orderStatusService.findAll({})
   }
 
+  @ApiOperation({ summary: AppStrings.ORDER_STATUS_ALL_ROLE_OPERATION })
+  @ApiOkResponse({
+    description: AppStrings.ORDER_STATUS_ALL_ROLE_RESPONSE,
+    type: OrderStatus,
+    isArray: true,
+  })
+  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @Get('all-by-role')
+  async getAllByRole(@Req() request) {
+    return this.orderStatusService.findAllByRole(request.user.user_id)
+  }
+
   @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_UPDATE_OPERATION })

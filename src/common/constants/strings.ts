@@ -200,6 +200,8 @@ export const AppStrings = {
   ORDER_STATUS_CREATE_OPERATION: 'Создание статуса заказа',
   ORDER_STATUS_ALL_RESPONSE: 'Список статусов заказа получен',
   ORDER_STATUS_ALL_OPERATION: 'Получение списка всех статусов заказа',
+  ORDER_STATUS_ALL_ROLE_RESPONSE: 'Список статусов заказа по роли получен',
+  ORDER_STATUS_ALL_ROLE_OPERATION: 'Получение списка всех статусов заказа по роли',
   ORDER_STATUS_DELETE_RESPONSE: 'Статус заказа удален',
   ORDER_STATUS_DELETE_OPERATION: 'Удаление статуса заказа',
 

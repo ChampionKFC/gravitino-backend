@@ -32,7 +32,7 @@ export class UpdateFileDto {
 
 export class UploadFileDto {
   @ApiProperty()
-  order_id: number
+  order_ids: number[]
 
   @ApiProperty()
   directory: string

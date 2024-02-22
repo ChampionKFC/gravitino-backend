@@ -12,7 +12,7 @@ import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { Order } from './entities/order.entity'
-import { ArrayOrderResponse, StatusOrderResponse } from './response'
+import { ArrayOrderResponse, StatusArrayOrderResponse, StatusOrderResponse } from './response'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { FacilityService } from '../facility/facility.service'
@@ -39,7 +39,7 @@ export class OrderController {
   @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.ORDER_CREATED_RESPONSE,
-    type: StatusOrderResponse,
+    type: StatusArrayOrderResponse,
   })
   @ApiOperation({ summary: AppStrings.ORDER_CREATE_OPERATION })
   @Post()

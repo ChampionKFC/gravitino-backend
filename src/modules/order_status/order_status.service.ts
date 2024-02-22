@@ -9,11 +9,13 @@ import { OrderStatusFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { AppStrings } from 'src/common/constants/strings'
+import { User } from '../users/entities/user.entity'
 
 @Injectable()
 export class OrderStatusService {
   constructor(
     @InjectModel(OrderStatus) private orderStatusRepository: typeof OrderStatus,
+    @InjectModel(User) private userRepository: typeof User,
     private readonly historyService: TransactionHistoryService,
     private readonly sequelize: Sequelize,
   ) {}
@@ -80,6 +82,26 @@ export class OrderStatusService {
       )
 
       return { count: count, data: foundStatuses }
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findAllByRole(user_id: string): Promise<ArrayOrderStatusResponse> {
+    try {
+      const user = await this.userRepository.findOne({ where: { user_id } })
+
+      const availableStatuses = []
+      if (user.role_id == 2) {
+        availableStatuses.push(...[3, 4, 5])
+      } else if (user.role_id == 3) {
+        availableStatuses.push(...[1, 2, 3, 4, 5, 6, 7, 8])
+      } else {
+        availableStatuses.push(...[1, 2, 3, 4, 5, 6, 7, 8])
+      }
+
+      const foundStatuses = await this.orderStatusRepository.findAll({ where: { order_status_id: availableStatuses } })
+      return { count: foundStatuses.length, data: foundStatuses }
     } catch (error) {
       throw new Error(error)
     }

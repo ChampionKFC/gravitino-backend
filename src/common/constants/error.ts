@@ -13,6 +13,7 @@ export const AppError = {
   FILE_NOT_FOUND: 'Файл не найден!',
   GROUP_NOT_FOUND: 'Группа не найдена!',
   ORDER_NOT_FOUND: 'Заказ не найден!',
+  ORDERS_NOT_SELECTED: 'Должен быть выбран минимум 1 заказ!',
   ORDER_STATUS_NOT_FOUND: 'Статус заказа не найден!',
   ORDER_BAD_REQUEST: 'Необходимо указать задачу или название задачи!',
   ORGANIZATION_NOT_FOUND: 'Организация не найдена!',

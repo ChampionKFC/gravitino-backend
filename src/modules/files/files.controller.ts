@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UseInterceptors, Query, Req, UploadedFiles, Get } from '@nestjs/common'
+import { Controller, Post, UseGuards, UseInterceptors, Query, Req, UploadedFiles, Get, HttpException, HttpStatus } from '@nestjs/common'
 import { FilesService } from './files.service'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
@@ -9,6 +9,7 @@ import { StatusFileResponse } from './response'
 import { UploadFileDto } from './dto'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { AppError } from 'src/common/constants/error'
 
 @ApiBearerAuth()
 @ApiTags('Files')
@@ -28,19 +29,6 @@ export class FilesController {
   @UseGuards(JwtAuthGuard, ActiveGuard)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      // storage: diskStorage({
-      //   destination: (req, file, cb) => {
-      //     const destination = `./uploads/${req.query.directory}`
-      //     cb(null, `${destination}`)
-      //   },
-      //   filename: (req, file, cb) => {
-      //     const randomName = Array(32)
-      //       .fill(null)
-      //       .map(() => Math.round(Math.random() * 16).toString(16))
-      //       .join('')
-      //     return cb(null, `${randomName}${extname(file.originalname)}`)
-      //   },
-      // }),
       limits: { fileSize: 5242880 },
       fileFilter: (req, file, callback) => {
         if (!Boolean(file.mimetype.match(/(jpg|jpeg|png|gif)/))) callback(null, false)
@@ -50,12 +38,23 @@ export class FilesController {
   )
   @Post('upload-images')
   async upload(
-    @Query() query: UploadFileDto,
+    @Query() uploadFileDto: UploadFileDto,
     @UploadedFiles()
     files: Array<Express.Multer.File>,
     @Req() request,
   ) {
-    return this.filesService.uploadToS3(query, files, request.user.user_id)
+    if (uploadFileDto.order_ids.length > 0) {
+      for (const order_id of uploadFileDto.order_ids) {
+        const foundOrder = await this.orderService.findOne(order_id)
+        if (!foundOrder) {
+          throw new HttpException(`${AppError.ORDER_NOT_FOUND} (ID: ${order_id})`, HttpStatus.NOT_FOUND)
+        }
+      }
+    } else {
+      throw new HttpException(AppError.ORDERS_NOT_SELECTED, HttpStatus.BAD_REQUEST)
+    }
+
+    return this.filesService.uploadToS3(uploadFileDto, files, request.user.user_id)
   }
 
   @Get('find')

@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Order } from './entities/order.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
-import { ArrayOrderResponse, StatusOrderResponse } from './response'
+import { ArrayOrderResponse, StatusArrayOrderResponse, StatusOrderResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { generateSortQuery, generateWhereQuery } from 'src/common/utlis/generate_sort_query'
@@ -160,7 +160,7 @@ export class OrderService {
       LEFT JOIN "Groups" AS "creator_group" ON "creator".group_id = "creator_group"."group_id"
   ) AS query`
 
-  async create(createOrderDto: CreateOrderDto, user_id: number, transaction?: Transaction): Promise<StatusOrderResponse> {
+  async create(createOrderDto: CreateOrderDto, user_id: number, transaction?: Transaction): Promise<Order> {
     try {
       const newOrder = await this.orderRepository.create({ ...createOrderDto }, { transaction })
 
@@ -178,15 +178,16 @@ export class OrderService {
 
       await this.orderJournalService.create(orderJournalDto, transaction)
 
-      return { status: true, data: { ...newOrder, files: [] } }
+      return newOrder
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async bulkCreate(order: BulkCreateOrderDto, user_id: number): Promise<StatusOrderResponse> {
+  async bulkCreate(order: BulkCreateOrderDto, user_id: number): Promise<StatusArrayOrderResponse> {
     const transaction = await this.sequelize.transaction()
     try {
+      const orders = []
       for (let index = 0; index < order.executor_ids.length; index++) {
         const executor_id = order.executor_ids[index]
 
@@ -206,10 +207,12 @@ export class OrderService {
             orderDto.planned_datetime = order.planned_datetime
             orderDto.task_end_datetime = order.task_end_datetime
 
-            await this.create(orderDto, user_id, transaction).catch((e) => {
+            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
               transaction.rollback()
               throw new Error(e)
             })
+
+            orders.push(newOrder)
           }
         } else if (order.checkpoint_ids && order.checkpoint_ids.length > 0) {
           const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, order.facility_type_ids, {})
@@ -221,10 +224,12 @@ export class OrderService {
             orderDto.planned_datetime = order.planned_datetime
             orderDto.task_end_datetime = order.task_end_datetime
 
-            await this.create(orderDto, user_id, transaction).catch((e) => {
+            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
               transaction.rollback()
               throw new Error(e)
             })
+
+            orders.push(newOrder)
           }
         } else {
           const facilities = await this.facilityService.findAllByBranch(order.branch_ids, order.facility_type_ids, {})
@@ -236,17 +241,19 @@ export class OrderService {
             orderDto.planned_datetime = order.planned_datetime
             orderDto.task_end_datetime = order.task_end_datetime
 
-            await this.create(orderDto, user_id, transaction).catch((e) => {
+            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
               transaction.rollback()
               throw new Error(e)
             })
+
+            orders.push(newOrder)
           }
         }
       }
 
       transaction.commit()
 
-      return { status: true }
+      return { status: true, data: { count: orders.length, data: [...orders] } }
     } catch (error) {
       transaction.rollback()
       throw new Error(error)

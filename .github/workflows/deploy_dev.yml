@@ -21,6 +21,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         script: |
           cd /www/wwwroot/gravitino/back/dev
-          git pull
+          git checkout develop
+          git pull origin develop
           npm install
           npm run build

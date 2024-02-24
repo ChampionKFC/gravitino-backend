@@ -23,8 +23,8 @@ async function bootstrap() {
       'https://gravitino.ru',
       'http://test.gravitino.ru',
       'http://prod.gravitino.ru',
-      'http://production.gravitino.ru',
-      'http://dev.gravitino.ru'
+      'http://front.production.gravitino.ru',
+      'http://front.dev.gravitino.ru'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,

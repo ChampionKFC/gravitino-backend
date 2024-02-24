@@ -3,17 +3,19 @@ import { CreateOrderStatusDto, UpdateOrderStatusDto } from './dto'
 import { OrderStatus } from './entities/order_status.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OrderStatusResponse, StatusOrderStatusResponse } from './response'
+import { ArrayOrderStatusResponse, OrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { OrderStatusFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { AppStrings } from 'src/common/constants/strings'
+import { User } from '../users/entities/user.entity'
 
 @Injectable()
 export class OrderStatusService {
   constructor(
     @InjectModel(OrderStatus) private orderStatusRepository: typeof OrderStatus,
+    @InjectModel(User) private userRepository: typeof User,
     private readonly historyService: TransactionHistoryService,
     private readonly sequelize: Sequelize,
   ) {}
@@ -36,7 +38,7 @@ export class OrderStatusService {
     }
   }
 
-  async findAll(orderStatusFilter: OrderStatusFilter): Promise<OrderStatusResponse[]> {
+  async findAll(orderStatusFilter: OrderStatusFilter): Promise<ArrayOrderStatusResponse> {
     try {
       const offset_count = orderStatusFilter.offset?.count == undefined ? 50 : orderStatusFilter.offset.count
       const offset_page = orderStatusFilter.offset?.page == undefined ? 1 : orderStatusFilter.offset.page
@@ -50,17 +52,27 @@ export class OrderStatusService {
         sortQuery = generateSortQuery(orderStatusFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "order_status_id",
+          "order_status_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "OrderStatuses" AS "OrderStatus"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<OrderStatus>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundStatuses = await this.sequelize.query<OrderStatus>(
         `
-          SELECT
-            "order_status_id",
-            "order_status_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "OrderStatuses" AS "OrderStatus"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -69,7 +81,27 @@ export class OrderStatusService {
         },
       )
 
-      return foundStatuses
+      return { count: count, data: foundStatuses }
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findAllByRole(user_id: string): Promise<ArrayOrderStatusResponse> {
+    try {
+      const user = await this.userRepository.findOne({ where: { user_id } })
+
+      const availableStatuses = []
+      if (user.role_id == 2) {
+        availableStatuses.push(...[3, 4, 5])
+      } else if (user.role_id == 3) {
+        availableStatuses.push(...[1, 2, 3, 4, 5, 6, 7, 8])
+      } else {
+        availableStatuses.push(...[1, 2, 3, 4, 5, 6, 7, 8])
+      }
+
+      const foundStatuses = await this.orderStatusRepository.findAll({ where: { order_status_id: availableStatuses } })
+      return { count: foundStatuses.length, data: foundStatuses }
     } catch (error) {
       throw new Error(error)
     }

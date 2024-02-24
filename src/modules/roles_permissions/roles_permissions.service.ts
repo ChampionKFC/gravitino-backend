@@ -3,7 +3,7 @@ import { CreateRolesPermissionDto, UpdateRolesPermissionDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { RolePermission } from './entities/roles_permission.entity'
-import { RolePermissionResponse, StatusRolePermissionResponse } from './response'
+import { ArrayRolePermissionResponse, RolePermissionResponse, StatusRolePermissionResponse } from './response'
 import { UsersService } from '../users/users.service'
 import { PermissionsService } from '../permissions/permissions.service'
 import { AppStrings } from 'src/common/constants/strings'
@@ -36,10 +36,10 @@ export class RolesPermissionsService {
     }
   }
 
-  async findAll(): Promise<RolePermissionResponse[]> {
+  async findAll(): Promise<ArrayRolePermissionResponse> {
     try {
       const result = await this.rolePermissionRepository.findAll()
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -119,8 +119,6 @@ export class RolesPermissionsService {
     if (!permission) {
       return false
     }
-    console.log(user.user_id)
-    console.log(user_id)
 
     const rolePermission = await this.rolePermissionRepository.findOne({
       where: {
@@ -133,9 +131,6 @@ export class RolesPermissionsService {
     })
 
     if (!rolePermission || !rolePermission.rights) {
-      console.log(rolePermission)
-      console.log(userPermission)
-
       if (!userPermission || !userPermission.rights) {
         return false
       } else {

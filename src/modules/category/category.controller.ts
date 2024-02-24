@@ -9,9 +9,10 @@ import { PermissionsGuard } from '../auth/guards/permission.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Category } from './entities/category.entity'
-import { StatusCategoryResponse } from './response'
+import { ArrayCategoryResponse, StatusCategoryResponse } from './response'
 import { CategoryFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiTags('Category (Task)')
 @Controller('category')
@@ -21,7 +22,7 @@ export class CategoryController {
 
   @ApiBearerAuth()
   @HasPermissions(PermissionEnum.CategoryCreate)
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CATEGORY_CREATED_RESPONSE,
     type: StatusCategoryResponse,
@@ -33,11 +34,10 @@ export class CategoryController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CATEGORY_ALL_RESPONSE,
-    type: Category,
-    isArray: true,
+    type: ArrayCategoryResponse,
   })
   @ApiOperation({ summary: AppStrings.CATEGORY_ALL_OPERATION })
   @ApiBody({ required: false, type: CategoryFilter })
@@ -48,7 +48,7 @@ export class CategoryController {
 
   @ApiBearerAuth()
   @HasPermissions(PermissionEnum.CategoryUpdate)
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CATEGORY_UPDATE_RESPONSE,
     type: Category,
@@ -69,7 +69,7 @@ export class CategoryController {
 
   @ApiBearerAuth()
   @HasPermissions(PermissionEnum.CategoryDelete)
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CATEGORY_DELETE_RESPONSE,
     type: StatusCategoryResponse,

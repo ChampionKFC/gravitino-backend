@@ -6,26 +6,29 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { AppError } from 'src/common/constants/error'
 import { Facility } from './entities/facility.entity'
-import { StatusFacilityResponse } from './response'
+import { ArrayFacilityResponse, StatusFacilityResponse } from './response'
 import { FacilityFilter } from './filters'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrganizationService } from '../organization/organization.service'
 import { BranchService } from '../branch/branch.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { FacilityTypeService } from '../facility_type/facility_type.service'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
-@ApiBearerAuth()
 @ApiTags('Facility')
 @Controller('facility')
+@ApiBearerAuth()
 @UseFilters(AllExceptionsFilter)
 export class FacilityController {
   constructor(
     private readonly facilityService: FacilityService,
+    private readonly facilityTypeService: FacilityTypeService,
     private readonly branchService: BranchService,
     private readonly checkpointService: CheckpointService,
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.FACILITY_CREATED_RESPONSE,
     type: StatusFacilityResponse,
@@ -38,19 +41,20 @@ export class FacilityController {
       throw new HttpException(AppError.CHECKPOINT_NOT_FOUND, HttpStatus.NOT_FOUND)
     }
 
-    const foundOrganization = await this.organizationService.findOne(createFacilityDto.organization_id)
-    if (!foundOrganization) {
-      throw new HttpException(AppError.ORGANIZATION_NOT_FOUND, HttpStatus.NOT_FOUND)
+    for (const organization of createFacilityDto.organization_ids) {
+      const foundOrganization = await this.organizationService.findOne(organization)
+      if (!foundOrganization) {
+        throw new HttpException(`${AppError.ORGANIZATION_NOT_FOUND} (ID: ${organization})`, HttpStatus.NOT_FOUND)
+      }
     }
 
     return this.facilityService.create(createFacilityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_ALL_RESPONSE,
-    type: Facility,
-    isArray: true,
+    type: ArrayFacilityResponse,
   })
   @ApiOperation({ summary: AppStrings.FACILITY_ALL_OPERATION })
   @ApiBody({ required: false, type: FacilityFilter })
@@ -59,12 +63,11 @@ export class FacilityController {
     return this.facilityService.findAll(facilityFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_BRANCH_RESPONSE,
-    type: Facility,
-    isArray: true,
+    type: ArrayFacilityResponse,
   })
   @ApiOperation({ summary: AppStrings.FACILITY_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: FacilityFilter })
@@ -79,10 +82,10 @@ export class FacilityController {
       }
     }
 
-    return this.facilityService.findAllByBranch(branch_ids, facilityFilter)
+    return this.facilityService.findAllByBranch(branch_ids, [], facilityFilter) //todo
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
@@ -104,10 +107,35 @@ export class FacilityController {
       }
     }
 
-    return this.facilityService.findAllByCheckpoint(checkpoint_ids, facilityFilter)
+    return this.facilityService.findAllByCheckpoint(checkpoint_ids, [], facilityFilter) //todo
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @ApiResponse({
+    status: 200,
+    description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
+    type: Facility,
+    isArray: true,
+  })
+  @ApiOperation({
+    summary: AppStrings.FACILITY_ALL_BY_CHECKPOINT_OPERATION,
+  })
+  @ApiBody({ required: false, type: FacilityFilter })
+  @Post('all-by-type')
+  async findAllByType(@Query('type_ids') type_ids: number[], @Body() facilityFilter?: FacilityFilter) {
+    for (let index = 0; index < type_ids.length; index++) {
+      const element = type_ids[index]
+
+      const foundType = await this.facilityTypeService.findOne(+element)
+      if (!foundType) {
+        throw new HttpException(`${AppError.FACILITY_TYPE_NOT_FOUND} (ID: ${element})`, HttpStatus.NOT_FOUND)
+      }
+    }
+
+    return this.facilityService.findAllByType(type_ids, facilityFilter)
+  }
+
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_UPDATE_RESPONSE,
     type: Facility,
@@ -130,17 +158,19 @@ export class FacilityController {
       }
     }
 
-    if (updateFacilityDto.organization_id) {
-      const foundOrganization = await this.organizationService.findOne(updateFacilityDto.organization_id)
-      if (!foundOrganization) {
-        throw new HttpException(AppError.ORGANIZATION_NOT_FOUND, HttpStatus.NOT_FOUND)
+    if (updateFacilityDto.organization_ids) {
+      for (const organization of updateFacilityDto.organization_ids) {
+        const foundOrganization = await this.organizationService.findOne(organization)
+        if (!foundOrganization) {
+          throw new HttpException(`${AppError.ORGANIZATION_NOT_FOUND} (ID: ${organization})`, HttpStatus.NOT_FOUND)
+        }
       }
     }
 
     return this.facilityService.update(updateFacilityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_DELETE_RESPONSE,
     type: StatusFacilityResponse,

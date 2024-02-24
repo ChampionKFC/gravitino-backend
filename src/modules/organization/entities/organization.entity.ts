@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger'
 import { NonAttribute } from 'sequelize'
 import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript'
 import { AppStrings } from 'src/common/constants/strings'
-import { Facility } from 'src/modules/facility/entities/facility.entity'
 import { Order } from 'src/modules/order/entities/order.entity'
 import { OrganizationType } from 'src/modules/organization_type/entities/organization_type.entity'
 import { User } from 'src/modules/users/entities/user.entity'
@@ -50,6 +49,6 @@ export class Organization extends Model {
   @HasMany(() => Order, 'executor_id')
   orders: NonAttribute<Order[]>
 
-  @HasMany(() => Facility, Organization.primaryKeyAttribute)
-  facilities: NonAttribute<Facility[]>
+  // @HasMany(() => Facility, Organization.primaryKeyAttribute)
+  // facilities: NonAttribute<Facility[]>
 }

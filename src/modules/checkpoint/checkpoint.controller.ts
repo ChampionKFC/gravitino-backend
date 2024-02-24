@@ -6,10 +6,11 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { BranchService } from '../branch/branch.service'
-import { StatusCheckpointResponse } from './response'
+import { ArrayCheckpointResponse, StatusCheckpointResponse } from './response'
 import { Checkpoint } from './entities/checkpoint.entity'
 import { CheckpointFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Checkpoint')
@@ -21,7 +22,7 @@ export class CheckpointController {
     private readonly branchService: BranchService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_CREATED_RESPONSE,
     type: StatusCheckpointResponse,
@@ -37,11 +38,10 @@ export class CheckpointController {
     return this.checkpointService.create(createCheckpointDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_ALL_RESPONSE,
-    type: Checkpoint,
-    isArray: true,
+    type: ArrayCheckpointResponse,
   })
   @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_RESPONSE })
   @ApiBody({ required: false, type: CheckpointFilter })
@@ -50,12 +50,11 @@ export class CheckpointController {
     return this.checkpointService.findAll(checkpointFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.CHECKPOINT_ALL_BY_BRANCH_RESPONSE,
-    type: Checkpoint,
-    isArray: true,
+    type: ArrayCheckpointResponse,
   })
   @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_BY_BRANCH_OPERATION })
   @ApiBody({ required: false, type: CheckpointFilter })
@@ -73,7 +72,7 @@ export class CheckpointController {
     return this.checkpointService.findAllByBranch(branch_ids, checkpointFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_UPDATE_RESPONSE,
     type: Checkpoint,
@@ -99,7 +98,7 @@ export class CheckpointController {
     return this.checkpointService.update(updateCheckpointDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_DELETE_RESPONSE,
     type: StatusCheckpointResponse,

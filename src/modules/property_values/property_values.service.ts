@@ -3,9 +3,10 @@ import { CreatePropertyValueDto, UpdatePropertyValueDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { PropertyValue } from './entities/property_value.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { PropertyValueResponse, StatusPropertValueResponse } from './response'
+import { ArrayPropertyValueResponse, PropertyValueResponse, StatusPropertValueResponse } from './response'
 import { PropertyName } from '../property_names/entities/property_name.entity'
 import { AppStrings } from 'src/common/constants/strings'
+import { Transaction } from 'sequelize'
 
 @Injectable()
 export class PropertyValuesService {
@@ -15,17 +16,20 @@ export class PropertyValuesService {
     private readonly historyService: TransactionHistoryService,
   ) {}
 
-  async create(createPropertyValueDto: CreatePropertyValueDto, user_id: number): Promise<StatusPropertValueResponse> {
+  async create(createPropertyValueDto: CreatePropertyValueDto, user_id: number, transaction?: Transaction): Promise<StatusPropertValueResponse> {
     try {
-      const newPropertyValue = await this.propertyValueRepository.create({
-        ...createPropertyValueDto,
-      })
+      const newPropertyValue = await this.propertyValueRepository.create(
+        {
+          ...createPropertyValueDto,
+        },
+        { transaction },
+      )
 
       const historyDto = {
         user_id: user_id,
         comment: `${AppStrings.HISTORY_PROPERTY_VALUE_CREATED}${newPropertyValue.property_value_id}`,
       }
-      await this.historyService.create(historyDto)
+      await this.historyService.create(historyDto, transaction)
 
       return { status: true, data: newPropertyValue }
     } catch (error) {
@@ -33,10 +37,10 @@ export class PropertyValuesService {
     }
   }
 
-  async findAll(): Promise<PropertyValueResponse[]> {
+  async findAll(): Promise<ArrayPropertyValueResponse> {
     try {
       const result = await this.propertyValueRepository.findAll({ include: [PropertyName], attributes: { exclude: ['property_name_id'] } })
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

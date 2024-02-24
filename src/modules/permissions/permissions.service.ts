@@ -3,7 +3,7 @@ import { CreatePermissionDto, UpdatePermissionDto } from './dto'
 import { Permission } from './entities/permission.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { PermissionResponse, StatusPermissionResponse } from './response'
+import { ArrayPermissionResponse, PermissionResponse, StatusPermissionResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 import { AppError } from 'src/common/constants/error'
 
@@ -32,10 +32,10 @@ export class PermissionsService {
     }
   }
 
-  async findAll(): Promise<PermissionResponse[]> {
+  async findAll(): Promise<ArrayPermissionResponse> {
     try {
       const result = await this.permissionRepository.findAll()
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

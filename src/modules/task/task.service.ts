@@ -3,7 +3,7 @@ import { CreateTaskDto, UpdateTaskDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Task } from './entities/task.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { StatusTaskResponse, TaskResponse } from './response'
+import { ArrayTaskResponse, StatusTaskResponse, TaskResponse } from './response'
 import { TaskFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -13,6 +13,7 @@ import { CreateOrderDto } from '../order/dto'
 import { FacilityService } from '../facility/facility.service'
 import { OrderService } from '../order/order.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { FacilityTypeService } from '../facility_type/facility_type.service'
 
 @Injectable()
 export class TaskService {
@@ -20,14 +21,14 @@ export class TaskService {
     @InjectModel(Task) private taskRepository: typeof Task,
     private readonly orderService: OrderService,
     private readonly facilityService: FacilityService,
+    private readonly facilityTypeService: FacilityTypeService,
     private readonly historyService: TransactionHistoryService,
     private readonly sequelize: Sequelize,
   ) {}
 
   async create(task: CreateTaskDto, user_id: number): Promise<StatusTaskResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction()
-
       const newTask = await this.taskRepository.create({ ...task }, { transaction })
 
       const dates = getPeriodDates(task.periodicity_id, task.period_start, task.period_end)
@@ -62,10 +63,10 @@ export class TaskService {
             }
           }
         } else if (task.checkpoint_ids && task.checkpoint_ids.length > 0) {
-          const facilities = await this.facilityService.findAllByCheckpoint(task.checkpoint_ids, {})
+          const facilities = await this.facilityService.findAllByCheckpoint(task.checkpoint_ids, task.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
-            const facility_id = facilities[index].facility_id
+          for (let index = 0; index < facilities.count; index++) {
+            const facility_id = facilities.data[index].facility_id
 
             for (let index = 0; index < dates.length; index++) {
               const period = dates[index]
@@ -81,10 +82,10 @@ export class TaskService {
             }
           }
         } else {
-          const facilities = await this.facilityService.findAllByBranch(task.branch_ids, {})
+          const facilities = await this.facilityService.findAllByBranch(task.branch_ids, task.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
-            const facility_id = facilities[index].facility_id
+          for (let index = 0; index < facilities.count; index++) {
+            const facility_id = facilities.data[index].facility_id
 
             for (let index = 0; index < dates.length; index++) {
               const period = dates[index]
@@ -112,11 +113,12 @@ export class TaskService {
 
       return { status: true }
     } catch (error) {
+      transaction.rollback()
       throw new Error(error)
     }
   }
 
-  async findAll(taskFilter: TaskFilter): Promise<TaskResponse[]> {
+  async findAll(taskFilter: TaskFilter): Promise<ArrayTaskResponse> {
     try {
       const offset_count = taskFilter.offset?.count == undefined ? 50 : taskFilter.offset.count
       const offset_page = taskFilter.offset?.page == undefined ? 1 : taskFilter.offset.page
@@ -130,8 +132,7 @@ export class TaskService {
         sortQuery = generateSortQuery(taskFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Task>(
-        `
+      const selectQuery = `
         SELECT * FROM (
           SELECT
             "Task"."task_id",
@@ -149,9 +150,20 @@ export class TaskService {
             "Tasks" AS "Task"
             LEFT OUTER JOIN "Categories" AS "category" ON "Task"."category_id" = "category"."category_id"
             LEFT OUTER JOIN "Periodicities" AS "periodicity" ON "Task"."periodicity_id" = "periodicity"."periodicity_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Task>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Task>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -160,7 +172,7 @@ export class TaskService {
         },
       )
 
-      return result
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }

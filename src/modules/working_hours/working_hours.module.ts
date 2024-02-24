@@ -6,9 +6,10 @@ import { WorkingHours } from './entities/working_hour.entity'
 import { TransactionHistoryModule } from '../transaction_history/transaction_history.module'
 import { SeederModule } from 'nestjs-sequelize-seeder'
 import { WorkingHoursSeeds } from './seeds'
+import { UsersModule } from '../users/users.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([WorkingHours]), TransactionHistoryModule, SeederModule.forFeature([WorkingHoursSeeds])],
+  imports: [SequelizeModule.forFeature([WorkingHours]), TransactionHistoryModule, UsersModule, SeederModule.forFeature([WorkingHoursSeeds])],
   controllers: [WorkingHoursController],
   providers: [WorkingHoursService],
   exports: [WorkingHoursService],

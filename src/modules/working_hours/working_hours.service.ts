@@ -3,7 +3,7 @@ import { CreateWorkingHourDto, UpdateWorkingHourDto } from './dto'
 import { WorkingHours } from './entities/working_hour.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { Sequelize } from 'sequelize-typescript'
-import { StatusWorkingHoursResponse, WorkingHoursResponse } from './response'
+import { ArrayWorkingHoursResponse, StatusWorkingHoursResponse } from './response'
 import { InjectModel } from '@nestjs/sequelize'
 import { AppStrings } from 'src/common/constants/strings'
 
@@ -34,11 +34,11 @@ export class WorkingHoursService {
     }
   }
 
-  async findAll(): Promise<WorkingHoursResponse[]> {
+  async findAll(): Promise<ArrayWorkingHoursResponse> {
     try {
       const foundWorkingHours = await this.workingHoursRepository.findAll()
 
-      return foundWorkingHours
+      return { count: foundWorkingHours.length, data: foundWorkingHours }
     } catch (error) {
       throw new Error(error)
     }

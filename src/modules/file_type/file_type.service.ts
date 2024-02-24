@@ -3,7 +3,7 @@ import { CreateFileTypeDto, UpdateFileTypeDto } from './dto'
 import { FileType } from './entities/file_type.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { FileTypeResponse, StatusFileTypeResponse } from './response'
+import { ArrayFileTypeResponse, FileTypeResponse, StatusFileTypeResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 
 @Injectable()
@@ -29,10 +29,10 @@ export class FileTypeService {
     }
   }
 
-  async findAll(): Promise<FileTypeResponse[]> {
+  async findAll(): Promise<ArrayFileTypeResponse> {
     try {
       const result = await this.fileTypeRepository.findAll()
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }

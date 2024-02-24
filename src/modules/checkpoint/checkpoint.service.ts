@@ -3,36 +3,49 @@ import { CreateCheckpointDto, UpdateCheckpointDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Checkpoint } from './entities/checkpoint.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { CheckpointResponse, StatusCheckpointResponse } from './response'
+import { ArrayCheckpointResponse, CheckpointResponse, StatusCheckpointResponse } from './response'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { CheckpointFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
+import { HttpService } from '@nestjs/axios'
 import { AppStrings } from 'src/common/constants/strings'
+import { ConfigService } from '@nestjs/config'
+import { catchError, lastValueFrom, map } from 'rxjs'
 
 @Injectable()
 export class CheckpointService {
   constructor(
     @InjectModel(Checkpoint) private checkpointRepository: typeof Checkpoint,
     private readonly historyService: TransactionHistoryService,
+    private readonly configService: ConfigService,
     private readonly sequelize: Sequelize,
+    private http: HttpService,
   ) {}
 
   async create(checkpoint: CreateCheckpointDto, user_id: number): Promise<StatusCheckpointResponse> {
-    const newCheckpoint = await this.checkpointRepository.create({
-      ...checkpoint,
-    })
+    try {
+      const coordinates = await this.decodeAddress(checkpoint.address)
 
-    const historyDto = {
-      user_id: user_id,
-      comment: `${AppStrings.HISTORY_CHECKPOINT_CREATED}${newCheckpoint.checkpoint_id}`,
+      const newCheckpoint = await this.checkpointRepository.create({
+        ...checkpoint,
+        lat: Number(coordinates[0]),
+        lng: Number(coordinates[1]),
+      })
+
+      const historyDto = {
+        user_id: user_id,
+        comment: `${AppStrings.HISTORY_CHECKPOINT_CREATED}${newCheckpoint.checkpoint_id}`,
+      }
+      await this.historyService.create(historyDto)
+
+      return { status: true, data: newCheckpoint }
+    } catch (error) {
+      throw new Error(error)
     }
-    await this.historyService.create(historyDto)
-
-    return { status: true, data: newCheckpoint }
   }
 
-  async findAll(checkpointFilter?: CheckpointFilter): Promise<CheckpointResponse[]> {
+  async findAll(checkpointFilter?: CheckpointFilter): Promise<ArrayCheckpointResponse> {
     try {
       const offset_count = checkpointFilter.offset?.count == undefined ? 50 : checkpointFilter.offset.count
       const offset_page = checkpointFilter.offset?.page == undefined ? 1 : checkpointFilter.offset.page
@@ -46,13 +59,14 @@ export class CheckpointService {
         sortQuery = generateSortQuery(checkpointFilter?.sorts)
       }
 
-      const result = this.sequelize.query<Checkpoint>(
-        `
+      const selectQuery = `
         SELECT * FROM (
           SELECT
             "checkpoint_id",
             "checkpoint_name",
             "address",
+            "lat",
+            "lng",
             "branch"."branch_id" AS "branch.branch_id",
             "branch"."branch_name" AS "branch.branch_name",
             "branch"."branch_address" AS "branch.branch_address",
@@ -74,9 +88,20 @@ export class CheckpointService {
             LEFT JOIN "WorkingHours" AS "working_hours" ON "Checkpoint"."working_hours_id" = "working_hours"."working_hours_id"
             LEFT JOIN "NeighboringStates" AS "neighboring_state" ON "Checkpoint"."neighboring_state_id" = "neighboring_state"."neighboring_state_id"
             LEFT JOIN "OperatingModes" AS "operating_mode" ON "Checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Checkpoint>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const result = await this.sequelize.query<Checkpoint>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -85,7 +110,7 @@ export class CheckpointService {
         },
       )
 
-      return result
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -107,7 +132,7 @@ export class CheckpointService {
     }
   }
 
-  async findAllByBranch(branch_ids: number[], checkpointFilter?: CheckpointFilter) {
+  async findAllByBranch(branch_ids: number[], checkpointFilter?: CheckpointFilter): Promise<ArrayCheckpointResponse> {
     try {
       let result = []
 
@@ -121,10 +146,10 @@ export class CheckpointService {
         checkpointFilter.filter.branch = {
           branch_id: +id,
         }
-        result = [...result, ...(await this.findAll(checkpointFilter))]
+        result = [...result, ...(await this.findAll(checkpointFilter)).data]
       }
 
-      return result
+      return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -169,5 +194,25 @@ export class CheckpointService {
     }
 
     return { status: false }
+  }
+
+  async decodeAddress(address: string): Promise<string[]> {
+    try {
+      const data = this.http
+        .get(`${AppStrings.YMAPS_GEOCODER_URL}&apikey=${this.configService.get('ymaps_api_key')}&geocode=${address}`)
+        .pipe(map((response) => response.data?.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos))
+        .pipe(
+          catchError((e) => {
+            throw new Error(e)
+          }),
+        )
+
+      const rawCoordinates: string = await lastValueFrom(data)
+      const coordinates = rawCoordinates.split(' ')
+
+      return coordinates
+    } catch (error) {
+      throw new Error(error)
+    }
   }
 }

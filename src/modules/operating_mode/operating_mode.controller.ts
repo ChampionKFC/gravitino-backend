@@ -3,11 +3,11 @@ import { OperatingModeService } from './operating_mode.service'
 import { CreateOperatingModeDto, UpdateOperatingModeDto } from './dto'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
-import { StatusOperatingModeResponse } from './response'
+import { ArrayOperatingModeResponse, StatusOperatingModeResponse } from './response'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
-import { OperatingMode } from './entities/operating_mode.entity'
 import { AppError } from 'src/common/constants/error'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiTags('Operating Mode')
 @Controller('operating-mode')
@@ -21,7 +21,7 @@ export class OperatingModeController {
     type: StatusOperatingModeResponse,
   })
   @ApiOperation({ summary: AppStrings.OPERATING_MODE_CREATE_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Post()
   create(@Body() createOperatingModeDto: CreateOperatingModeDto, @Req() request) {
     return this.operatingModeService.create(createOperatingModeDto, request.user.user_id)
@@ -29,11 +29,10 @@ export class OperatingModeController {
 
   @ApiOkResponse({
     description: AppStrings.OPERATING_MODE_ALL_RESPONSE,
-    type: OperatingMode,
-    isArray: true,
+    type: ArrayOperatingModeResponse,
   })
   @ApiOperation({ summary: AppStrings.OPERATING_MODE_ALL_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Get('all')
   findAll() {
     return this.operatingModeService.findAll()
@@ -44,7 +43,7 @@ export class OperatingModeController {
     type: StatusOperatingModeResponse,
   })
   @ApiOperation({ summary: AppStrings.OPERATING_MODE_UPDATE_OPERATION })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   async update(@Body() updateOperatingModeDto: UpdateOperatingModeDto, @Req() request) {
     const foundOperatingMode = await this.operatingModeService.findOne(updateOperatingModeDto.operating_mode_id)
@@ -55,7 +54,7 @@ export class OperatingModeController {
     return this.operatingModeService.update(updateOperatingModeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.OPERATING_MODE_DELETE_RESPONSE,
     type: StatusOperatingModeResponse,

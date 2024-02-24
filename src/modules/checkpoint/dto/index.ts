@@ -29,7 +29,7 @@ export class CreateCheckpointDto {
   checkpoint_type_id: number
 
   @ApiProperty({ default: 1 })
-  operating_mode: number
+  operating_mode_id: number
 
   @ApiProperty({ default: 1 })
   working_hours_id: number
@@ -83,6 +83,12 @@ export class CheckpointSorts {
   @ApiProperty({ default: AppStrings.ASC, required: false })
   address?: string
 
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  lat?: string
+
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  lng?: string
+
   @ApiProperty({ required: false })
   neighboring_state?: NeighboringStateSorts
 
@@ -114,6 +120,12 @@ export class CheckpointFilters {
 
   @ApiProperty({ required: false })
   address?: string
+
+  @ApiProperty({ required: false })
+  lat?: number
+
+  @ApiProperty({ required: false })
+  lng?: number
 
   @ApiProperty({ required: false })
   neighboring_state?: NeighboringStateFilters

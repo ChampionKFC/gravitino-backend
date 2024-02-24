@@ -3,7 +3,7 @@ import { CreateBranchDto, UpdateBranchDto } from './dto'
 import { Branch } from './entities/branch.entity'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { BranchResponse, StatusBranchResponse } from './response'
+import { ArrayBranchResponse, BranchResponse, StatusBranchResponse } from './response'
 import { BranchFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { QueryTypes } from 'sequelize'
@@ -33,7 +33,7 @@ export class BranchService {
     return { status: true, data: newBranch }
   }
 
-  async findAll(branchFilter?: BranchFilter): Promise<BranchResponse[]> {
+  async findAll(branchFilter: BranchFilter): Promise<ArrayBranchResponse> {
     try {
       const offset_count = branchFilter.offset?.count == undefined ? 50 : branchFilter.offset.count
       const offset_page = branchFilter.offset?.page == undefined ? 1 : branchFilter.offset.page
@@ -47,18 +47,29 @@ export class BranchService {
         sortQuery = generateSortQuery(branchFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "branch_id",
+          "branch_name",
+          "branch_address",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "Branches" AS "Branch"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Branch>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+
       const result = await this.sequelize.query<Branch>(
         `
-          SELECT
-            "branch_id",
-            "branch_name",
-            "branch_address",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "Branches" AS "Branch"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -66,7 +77,7 @@ export class BranchService {
           type: QueryTypes.SELECT,
         },
       )
-      return result
+      return { count: count, data: result }
     } catch (error) {
       throw new Error(error)
     }
@@ -149,14 +160,10 @@ export class BranchService {
           branch_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
           branch_address: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
         }
-        console.log(entity)
 
         const pk = ws[xlsx.utils.encode_cell({ c: 0, r: R })].v
-        console.log(pk)
 
         const exists = await this.findOne(pk)
-
-        console.log(exists)
 
         if (exists) {
           await this.branchRepository.update(entity, { where: { branch_id: pk }, transaction })

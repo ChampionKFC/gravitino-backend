@@ -7,13 +7,15 @@ import { CategoryService } from '../category/category.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Task } from './entities/task.entity'
-import { StatusTaskResponse } from './response'
+import { ArrayTaskResponse, StatusTaskResponse } from './response'
 import { TaskFilter } from './filters'
 import { BranchService } from '../branch/branch.service'
 import { CheckpointService } from '../checkpoint/checkpoint.service'
 import { FacilityService } from '../facility/facility.service'
 import { OrganizationService } from '../organization/organization.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { FacilityTypeService } from '../facility_type/facility_type.service'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -26,10 +28,11 @@ export class TaskController {
     private readonly branchService: BranchService,
     private readonly checkpointService: CheckpointService,
     private readonly facilityService: FacilityService,
+    private readonly facilityTypeService: FacilityTypeService,
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.TASK_CREATED_RESPONSE,
     type: StatusTaskResponse,
@@ -66,6 +69,18 @@ export class TaskController {
       }
     }
 
+    const facility_type_ids = createTaskDto.facility_type_ids
+    if (facility_type_ids) {
+      for (let index = 0; index < facility_type_ids.length; index++) {
+        const element = facility_type_ids[index]
+
+        const foundFacilityType = await this.facilityTypeService.findOne(+element)
+        if (!foundFacilityType) {
+          throw new HttpException(`${AppError.FACILITY_TYPE_NOT_FOUND} (ID: ${element})`, HttpStatus.NOT_FOUND)
+        }
+      }
+    }
+
     const facility_ids = createTaskDto.facility_ids
     if (facility_ids) {
       for (let index = 0; index < facility_ids.length; index++) {
@@ -95,11 +110,10 @@ export class TaskController {
     return this.taskService.create(createTaskDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_ALL_RESPONSE,
-    type: Task,
-    isArray: true,
+    type: ArrayTaskResponse,
   })
   @ApiOperation({ summary: AppStrings.TASK_ALL_OPERATION })
   @ApiBody({ required: false, type: TaskFilter })
@@ -108,7 +122,7 @@ export class TaskController {
     return this.taskService.findAll(taskFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_UPDATE_RESPONSE,
     type: Task,
@@ -135,7 +149,7 @@ export class TaskController {
     return this.taskService.update(updateTaskDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_DELETE_RESPONSE,
     type: StatusTaskResponse,

@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Order } from './entities/order.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
-import { OrderResponse, StatusOrderResponse } from './response'
+import { ArrayOrderResponse, StatusArrayOrderResponse, StatusOrderResponse } from './response'
 import { Sequelize } from 'sequelize-typescript'
 import { MyOrdersFilter, OrderFilter } from './filters'
 import { generateSortQuery, generateWhereQuery } from 'src/common/utlis/generate_sort_query'
@@ -13,11 +13,17 @@ import { OrderJournalService } from '../order_journal/order_journal.service'
 import { CreateOrderJournalDto } from '../order_journal/dto'
 import { FacilityService } from '../facility/facility.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { File } from '../files/entities/file.entity'
+import { S3BUCKET, S3ENDPOINT } from 'src/common/s3Client'
+import { Organization } from '../organization/entities/organization.entity'
+import { OrganizationType } from '../organization_type/entities/organization_type.entity'
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order) private orderRepository: typeof Order,
+    @InjectModel(File) private fileRepository: typeof File,
+    @InjectModel(Organization) private organizationRepository: typeof Organization,
     private readonly facilityService: FacilityService,
     private readonly historyService: TransactionHistoryService,
     private readonly orderJournalService: OrderJournalService,
@@ -34,6 +40,7 @@ export class OrderService {
       "Order"."task_end_datetime",
       "Order"."ended_at_datetime",
       "Order"."property_values",
+      "Order"."order_status_id",
       "Order"."createdAt",
       "Order"."updatedAt",
       "task"."task_id" AS "task.task_id",
@@ -47,18 +54,16 @@ export class OrderService {
       "task"."period_end" AS "task.period_end",
       "facility"."facility_id" AS "facility.facility_id",
       "facility"."facility_name" AS "facility.facility_name",
-      "facility_organization"."organization_id" AS "facility.organization.organization_id",
-      "facility_organization"."full_name" AS "facility.organization.full_name",
-      "facility_organization"."short_name" AS "facility.organization.short_name",
-      "facility_organization"."phone" AS "facility.organization.phone",
-      "facility_organization"."property_values" AS "facility.organization.property_values",
-      "facility_organization_type"."organization_type_id" AS "facility.organization.organization_type.organization_type_id",
-      "facility_organization_type"."organization_type_name" AS "facility.organization.organization_type.organization_type_name",
+      "facility"."organization_ids" AS "facility.organization_ids",
+      "facility_type"."facility_type_id" AS "facility.facility_type.facility_type_id",
+      "facility_type"."facility_type_name" AS "facility.facility_type.facility_type_name",
       "checkpoint"."checkpoint_id" AS "facility.checkpoint.checkpoint_id",
       "checkpoint_type"."checkpoint_type_id" AS "facility.checkpoint.checkpoint_type.checkpoint_type_id",
       "checkpoint_type"."checkpoint_type_name" AS "facility.checkpoint.checkpoint_type.checkpoint_type_name",
       "checkpoint"."checkpoint_name" AS "facility.checkpoint.checkpoint_name",
       "checkpoint"."address" AS "facility.checkpoint.address",
+      "checkpoint"."lat" AS "facility.checkpoint.lat",
+      "checkpoint"."lng" AS "facility.checkpoint.lng",
       "neighboring_state"."neighboring_state_id" AS "facility.checkpoint.neighboring_state.neighboring_state_id",
       "neighboring_state"."neighboring_state_name" AS "facility.checkpoint.neighboring_state.neighboring_state_name",
       "checkpoint"."district" AS "facility.checkpoint.district",
@@ -129,10 +134,9 @@ export class OrderService {
       LEFT JOIN "Tasks" AS "task" ON "Order"."task_id" = "task"."task_id"
       LEFT JOIN "Periodicities" AS "periodicity" ON "task"."periodicity_id" = "periodicity"."periodicity_id"
       LEFT JOIN "Facilities" AS "facility" ON "Order"."facility_id" = "facility"."facility_id"
-      LEFT JOIN "Organizations" AS "facility_organization" ON "facility"."organization_id" = "facility_organization"."organization_id"
-      LEFT JOIN "OrganizationTypes" AS "facility_organization_type" ON "facility_organization".organization_type_id = "facility_organization_type"."organization_type_id"
       LEFT JOIN "Checkpoints" AS "checkpoint" ON "facility"."checkpoint_id" = "checkpoint"."checkpoint_id"
       LEFT JOIN "CheckpointTypes" AS "checkpoint_type" ON "checkpoint"."checkpoint_type_id" = "checkpoint_type"."checkpoint_type_id"
+      LEFT JOIN "FacilityTypes" AS "facility_type" ON "facility"."facility_type_id" = "facility_type"."facility_type_id"
       LEFT JOIN "WorkingHours" AS "working_hours" ON "checkpoint"."working_hours_id" = "working_hours"."working_hours_id"
       LEFT JOIN "NeighboringStates" AS "neighboring_state" ON "checkpoint"."neighboring_state_id" = "neighboring_state"."neighboring_state_id"
       LEFT JOIN "OperatingModes" AS "operating_mode" ON "checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
@@ -154,9 +158,9 @@ export class OrderService {
       LEFT JOIN "OrganizationTypes" AS "creator_organization_type" ON "creator_organization".organization_type_id = "creator_organization_type"."organization_type_id"
       LEFT JOIN "Roles" AS "creator_role" ON "creator".role_id = "creator_role"."role_id"
       LEFT JOIN "Groups" AS "creator_group" ON "creator".group_id = "creator_group"."group_id"
-  )`
+  ) AS query`
 
-  async create(createOrderDto: CreateOrderDto, user_id: number, transaction?: Transaction): Promise<StatusOrderResponse> {
+  async create(createOrderDto: CreateOrderDto, user_id: number, transaction?: Transaction): Promise<Order> {
     try {
       const newOrder = await this.orderRepository.create({ ...createOrderDto }, { transaction })
 
@@ -174,16 +178,16 @@ export class OrderService {
 
       await this.orderJournalService.create(orderJournalDto, transaction)
 
-      return { status: true, data: newOrder }
+      return newOrder
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async bulkCreate(order: BulkCreateOrderDto, user_id: number): Promise<StatusOrderResponse> {
+  async bulkCreate(order: BulkCreateOrderDto, user_id: number): Promise<StatusArrayOrderResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction()
-
+      const orders = []
       for (let index = 0; index < order.executor_ids.length; index++) {
         const executor_id = order.executor_ids[index]
 
@@ -203,53 +207,60 @@ export class OrderService {
             orderDto.planned_datetime = order.planned_datetime
             orderDto.task_end_datetime = order.task_end_datetime
 
-            await this.create(orderDto, user_id, transaction).catch((e) => {
+            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
               transaction.rollback()
               throw new Error(e)
             })
+
+            orders.push(newOrder)
           }
         } else if (order.checkpoint_ids && order.checkpoint_ids.length > 0) {
-          const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, {})
+          const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, order.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
-            const facility_id = facilities[index].facility_id
+          for (let index = 0; index < facilities.count; index++) {
+            const facility_id = facilities.data[index].facility_id
 
             orderDto.facility_id = facility_id
             orderDto.planned_datetime = order.planned_datetime
             orderDto.task_end_datetime = order.task_end_datetime
 
-            await this.create(orderDto, user_id, transaction).catch((e) => {
+            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
               transaction.rollback()
               throw new Error(e)
             })
+
+            orders.push(newOrder)
           }
         } else {
-          const facilities = await this.facilityService.findAllByBranch(order.branch_ids, {})
+          const facilities = await this.facilityService.findAllByBranch(order.branch_ids, order.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.length; index++) {
-            const facility_id = facilities[index].facility_id
+          for (let index = 0; index < facilities.count; index++) {
+            const facility_id = facilities.data[index].facility_id
 
             orderDto.facility_id = facility_id
             orderDto.planned_datetime = order.planned_datetime
             orderDto.task_end_datetime = order.task_end_datetime
 
-            await this.create(orderDto, user_id, transaction).catch((e) => {
+            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
               transaction.rollback()
               throw new Error(e)
             })
+
+            orders.push(newOrder)
           }
         }
       }
 
       transaction.commit()
 
-      return { status: true }
+      return { status: true, data: { count: orders.length, data: [...orders] } }
     } catch (error) {
+      transaction.rollback()
       throw new Error(error)
     }
   }
 
-  async findAll(orderFilter: OrderFilter): Promise<OrderResponse[]> {
+  async findAll(orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
       const order_offset_count = orderFilter.offset?.count == undefined ? 50 : orderFilter.offset.count
       const order_offset_page = orderFilter.offset?.page == undefined ? 1 : orderFilter.offset.page
@@ -263,11 +274,29 @@ export class OrderService {
         sortQuery = generateSortQuery(orderFilter?.sorts)
       }
 
-      const result = await this.sequelize.query<Order>(
-        ` 
+      if (orderFilter.period) {
+        if (whereQuery.trim() == '') {
+          whereQuery = `WHERE planned_datetime between '${orderFilter.period.date_start}' AND '${orderFilter.period.date_end}'`
+        } else {
+          whereQuery += ` AND planned_datetime between '${orderFilter.period.date_start}' AND '${orderFilter.period.date_end}'`
+        }
+      }
+
+      const selectQuery = `
         ${this.includeOrders}
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Order>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const orders = await this.sequelize.query<Order>(
+        ` 
+        ${selectQuery}
         LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
         `,
         {
@@ -275,15 +304,44 @@ export class OrderService {
           type: QueryTypes.SELECT,
         },
       )
-      return result
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
+        result.push(order)
+      }
+
+      return { count: count, data: result }
     } catch (error) {
+      console.log(error)
+
       throw new Error(error)
     }
   }
 
-  async findAllByBranch(branch_ids: number[], orderFilter: OrderFilter) {
+  async findAllByBranch(branch_ids: number[], orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
-      let result = []
+      let orders = []
 
       if (!orderFilter.filter) {
         orderFilter.filter = {}
@@ -295,20 +353,44 @@ export class OrderService {
         orderFilter.filter.facility = {
           checkpoint: { branch: { branch_id: +id } },
         }
-        result = [...result, ...(await this.findAll(orderFilter))]
+        orders = [...orders, ...(await this.findAll(orderFilter)).data]
       }
 
-      return result
-    } catch (error) {
-      console.log(error)
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
 
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
+        result.push(order)
+      }
+
+      return { count: result.length, data: result }
+    } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findAllByCheckpoint(checkpoint_ids: number[], orderFilter: OrderFilter) {
+  async findAllByCheckpoint(checkpoint_ids: number[], orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
     try {
-      let result = []
+      let orders = []
 
       if (!orderFilter.filter) {
         orderFilter.filter = {}
@@ -318,18 +400,87 @@ export class OrderService {
         const id = checkpoint_ids[index]
 
         orderFilter.filter.facility = { checkpoint: { checkpoint_id: +id } }
-        result = [...result, ...(await this.findAll(orderFilter))]
+        orders = [...orders, ...(await this.findAll(orderFilter)).data]
       }
 
-      return result
-    } catch (error) {
-      console.log(error)
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
 
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
+        result.push(order)
+      }
+
+      return { count: result.length, data: result }
+    } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findMy(myOrdersFilter: MyOrdersFilter, user: any): Promise<OrderResponse[]> {
+  async findAllByOrganization(organization_id: number, orderFilter: OrderFilter): Promise<ArrayOrderResponse> {
+    try {
+      if (!orderFilter.filter) {
+        orderFilter.filter = {}
+      }
+
+      orderFilter.filter = {
+        executor: { organization_id },
+      }
+
+      let orders = []
+      orders = [...(await this.findAll(orderFilter)).data]
+
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
+
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
+        result.push(order)
+      }
+
+      return { count: result.length, data: result }
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findMy(myOrdersFilter: MyOrdersFilter, user: any): Promise<ArrayOrderResponse> {
     try {
       const foundUser = await this.sequelize.query(
         `
@@ -363,7 +514,8 @@ export class OrderService {
         throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
       }
 
-      let result
+      let orders
+      let count = 0
 
       const order_offset_count = myOrdersFilter.offset?.count == undefined ? 50 : myOrdersFilter.offset.count
       const order_offset_page = myOrdersFilter.offset?.page == undefined ? 1 : myOrdersFilter.offset.page
@@ -371,13 +523,13 @@ export class OrderService {
       let whereQuery = ''
       if (myOrdersFilter?.filter) {
         whereQuery = generateWhereQuery(myOrdersFilter?.filter)
-
-        if (whereQuery == '') {
-          whereQuery = 'WHERE'
-        } else {
-          whereQuery += ' AND'
-        }
       }
+      if (whereQuery.trim() == '') {
+        whereQuery = 'WHERE'
+      } else {
+        whereQuery += ' AND'
+      }
+
       let sortQuery = ''
       if (myOrdersFilter?.sorts) {
         sortQuery = generateSortQuery(myOrdersFilter?.sorts)
@@ -385,11 +537,21 @@ export class OrderService {
 
       if (!u.group.group_id && !u.group.checkpoint_id && !u.group.facility_id && u.organization.organization_id) {
         //Рабочий
-        result = await this.sequelize.query(
+        const selectQuery = `
+          ${this.includeOrders}
+          ${whereQuery} planned_datetime between '${myOrdersFilter.period.date_start}' AND '${myOrdersFilter.period.date_end}'
+          ${sortQuery}
+        `
+
+        count = (
+          await this.sequelize.query<Order>(selectQuery, {
+            nest: true,
+            type: QueryTypes.SELECT,
+          })
+        ).length
+        orders = await this.sequelize.query(
           `
-            ${this.includeOrders}
-            ${whereQuery} planned_datetime between '${myOrdersFilter.period.date_start}' AND '${myOrdersFilter.period.date_end}'
-            ${sortQuery}
+           ${selectQuery}
             LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
           `,
           {
@@ -398,15 +560,23 @@ export class OrderService {
           },
         )
       } else {
-        console.log(u.group)
-
         if (u.group.facility_id) {
           // Вывод всех задач по всем ПП по объекту обслуживания
-          result = await this.sequelize.query(
+          const selectQuery = `
+            ${this.includeOrders}
+            ${whereQuery} "facility".facility_id = ${u.group.facility_id}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
+          orders = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${whereQuery} "facility".facility_id = ${u.group.facility_id}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -416,11 +586,21 @@ export class OrderService {
           )
         } else if (u.group.checkpoint_id) {
           // Вывод всех задач по всем объектам обслуживания по ПП
-          result = await this.sequelize.query(
+          const selectQuery = `
+            ${this.includeOrders}
+            ${whereQuery} "checkpoint".checkpoint_id = ${u.group.checkpoint_id}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
+          orders = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${whereQuery} "checkpoint".checkpoint_id = ${u.group.checkpoint_id}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -430,11 +610,21 @@ export class OrderService {
           )
         } else if (u.group.branch_id) {
           // Вывод всех задач по всем ПП по филиалу
-          result = await this.sequelize.query(
+          const selectQuery = `
+            ${this.includeOrders}
+            ${whereQuery} "branch".branch_id = ${u.group.branch_id}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
+          orders = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${whereQuery} "branch".branch_id = ${u.group.branch_id}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -444,10 +634,20 @@ export class OrderService {
           )
         } else {
           //Сотрудник ЦА
-          result = await this.sequelize.query(
+          const selectQuery = `
+            ${this.includeOrders}
+            ${sortQuery}
+          `
+
+          count = (
+            await this.sequelize.query<Order>(selectQuery, {
+              nest: true,
+              type: QueryTypes.SELECT,
+            })
+          ).length
+          orders = await this.sequelize.query(
             `
-              ${this.includeOrders}
-              ${sortQuery}
+              ${selectQuery}
               LIMIT ${order_offset_count} OFFSET ${(order_offset_page - 1) * order_offset_count};
             `,
             {
@@ -458,10 +658,34 @@ export class OrderService {
         }
       }
 
-      return result
-    } catch (error) {
-      console.log(error)
+      const result = []
+      for (const order of orders) {
+        const files = await this.fileRepository.findAll({
+          where: { order_id: order.order_id },
+          attributes: { exclude: ['file_id', 'order_id', 'file_alt', 'file_type_id', 'createdAt', 'updatedAt'] },
+        })
+        if (files) {
+          const links = []
+          for (const file of files) {
+            links.push(`${S3ENDPOINT}/${S3BUCKET}/${file.file_sku}`)
+          }
 
+          order['files'] = links
+        } else {
+          order['files'] = []
+        }
+
+        const organizations = await this.organizationRepository.findAll({
+          where: { organization_id: order.facility.organization_ids },
+          include: [OrganizationType],
+        })
+        order['facility']['organizations'] = organizations
+
+        result.push(order)
+      }
+
+      return { count: count, data: result }
+    } catch (error) {
       throw new Error(error)
     }
   }
@@ -478,7 +702,7 @@ export class OrderService {
     }
   }
 
-  async update(updateOrderDto: UpdateOrderDto, user_id: number): Promise<OrderResponse> {
+  async update(updateOrderDto: UpdateOrderDto, user_id: number): Promise<StatusOrderResponse> {
     try {
       const foundOrder = await this.orderRepository.findOne({
         where: { order_id: updateOrderDto.order_id },
@@ -539,9 +763,11 @@ export class OrderService {
           comment: `${AppStrings.HISTORY_ORDER_UPDATED}${foundOrder.order_id}`,
         }
         await this.historyService.create(historyDto)
-      }
 
-      return foundOrder
+        return { status: true }
+      } else {
+        return { status: false }
+      }
     } catch (error) {
       throw new Error(error)
     }

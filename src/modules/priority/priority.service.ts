@@ -3,7 +3,7 @@ import { CreatePriorityDto, UpdatePriorityDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { OrderPriority } from './entities/priority.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
+import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityResponse } from './response'
 import { OrderPriorityFilter } from './filters'
 import { Sequelize } from 'sequelize-typescript'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -37,7 +37,7 @@ export class PriorityService {
     }
   }
 
-  async findAll(orderPriorityFilter: OrderPriorityFilter): Promise<OrderPriorityResponse[]> {
+  async findAll(orderPriorityFilter: OrderPriorityFilter): Promise<ArrayOrderPriorityResponse> {
     try {
       const offset_count = orderPriorityFilter.offset?.count == undefined ? 50 : orderPriorityFilter.offset.count
       const offset_page = orderPriorityFilter.offset?.page == undefined ? 1 : orderPriorityFilter.offset.page
@@ -51,17 +51,27 @@ export class PriorityService {
         sortQuery = generateSortQuery(orderPriorityFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "priority_id",
+          "priority_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "OrderPriorities" AS "OrderPriority"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<OrderPriority>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundPriorities = await this.sequelize.query<OrderPriority>(
         `
-          SELECT
-            "priority_id",
-            "priority_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "OrderPriorities" AS "OrderPriority"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -70,7 +80,7 @@ export class PriorityService {
         },
       )
 
-      return foundPriorities
+      return { count: count, data: foundPriorities }
     } catch (error) {
       throw new Error(error)
     }

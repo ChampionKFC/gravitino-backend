@@ -6,9 +6,10 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Role } from './entities/role.entity'
-import { StatusRoleResponse } from './response'
+import { ArrayRoleResponse, StatusRoleResponse } from './response'
 import { RoleFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Roles')
@@ -17,7 +18,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ROLE_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ROLE_CREATED_RESPONSE,
@@ -31,8 +32,7 @@ export class RolesController {
   @ApiOperation({ summary: AppStrings.ROLE_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ROLE_ALL_RESPONSE,
-    type: Role,
-    isArray: true,
+    type: ArrayRoleResponse,
   })
   @ApiBody({ required: false, type: RoleFilter })
   @Post('all')
@@ -43,15 +43,14 @@ export class RolesController {
   @ApiOperation({ summary: AppStrings.ROLE_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ROLE_ALL_RESPONSE,
-    type: Role,
-    isArray: true,
+    type: ArrayRoleResponse,
   })
   @Get('all')
   async getAll() {
     return this.rolesService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ROLE_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ROLE_UPDATE_RESPONSE,
@@ -71,7 +70,7 @@ export class RolesController {
     return this.rolesService.update(updateRoleDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ROLE_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ROLE_DELETE_RESPONSE,

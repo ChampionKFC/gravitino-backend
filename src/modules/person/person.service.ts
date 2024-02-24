@@ -1,15 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePersonDto, UpdatePersonDto } from './dto';
-import { InjectModel } from '@nestjs/sequelize';
-import { Person } from './entities/person.entity';
-import { PersonResponse, StatusPersonResponse } from './response';
-import { PersonFilter } from './filters';
-import { Sequelize } from 'sequelize-typescript';
-import { QueryTypes } from 'sequelize';
-import {
-  generateWhereQuery,
-  generateSortQuery,
-} from 'src/common/utlis/generate_sort_query';
+import { Injectable } from '@nestjs/common'
+import { CreatePersonDto, UpdatePersonDto } from './dto'
+import { InjectModel } from '@nestjs/sequelize'
+import { Person } from './entities/person.entity'
+import { ArrayPersonResponse, PersonResponse, StatusPersonResponse } from './response'
+import { PersonFilter } from './filters'
+import { Sequelize } from 'sequelize-typescript'
+import { QueryTypes } from 'sequelize'
+import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 
 @Injectable()
 export class PersonService {
@@ -20,57 +17,63 @@ export class PersonService {
 
   async create(person: CreatePersonDto): Promise<PersonResponse> {
     try {
-      const newPerson = await this.personRepository.create({ ...person });
-      return newPerson;
+      const newPerson = await this.personRepository.create({ ...person })
+      return newPerson
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
-  async findAll(personFilter: PersonFilter): Promise<PersonResponse[]> {
+  async findAll(personFilter: PersonFilter): Promise<ArrayPersonResponse> {
     try {
-      const offset_count =
-        personFilter.offset?.count == undefined
-          ? 50
-          : personFilter.offset.count;
-      const offset_page =
-        personFilter.offset?.page == undefined ? 1 : personFilter.offset.page;
+      const offset_count = personFilter.offset?.count == undefined ? 50 : personFilter.offset.count
+      const offset_page = personFilter.offset?.page == undefined ? 1 : personFilter.offset.page
 
-      let whereQuery = '';
+      let whereQuery = ''
       if (personFilter?.filter) {
-        whereQuery = generateWhereQuery(personFilter?.filter);
+        whereQuery = generateWhereQuery(personFilter?.filter)
       }
-      let sortQuery = '';
+      let sortQuery = ''
       if (personFilter?.sorts) {
-        sortQuery = generateSortQuery(personFilter?.sorts);
+        sortQuery = generateSortQuery(personFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "person_id",
+          "last_name",
+          "first_name",
+          "patronymic",
+          "phone",
+          "property_values",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "People" AS "Person"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<Person>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundPerson = await this.sequelize.query<Person>(
         `
-          SELECT
-            "person_id",
-            "last_name",
-            "first_name",
-            "patronymic",
-            "phone",
-            "property_values",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "People" AS "Person"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
           nest: true,
           type: QueryTypes.SELECT,
         },
-      );
+      )
 
-      return foundPerson;
+      return { count: count, data: foundPerson }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -78,26 +81,23 @@ export class PersonService {
     try {
       const result = await this.personRepository.findOne({
         where: { person_id },
-      });
+      })
 
       if (result) {
-        return true;
+        return true
       } else {
-        return false;
+        return false
       }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
   async update(updatedPerson: UpdatePersonDto) {
     try {
-      await this.personRepository.update(
-        { ...updatedPerson },
-        { where: { person_id: updatedPerson.person_id } },
-      );
+      await this.personRepository.update({ ...updatedPerson }, { where: { person_id: updatedPerson.person_id } })
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 
@@ -105,15 +105,15 @@ export class PersonService {
     try {
       const deletePerson = await this.personRepository.destroy({
         where: { person_id },
-      });
+      })
 
       if (deletePerson) {
-        return { status: true };
+        return { status: true }
       }
 
-      return { status: false };
+      return { status: false }
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error)
     }
   }
 }

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString } from 'class-validator'
+import { Facility } from 'src/modules/facility/entities/facility.entity'
 
 export class OrganizationResponse {
   @IsInt()
@@ -24,6 +25,19 @@ export class OrganizationResponse {
 
   @ApiProperty()
   property_values?: number[]
+
+  @ApiProperty()
+  facilities?: Facility[]
+}
+
+export class ArrayOrganizationResponse {
+  @IsInt()
+  @ApiProperty()
+  count: number
+
+  @IsArray()
+  @ApiProperty({ required: false, type: OrganizationResponse, isArray: true })
+  data: OrganizationResponse[]
 }
 
 export class StatusOrganizationResponse {

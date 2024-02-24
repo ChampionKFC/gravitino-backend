@@ -4,10 +4,11 @@ import { CreateCheckpointTypeDto, UpdateCheckpointTypeDto } from './dto'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { CheckpointType } from './entities/checkpoint_type.entity'
-import { StatusCheckpointTypeResponse } from './response'
+import { ArrayCheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
 import { CheckpointTypeFilter } from './filters'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Checkpoint Type')
@@ -16,7 +17,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class CheckpointTypeController {
   constructor(private readonly checkpointTypeService: CheckpointTypeService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_CREATED_RESPONSE,
     type: StatusCheckpointTypeResponse,
@@ -27,11 +28,10 @@ export class CheckpointTypeController {
     return this.checkpointTypeService.create(createCheckpointTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_ALL_RESPONSE,
-    type: CheckpointType,
-    isArray: true,
+    type: ArrayCheckpointTypeResponse,
   })
   @ApiOperation({ summary: AppStrings.CHECKPOINT_TYPE_ALL_OPERATION })
   @ApiBody({ required: false, type: CheckpointTypeFilter })
@@ -40,7 +40,7 @@ export class CheckpointTypeController {
     return this.checkpointTypeService.findAll(checkpointTypeFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_UPDATE_RESPONSE,
     type: CheckpointType,
@@ -51,7 +51,7 @@ export class CheckpointTypeController {
     return this.checkpointTypeService.update(updateCheckpointTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_DELETE_RESPONSE,
     type: CheckpointType,

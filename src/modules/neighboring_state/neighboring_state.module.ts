@@ -6,9 +6,10 @@ import { NeighboringState } from './entities/neighboring_state.entity'
 import { SeederModule } from 'nestjs-sequelize-seeder'
 import { NeighboringStateSeeds } from './seeds'
 import { TransactionHistoryModule } from '../transaction_history/transaction_history.module'
+import { UsersModule } from '../users/users.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([NeighboringState]), TransactionHistoryModule, SeederModule.forFeature([NeighboringStateSeeds])],
+  imports: [SequelizeModule.forFeature([NeighboringState]), TransactionHistoryModule, UsersModule, SeederModule.forFeature([NeighboringStateSeeds])],
   controllers: [NeighboringStateController],
   providers: [NeighboringStateService],
   exports: [NeighboringStateService],

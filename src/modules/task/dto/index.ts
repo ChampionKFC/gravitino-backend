@@ -23,6 +23,9 @@ export class CreateTaskDto {
   checkpoint_ids?: number[]
 
   @ApiProperty({ default: [], required: false })
+  facility_type_ids?: number[]
+
+  @ApiProperty({ default: [], required: false })
   facility_ids?: number[]
 
   @ApiProperty({ default: [] })

@@ -6,9 +6,10 @@ import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { OrderStatus } from './entities/order_status.entity'
-import { StatusOrderStatusResponse } from './response'
+import { ArrayOrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { OrderStatusFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Order Status')
@@ -17,7 +18,7 @@ import { AppStrings } from 'src/common/constants/strings'
 export class OrderStatusController {
   constructor(private readonly orderStatusService: OrderStatusService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ORDER_STATUS_CREATED_RESPONSE,
@@ -31,8 +32,7 @@ export class OrderStatusController {
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORDER_STATUS_ALL_RESPONSE,
-    type: OrderStatus,
-    isArray: true,
+    type: ArrayOrderStatusResponse,
   })
   @ApiBody({ required: false, type: OrderStatusFilter })
   @Post('all')
@@ -51,7 +51,19 @@ export class OrderStatusController {
     return this.orderStatusService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: AppStrings.ORDER_STATUS_ALL_ROLE_OPERATION })
+  @ApiOkResponse({
+    description: AppStrings.ORDER_STATUS_ALL_ROLE_RESPONSE,
+    type: OrderStatus,
+    isArray: true,
+  })
+  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @Get('all-by-role')
+  async getAllByRole(@Req() request) {
+    return this.orderStatusService.findAllByRole(request.user.user_id)
+  }
+
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_UPDATE_OPERATION })
   @ApiOkResponse({
@@ -71,7 +83,7 @@ export class OrderStatusController {
     return this.orderStatusService.update(updateOrderStatusDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Delete(':id')
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_DELETE_OPERATION })
   @ApiOkResponse({

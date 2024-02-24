@@ -10,9 +10,10 @@ import { GroupService } from '../group/group.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { UserFilter } from './filters'
-import { StatusUserResponse } from './response'
+import { ArrayUserResponse, StatusUserResponse } from './response'
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -94,21 +95,20 @@ export class UsersController {
     })
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Post('all')
   @ApiOperation({ summary: AppStrings.USER_ALL_OPERATION })
   @ApiResponse({
     status: 200,
     description: AppStrings.USER_ALL_RESPONSE,
-    type: User,
-    isArray: true,
+    type: ArrayUserResponse,
   })
   @ApiBody({ required: false, type: UserFilter })
   findAll(@Body() userFilter: UserFilter) {
     return this.usersService.findAll(userFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Get(':id')
   @ApiOperation({ summary: AppStrings.USER_GET_OPERATION })
   @ApiResponse({
@@ -122,7 +122,7 @@ export class UsersController {
 
   @ApiOperation({ summary: AppStrings.USER_UPDATE_OPERATION })
   @ApiResponse({ status: 200, description: AppStrings.USER_UPDATE_RESPONSE })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   async update(@Body() user: UpdateUserDto, @Req() request) {
     const foundUser = await this.usersService.findByEmail(user.email)
@@ -149,10 +149,10 @@ export class UsersController {
 
   @ApiOperation({ summary: AppStrings.USER_ORGANIZATION_UPDATE_OPERATION })
   @ApiResponse({ status: 200, description: AppStrings.USER_ORGANIZATION_UPDATE_RESPONSE })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch('organization')
   async updateOrganization(@Body() organization: UpdateUserOrganizationDto, @Req() request) {
-    const foundUser = await this.usersService.findByEmail(organization.email)
+    const foundUser = await this.usersService.findById(organization.user_id)
     if (!foundUser) {
       throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
     }
@@ -181,7 +181,7 @@ export class UsersController {
     return this.usersService.updateOrganization(organization, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Delete(':id')
   @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
   @ApiResponse({
@@ -198,7 +198,7 @@ export class UsersController {
     return this.usersService.remove(+id, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch('change_status')
   @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
   @ApiOkResponse({ type: StatusUserResponse, description: AppStrings.USER_DELETE_RESPONSE })

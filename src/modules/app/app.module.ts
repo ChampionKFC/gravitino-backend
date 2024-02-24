@@ -59,6 +59,10 @@ import { OperatingMode } from '../operating_mode/entities/operating_mode.entity'
 import { WorkingHoursModule } from '../working_hours/working_hours.module'
 import { OperatingModeModule } from '../operating_mode/operating_mode.module'
 import { NeighboringStateModule } from '../neighboring_state/neighboring_state.module'
+import { FacilityTypeModule } from '../facility_type/facility_type.module'
+import { FacilityType } from '../facility_type/entities/facility_type.entity'
+import { ReportModule } from '../report/report.module'
+import { Report } from '../report/entities/report.entity'
 
 @Module({
   imports: [
@@ -81,7 +85,7 @@ import { NeighboringStateModule } from '../neighboring_state/neighboring_state.m
         password: configService.get('db_password'),
         database: configService.get('db_name'),
         autoLoadModels: true,
-        logging: true,
+        logging: false,
         synchronize: true,
         models: [
           User,
@@ -99,7 +103,8 @@ import { NeighboringStateModule } from '../neighboring_state/neighboring_state.m
           OrderPriority,
           Checkpoint,
           FileType,
-          //Report,
+          FacilityType,
+          Report,
           Order,
           Permission,
           RolePermission,
@@ -131,6 +136,7 @@ import { NeighboringStateModule } from '../neighboring_state/neighboring_state.m
     OrganizationTypeModule,
 
     FacilityModule,
+    FacilityTypeModule,
     CheckpointModule,
     CheckpointTypeModule,
     BranchModule,
@@ -146,7 +152,7 @@ import { NeighboringStateModule } from '../neighboring_state/neighboring_state.m
 
     FileTypeModule,
     FilesModule,
-    //ReportModule,
+    ReportModule,
 
     PermissionsModule,
     RolesPermissionsModule,

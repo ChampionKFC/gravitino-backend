@@ -12,7 +12,7 @@ import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
 import { Op, QueryTypes } from 'sequelize'
-import { StatusUserResponse, UserResponse } from './response'
+import { ArrayUserResponse, StatusUserResponse, UserResponse } from './response'
 import { UserFilter } from './filters'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { OrganizationService } from '../organization/organization.service'
@@ -238,7 +238,7 @@ export class UsersService {
     }
   }
 
-  async findAll(userFilter: UserFilter) {
+  async findAll(userFilter: UserFilter): Promise<ArrayUserResponse> {
     try {
       const offset_count = userFilter.offset?.count == undefined ? 50 : userFilter.offset.count
       const offset_page = userFilter.offset?.page == undefined ? 1 : userFilter.offset.page
@@ -252,8 +252,7 @@ export class UsersService {
         sortQuery = generateSortQuery(userFilter?.sorts)
       }
 
-      const foundUsers = this.sequelize.query<User>(
-        `
+      const selectQuery = `
         SELECT *
         FROM (
           SELECT
@@ -289,9 +288,20 @@ export class UsersService {
             LEFT OUTER JOIN "OrganizationTypes" AS "organization_type" ON "organization"."organization_type_id" = "organization_type"."organization_type_id"
             LEFT OUTER JOIN "People" AS "person" ON "User"."person_id" = "person"."person_id"
             LEFT OUTER JOIN "Groups" AS "group" ON "User"."group_id" = "group"."group_id"
-        )
+        ) AS query
         ${whereQuery}
         ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<User>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
+      const foundUsers = await this.sequelize.query<User>(
+        `
+        ${selectQuery}
         LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -299,7 +309,7 @@ export class UsersService {
           type: QueryTypes.SELECT,
         },
       )
-      return foundUsers
+      return { count: count, data: foundUsers }
     } catch (error) {
       throw new Error(error)
     }
@@ -338,16 +348,16 @@ export class UsersService {
     }
   }
 
-  async findUser({ user_id = -1, email = '' }: { user_id?: number; email?: string }): Promise<boolean> {
+  async findUser({ user_id = -1, email = '' }: { user_id?: number; email?: string }): Promise<UserResponse> {
     try {
       const foundUser = await this.userRepository.findOne({
         where: { [Op.or]: [{ user_id }, { email }] },
       })
 
       if (foundUser) {
-        return true
+        return foundUser
       } else {
-        return false
+        return null
       }
     } catch (error) {
       throw new Error(error)
@@ -361,8 +371,6 @@ export class UsersService {
         where: { email },
         attributes: { exclude: ['person_id'] },
       })
-
-      console.log(result)
 
       if (result != null) {
         // const userRoles = await this.rolePermissionRepository.findAll({
@@ -393,9 +401,8 @@ export class UsersService {
   }
 
   async remove(id: number, user_id: number): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      const transaction = await this.sequelize.transaction()
-
       const user = await this.userRepository.findOne({
         where: { user_id: id },
         attributes: { exclude: ['password'] },
@@ -432,6 +439,7 @@ export class UsersService {
         return { status: false }
       }
     } catch (error) {
+      await transaction.rollback()
       throw new Error(error)
     }
   }
@@ -451,6 +459,20 @@ export class UsersService {
       return { status: true }
     } catch (error) {
       await transaction.rollback()
+      throw new Error(error)
+    }
+  }
+
+  async canUserActivate(user_id: number): Promise<boolean> {
+    try {
+      const user = await this.findById(user_id)
+
+      if (user.is_active) {
+        return true
+      } else {
+        return false
+      }
+    } catch (error) {
       throw new Error(error)
     }
   }

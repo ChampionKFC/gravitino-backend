@@ -3,7 +3,7 @@ import { CreateCheckpointTypeDto, UpdateCheckpointTypeDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { CheckpointType } from './entities/checkpoint_type.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
-import { CheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
+import { ArrayCheckpointTypeResponse, CheckpointTypeResponse, StatusCheckpointTypeResponse } from './response'
 import { CheckpointTypeFilter } from './filters'
 import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
@@ -37,7 +37,7 @@ export class CheckpointTypeService {
     }
   }
 
-  async findAll(checkpointTypeFilter?: CheckpointTypeFilter): Promise<CheckpointTypeResponse[]> {
+  async findAll(checkpointTypeFilter?: CheckpointTypeFilter): Promise<ArrayCheckpointTypeResponse> {
     try {
       const offset_count = checkpointTypeFilter.offset?.count == undefined ? 50 : checkpointTypeFilter.offset.count
       const offset_page = checkpointTypeFilter.offset?.page == undefined ? 1 : checkpointTypeFilter.offset.page
@@ -51,17 +51,27 @@ export class CheckpointTypeService {
         sortQuery = generateSortQuery(checkpointTypeFilter?.sorts)
       }
 
+      const selectQuery = `
+        SELECT
+          "checkpoint_type_id",
+          "checkpoint_type_name",
+          "createdAt",
+          "updatedAt"
+        FROM
+          "CheckpointTypes" AS "CheckpointType"
+        ${whereQuery}
+        ${sortQuery}
+      `
+
+      const count = (
+        await this.sequelize.query<CheckpointType>(selectQuery, {
+          nest: true,
+          type: QueryTypes.SELECT,
+        })
+      ).length
       const foundCheckpointTypes = await this.sequelize.query<CheckpointType>(
         `
-          SELECT
-            "checkpoint_type_id",
-            "checkpoint_type_name",
-            "createdAt",
-            "updatedAt"
-          FROM
-            "CheckpointTypes" AS "CheckpointType"
-          ${whereQuery}
-          ${sortQuery}
+          ${selectQuery}
           LIMIT ${offset_count} OFFSET ${(offset_page - 1) * offset_count};
         `,
         {
@@ -70,7 +80,7 @@ export class CheckpointTypeService {
         },
       )
 
-      return foundCheckpointTypes
+      return { count: count, data: foundCheckpointTypes }
     } catch (error) {
       throw new Error(error)
     }

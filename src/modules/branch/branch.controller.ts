@@ -21,10 +21,11 @@ import { OrganizationService } from '../organization/organization.service'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Branch } from './entities/branch.entity'
-import { StatusBranchResponse } from './response'
+import { ArrayBranchResponse, StatusBranchResponse } from './response'
 import { BranchFilter } from './filters'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AppStrings } from 'src/common/constants/strings'
+import { ActiveGuard } from '../auth/guards/active.guard'
 
 @ApiBearerAuth()
 @ApiTags('Branch')
@@ -36,7 +37,7 @@ export class BranchController {
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.BRANCH_CREATED_RESPONSE,
     type: StatusBranchResponse,
@@ -47,11 +48,10 @@ export class BranchController {
     return this.branchService.create(createBranchDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_ALL_RESPONSE,
-    type: Branch,
-    isArray: true,
+    type: ArrayBranchResponse,
   })
   @ApiOperation({ summary: AppStrings.BRANCH_ALL_OPERATION })
   @ApiBody({ required: false, type: BranchFilter })
@@ -60,7 +60,7 @@ export class BranchController {
     return this.branchService.findAll(branchFilter)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_UPDATE_RESPONSE,
     type: Branch,
@@ -79,7 +79,7 @@ export class BranchController {
     return this.branchService.update(updateBranchDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_DELETE_RESPONSE,
     type: StatusBranchResponse,
@@ -95,7 +95,7 @@ export class BranchController {
     return this.branchService.remove(+id, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_IMPORT_RESPONSE,
     type: StatusBranchResponse,
@@ -117,7 +117,7 @@ export class BranchController {
     return this.branchService.import(file)
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_IMPORT_UPLOAD_RESPONSE,
     type: StatusBranchResponse,

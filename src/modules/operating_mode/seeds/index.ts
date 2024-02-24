@@ -7,7 +7,11 @@ import { OperatingMode } from '../entities/operating_mode.entity'
 })
 export class OperatingModeSeeds implements OnSeederInit {
   run() {
-    const data = [{ operating_mode_name: 'Постоянный' }, { operating_mode_name: 'По будням' }, { operating_mode_name: 'По выходным' }]
+    const data = [
+      { operating_mode_id: 1, operating_mode_name: 'Постоянный' },
+      { operating_mode_id: 2, operating_mode_name: 'По будням' },
+      { operating_mode_id: 3, operating_mode_name: 'По выходным' },
+    ]
     return data
   }
 }

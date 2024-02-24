@@ -12,23 +12,17 @@ async function bootstrap() {
       'http://localhost:3001',
       'https://localhost:3001',
       'http://localhost:3000',
-      'https://localhost:3000',
       'http://localhost',
       'https://localhost',
       'http://31.172.73.217',
       'https://31.172.73.217',
-      'http://up.gravitino.ru',
-      'http://gravitino.ru',
-      'https://up.gravitino.ru',
-      'https://gravitino.ru',
-      'http://test.gravitino.ru',
-      'http://prod.gravitino.ru',
       'http://front.production.gravitino.ru',
       'http://front.dev.gravitino.ru'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   })
+
 
   const config = new DocumentBuilder()
     .setTitle('GRAVITINO ASU API')

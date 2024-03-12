@@ -17,7 +17,8 @@ async function bootstrap() {
       'http://31.172.73.217',
       'https://31.172.73.217',
       'http://front.production.gravitino.ru',
-      'http://front.dev.gravitino.ru'
+      'http://front.dev.gravitino.ru',
+      'http://devops.gravitino.ru'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,

@@ -16,6 +16,9 @@ jobs:
     - name: Clone backend repository
       run: git clone https://github.com/ChampionKFC/gravitino-backend.git -b ${{ github.ref_name }} gravitino-backend/
 
+    - name: Check files
+      run: ls -la gravitino-backend/
+
     - name: Clone devops-gravitino repository
       run: git clone https://github.com/ChampionKFC/devops-gravitino.git -b ${{ github.ref_name }}
 

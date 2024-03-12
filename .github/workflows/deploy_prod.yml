@@ -13,16 +13,40 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.3
+    - name: Clone backend repository
+      run: git clone https://github.com/ChampionKFC/gravitino-backend.git -b ${{ github.ref_name }} gravitino-backend/
+
+    - name: Clone devops-gravitino repository
+      run: git clone https://github.com/ChampionKFC/devops-gravitino.git -b ${{ github.ref_name }}
+
+    - name: Copy Dockerfile to backend directory
+      run: cp devops-gravitino/docker_images/backend/Dockerfile gravitino-backend/
+
+    - name: Build Docker image
+      run: |
+        cd gravitino-backend/
+        docker build -t gravitino_backend_${{ github.ref_name }} .
+
+    - name: Docker Login
+      run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u del98 --password-stdin
+
+    - name: Tag Docker image
+      run: docker tag gravitino_backend_${{ github.ref_name }} del98/gravitino_backend_${{ github.ref_name }}:${{ github.sha }}
+
+    - name: Push Docker image
+      run: docker push del98/gravitino_backend_${{ github.ref_name }}:${{ github.sha }}
+
+    - name: Trigger test workflow
+      uses: actions/github-script@v5
       with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
+        github-token: ${{ secrets.TRIGGER }}
         script: |
-          cd /www/wwwroot/gravitino/back/prod
-          git checkout main
-          git pull origin main
-          npm install
-          npm run build
-          pm2 restart gravitino_prod
+          await github.rest.actions.createWorkflowDispatch({
+            owner: 'ChampionKFC',
+            repo: 'devops-gravitino',
+            workflow_id: 'test_workflow_backend.yml',
+            ref: 'main',
+            inputs: {
+              imageTag: "${{ github.sha }}"
+            }
+          });          

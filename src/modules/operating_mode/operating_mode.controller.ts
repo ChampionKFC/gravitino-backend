@@ -8,6 +8,9 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiTags('Operating Mode')
 @Controller('operating-mode')
@@ -16,12 +19,13 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class OperatingModeController {
   constructor(private readonly operatingModeService: OperatingModeService) {}
 
+  @HasPermissions(PermissionEnum.OperatingModeCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.OPERATING_MODE_CREATED_RESPONSE,
     type: StatusOperatingModeResponse,
   })
   @ApiOperation({ summary: AppStrings.OPERATING_MODE_CREATE_OPERATION })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Post()
   create(@Body() createOperatingModeDto: CreateOperatingModeDto, @Req() request) {
     return this.operatingModeService.create(createOperatingModeDto, request.user.user_id)
@@ -38,12 +42,13 @@ export class OperatingModeController {
     return this.operatingModeService.findAll()
   }
 
+  @HasPermissions(PermissionEnum.OperatingModeUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.OPERATING_MODE_UPDATE_RESPONSE,
     type: StatusOperatingModeResponse,
   })
   @ApiOperation({ summary: AppStrings.OPERATING_MODE_UPDATE_OPERATION })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Patch()
   async update(@Body() updateOperatingModeDto: UpdateOperatingModeDto, @Req() request) {
     const foundOperatingMode = await this.operatingModeService.findOne(updateOperatingModeDto.operating_mode_id)
@@ -54,7 +59,8 @@ export class OperatingModeController {
     return this.operatingModeService.update(updateOperatingModeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OperatingModeDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.OPERATING_MODE_DELETE_RESPONSE,
     type: StatusOperatingModeResponse,

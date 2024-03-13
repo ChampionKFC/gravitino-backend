@@ -45,6 +45,10 @@ export class OrderJournalService {
         sortQuery = generateSortQuery(orderJournalFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const orderJournalCount = await this.orderJournalRepository.count({ where: { order_id: orderJournalFilter.filter.order_id } })
       const selectQuery = `
         SELECT

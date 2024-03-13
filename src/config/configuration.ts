@@ -9,4 +9,8 @@ export default () => ({
   db_username: process.env.DB_USERNAME,
   db_password: process.env.DB_PASSWORD,
   db_name: process.env.DB_NAME,
+  smtp_host: process.env.SMTP_HOST,
+  smtp_domain: process.env.SMTP_DOMAIN,
+  smtp_user: process.env.SMTP_USER,
+  smtp_password: process.env.SMTP_PASSWORD,
 })

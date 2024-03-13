@@ -46,6 +46,7 @@ export class GroupService {
           Branch,
         ],
         attributes: { exclude: ['facility_id', 'checkpoint_id', 'branch_id'] },
+        order: [['createdAt', 'DESC']],
       })
       return { count: foundGroups.length, data: foundGroups }
     } catch (error) {

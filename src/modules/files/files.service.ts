@@ -8,7 +8,7 @@ import { FileType } from '../file_type/entities/file_type.entity'
 import { Order } from '../order/entities/order.entity'
 import { AppStrings } from 'src/common/constants/strings'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { S3ENDPOINT, s3Client } from 'src/common/s3Client'
+import { S3BUCKET, S3ENDPOINT, s3Client } from 'src/common/s3Client'
 import { extname } from 'path'
 import { Transaction } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
@@ -21,14 +21,16 @@ export class FilesService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(createFileDto: CreateFileDto, user_id: number, transaction?: Transaction): Promise<StatusFileResponse> {
+  async create(createFileDto: CreateFileDto, user_id?: number, transaction?: Transaction): Promise<StatusFileResponse> {
     const newFile = await this.fileRepository.create({ ...createFileDto }, { transaction })
 
-    const historyDto = {
-      user_id: user_id,
-      comment: `${AppStrings.HISTORY_FILE_CREATED}${newFile.file_id}`,
+    if (user_id) {
+      const historyDto = {
+        user_id: user_id,
+        comment: `${AppStrings.HISTORY_FILE_CREATED}${newFile.file_id}`,
+      }
+      await this.historyService.create(historyDto, transaction)
     }
-    await this.historyService.create(historyDto, transaction)
 
     return { status: true, data: newFile }
   }
@@ -38,6 +40,7 @@ export class FilesService {
       const result = await this.fileRepository.findAll({
         include: [FileType, Order],
         attributes: { exclude: ['file_type_id', 'order_id'] },
+        order: [['createdAt', 'DESC']],
       })
       return { count: result.length, data: result }
     } catch (error) {
@@ -102,12 +105,11 @@ export class FilesService {
     return { status: false }
   }
 
-  async uploadToS3(uploadFilesDto: UploadFileDto, files: Array<Express.Multer.File>, user_id: number) {
+  async uploadToS3(uploadFilesDto: UploadFileDto, files: Array<Express.Multer.File>) {
     const transaction = await this.sequelize.transaction()
     try {
-      const bucketName = 's3media'
-
       const links = []
+
       for (let index = 0; index < files.length; index++) {
         const file = files[index]
 
@@ -119,7 +121,7 @@ export class FilesService {
         const fileKey = `${uploadFilesDto.directory}/${uploadFilesDto.order_ids[0]}/${randomName}${extname(file.originalname)}`
 
         const params = {
-          Bucket: bucketName,
+          Bucket: S3BUCKET,
           Key: fileKey,
           Body: file.buffer,
         }
@@ -133,10 +135,10 @@ export class FilesService {
           createFileDto.order_id = order_id
           createFileDto.file_type_id = 2 // IMAGE TODO
 
-          await this.create(createFileDto, user_id, transaction)
+          await this.create(createFileDto, null, transaction)
         }
 
-        links.push(`${S3ENDPOINT}/${bucketName}/${fileKey}`)
+        links.push(`${S3ENDPOINT}/${S3BUCKET}/${fileKey}`)
       }
 
       transaction.commit()
@@ -150,8 +152,6 @@ export class FilesService {
   async loadFromS3(file_ids: number[]) {
     const transaction = await this.sequelize.transaction()
     try {
-      const bucketName = 's3media'
-
       const foundFiles = await this.fileRepository.findAll({
         where: { file_id: file_ids },
       })
@@ -159,7 +159,7 @@ export class FilesService {
       const links = []
       foundFiles.forEach((file) => {
         const fileKey = file.file_sku
-        links.push(`${S3ENDPOINT}/${bucketName}/${fileKey}`)
+        links.push(`${S3ENDPOINT}/${S3BUCKET}/${fileKey}`)
       })
 
       transaction.commit()

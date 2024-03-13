@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { CreateRolesPermissionDto, UpdateRolesPermissionDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
@@ -7,6 +7,7 @@ import { ArrayRolePermissionResponse, RolePermissionResponse, StatusRolePermissi
 import { UsersService } from '../users/users.service'
 import { PermissionsService } from '../permissions/permissions.service'
 import { AppStrings } from 'src/common/constants/strings'
+import { UserRoles } from 'src/common/constants/constants'
 
 @Injectable()
 export class RolesPermissionsService {
@@ -38,7 +39,7 @@ export class RolesPermissionsService {
 
   async findAll(): Promise<ArrayRolePermissionResponse> {
     try {
-      const result = await this.rolePermissionRepository.findAll()
+      const result = await this.rolePermissionRepository.findAll({ order: [['createdAt', 'DESC']] })
       return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)
@@ -113,36 +114,39 @@ export class RolesPermissionsService {
 
     if (!user) {
       return false
-    }
-
-    const permission = await this.permissionsService.findBySku(permission_sku)
-    if (!permission) {
-      return false
-    }
-
-    const rolePermission = await this.rolePermissionRepository.findOne({
-      where: {
-        permission_id: permission.permission_id,
-        role_id: user.role.role_id,
-      },
-    })
-    const userPermission = await this.rolePermissionRepository.findOne({
-      where: { permission_id: permission.permission_id, user_id: user.user_id },
-    })
-
-    if (!rolePermission || !rolePermission.rights) {
-      if (!userPermission || !userPermission.rights) {
-        return false
-      } else {
-        return true
-      }
+    } else if (user.role.role_id == UserRoles.ADMIN) {
+      Logger.log('ADMIN ACCESS')
+      return true
     } else {
-      if (!userPermission) {
-        return true
-      } else if (!userPermission.rights) {
+      const permission = await this.permissionsService.findBySku(permission_sku)
+      if (!permission) {
         return false
+      }
+
+      const rolePermission = await this.rolePermissionRepository.findOne({
+        where: {
+          permission_id: permission.permission_id,
+          role_id: user.role.role_id,
+        },
+      })
+      const userPermission = await this.rolePermissionRepository.findOne({
+        where: { permission_id: permission.permission_id, user_id: user.user_id },
+      })
+
+      if (!rolePermission || !rolePermission.rights) {
+        if (!userPermission || !userPermission.rights) {
+          return false
+        } else {
+          return true
+        }
       } else {
-        return true
+        if (!userPermission) {
+          return true
+        } else if (!userPermission.rights) {
+          return false
+        } else {
+          return true
+        }
       }
     }
   }

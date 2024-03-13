@@ -7,7 +7,7 @@ import { User } from 'src/modules/users/entities/user.entity'
 export class TransactionHistory extends Model<TransactionHistory> {
   @PrimaryKey
   @Column({ type: DataType.INTEGER, allowNull: false, autoIncrement: true })
-  history_id
+  history_id: number
 
   @ForeignKey(() => User)
   @Column({ type: DataType.INTEGER, allowNull: false })

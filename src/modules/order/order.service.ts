@@ -1,5 +1,5 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { BulkCreateOrderDto, CreateOrderDto, UpdateOrderDto, UpdateStatusDto } from './dto'
+import { HttpException, HttpStatus, Inject, Injectable, Logger, NotFoundException, forwardRef } from '@nestjs/common'
+import { BulkCreateOrderDto, CreateGuestOrderDto, CreateOrderDto, UpdateExecutorDto, UpdateOrderDto, UpdateStatusDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Order } from './entities/order.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
@@ -17,6 +17,19 @@ import { File } from '../files/entities/file.entity'
 import { S3BUCKET, S3ENDPOINT } from 'src/common/s3Client'
 import { Organization } from '../organization/entities/organization.entity'
 import { OrganizationType } from '../organization_type/entities/organization_type.entity'
+import { OrderPriorities, OrderStatuses, UserRoles } from 'src/common/constants/constants'
+import { GuestService } from '../guest/guest.service'
+import { CreateGuestDto } from '../guest/dto'
+import { Guest } from '../guest/entities/guest.entity'
+import { MailService } from '../mail/mail.service'
+import { Facility } from '../facility/entities/facility.entity'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const moment = require('moment')
+import * as xlsx from 'xlsx'
+import { formatExcelDate } from 'src/common/utlis/format_excel_date'
+import { OrganizationService } from '../organization/organization.service'
+import { PriorityService } from '../priority/priority.service'
+import { UsersService } from '../users/users.service'
 
 @Injectable()
 export class OrderService {
@@ -24,9 +37,14 @@ export class OrderService {
     @InjectModel(Order) private orderRepository: typeof Order,
     @InjectModel(File) private fileRepository: typeof File,
     @InjectModel(Organization) private organizationRepository: typeof Organization,
-    private readonly facilityService: FacilityService,
-    private readonly historyService: TransactionHistoryService,
-    private readonly orderJournalService: OrderJournalService,
+    @Inject(forwardRef(() => FacilityService)) private facilityService: FacilityService,
+    private guestService: GuestService,
+    @Inject(forwardRef(() => OrganizationService)) private organizationService: OrganizationService,
+    @Inject(forwardRef(() => UsersService)) private userService: UsersService,
+    private priorityService: PriorityService,
+    private historyService: TransactionHistoryService,
+    private orderJournalService: OrderJournalService,
+    private mailService: MailService,
     private sequelize: Sequelize,
   ) {}
 
@@ -39,7 +57,9 @@ export class OrderService {
       "Order"."planned_datetime",
       "Order"."task_end_datetime",
       "Order"."ended_at_datetime",
+      "Order"."closed_at_datetime",
       "Order"."property_values",
+      "Order"."executor_id",
       "Order"."order_status_id",
       "Order"."createdAt",
       "Order"."updatedAt",
@@ -104,6 +124,9 @@ export class OrderService {
       "creator_organization"."property_values" AS "creator.organization.property_values",
       "creator_organization_type"."organization_type_id" AS "creator.organization.organization_type.organization_type_id",
       "creator_organization_type"."organization_type_name" AS "creator.organization.organization_type.organization_type_name",
+      "guest"."guest_id" AS "creator.guest_id",
+      "guest"."guest_email" AS "creator.guest_email",
+      "guest"."guest_phone" AS "creator.guest_phone",
       "completed_by"."user_id" AS "completed_by.user_id",
       "completed_by"."is_active" AS "completed_by.is_active",
       "completed_by"."email" AS "completed_by.email",
@@ -158,6 +181,7 @@ export class OrderService {
       LEFT JOIN "OrganizationTypes" AS "creator_organization_type" ON "creator_organization".organization_type_id = "creator_organization_type"."organization_type_id"
       LEFT JOIN "Roles" AS "creator_role" ON "creator".role_id = "creator_role"."role_id"
       LEFT JOIN "Groups" AS "creator_group" ON "creator".group_id = "creator_group"."group_id"
+      LEFT JOIN "Guests" AS "guest" ON "Order"."guest_id" = "guest"."guest_id"
   ) AS query`
 
   async create(createOrderDto: CreateOrderDto, user_id: number, transaction?: Transaction): Promise<Order> {
@@ -199,55 +223,60 @@ export class OrderService {
         orderDto.order_status_id = 1
         orderDto.priority_id = order.priority_id
 
-        if (order.facility_ids && order.facility_ids.length > 0) {
-          for (let index = 0; index < order.facility_ids.length; index++) {
-            const facility_id = order.facility_ids[index]
+        if (order.facility_ids) {
+          if (order.facility_ids.length > 0) {
+            for (let index = 0; index < order.facility_ids.length; index++) {
+              const facility_id = order.facility_ids[index]
 
-            orderDto.facility_id = facility_id
-            orderDto.planned_datetime = order.planned_datetime
-            orderDto.task_end_datetime = order.task_end_datetime
+              orderDto.facility_id = facility_id
+              orderDto.planned_datetime = order.planned_datetime
+              orderDto.task_end_datetime = order.task_end_datetime
 
-            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
-              transaction.rollback()
-              throw new Error(e)
-            })
+              const newOrder = await this.create(orderDto, user_id, transaction)
 
-            orders.push(newOrder)
+              orders.push(newOrder)
+            }
+          } else {
+            throw AppError.FACILITIES_NOT_FOUND
           }
-        } else if (order.checkpoint_ids && order.checkpoint_ids.length > 0) {
+        } else if (order.checkpoint_ids) {
           const facilities = await this.facilityService.findAllByCheckpoint(order.checkpoint_ids, order.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.count; index++) {
-            const facility_id = facilities.data[index].facility_id
+          if (facilities.count > 0) {
+            for (let index = 0; index < facilities.count; index++) {
+              const facility_id = facilities.data[index].facility_id
 
-            orderDto.facility_id = facility_id
-            orderDto.planned_datetime = order.planned_datetime
-            orderDto.task_end_datetime = order.task_end_datetime
+              orderDto.facility_id = facility_id
+              orderDto.planned_datetime = order.planned_datetime
+              orderDto.task_end_datetime = order.task_end_datetime
 
-            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
-              transaction.rollback()
-              throw new Error(e)
-            })
+              const newOrder = await this.create(orderDto, user_id, transaction)
 
-            orders.push(newOrder)
+              orders.push(newOrder)
+            }
+          } else {
+            throw AppError.FACILITIES_NOT_FOUND
           }
-        } else {
+        } else if (order.branch_ids) {
           const facilities = await this.facilityService.findAllByBranch(order.branch_ids, order.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.count; index++) {
-            const facility_id = facilities.data[index].facility_id
+          if (facilities.count > 0) {
+            for (let index = 0; index < facilities.count; index++) {
+              const facility_id = facilities.data[index].facility_id
 
-            orderDto.facility_id = facility_id
-            orderDto.planned_datetime = order.planned_datetime
-            orderDto.task_end_datetime = order.task_end_datetime
+              orderDto.facility_id = facility_id
+              orderDto.planned_datetime = order.planned_datetime
+              orderDto.task_end_datetime = order.task_end_datetime
 
-            const newOrder = await this.create(orderDto, user_id, transaction).catch((e) => {
-              transaction.rollback()
-              throw new Error(e)
-            })
+              const newOrder = await this.create(orderDto, user_id, transaction)
 
-            orders.push(newOrder)
+              orders.push(newOrder)
+            }
+          } else {
+            throw AppError.FACILITIES_NOT_FOUND
           }
+        } else {
+          throw AppError.FACILITIES_NOT_FOUND
         }
       }
 
@@ -255,7 +284,32 @@ export class OrderService {
 
       return { status: true, data: { count: orders.length, data: [...orders] } }
     } catch (error) {
+      console.log(error)
+
       transaction.rollback()
+      throw new Error(error)
+    }
+  }
+
+  async createGuestOrder(order: CreateGuestOrderDto, trx?: Transaction): Promise<Order> {
+    const transaction = trx ?? (await this.sequelize.transaction())
+    try {
+      const guestDto = new CreateGuestDto()
+      guestDto.guest_name = order.guest_name
+      guestDto.guest_email = order.guest_email
+      guestDto.guest_phone = order.guest_phone
+      const newGuest = await this.guestService.create(guestDto, transaction)
+
+      const newOrder = await this.orderRepository.create(
+        { ...order, guest_id: newGuest.data.guest_id, priority_id: OrderPriorities.HIGH, order_status_id: OrderStatuses.NOT_ASSIGNED },
+        { transaction },
+      )
+
+      if (!trx) transaction.commit()
+
+      return newOrder
+    } catch (error) {
+      if (!trx) transaction.rollback()
       throw new Error(error)
     }
   }
@@ -274,11 +328,18 @@ export class OrderService {
         sortQuery = generateSortQuery(orderFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       if (orderFilter.period) {
+        const date_start = moment(orderFilter.period.date_start).format(`yyyy-MM-DD HH:mm:ssZ`)
+        const date_end = moment(orderFilter.period.date_end).format(`yyyy-MM-DD HH:mm:ssZ`)
+
         if (whereQuery.trim() == '') {
-          whereQuery = `WHERE planned_datetime between '${orderFilter.period.date_start}' AND '${orderFilter.period.date_end}'`
+          whereQuery = `WHERE planned_datetime between '${date_start}' AND '${date_end}' OR planned_datetime = null`
         } else {
-          whereQuery += ` AND planned_datetime between '${orderFilter.period.date_start}' AND '${orderFilter.period.date_end}'`
+          whereQuery += ` AND (planned_datetime between '${date_start}' AND '${date_end}') OR planned_datetime = null`
         }
       }
 
@@ -333,7 +394,7 @@ export class OrderService {
 
       return { count: count, data: result }
     } catch (error) {
-      console.log(error)
+      Logger.error(error)
 
       throw new Error(error)
     }
@@ -431,6 +492,8 @@ export class OrderService {
 
       return { count: result.length, data: result }
     } catch (error) {
+      console.log(error)
+
       throw new Error(error)
     }
   }
@@ -485,6 +548,7 @@ export class OrderService {
       const foundUser = await this.sequelize.query(
         `
         SELECT "user"."user_id",
+               "user"."role_id",
                "group"."group_id" AS "group.group_id",
                "group"."checkpoint_id" AS "group.checkpoint_id",
                "group"."facility_id" AS "group.facility_id",
@@ -535,13 +599,21 @@ export class OrderService {
         sortQuery = generateSortQuery(myOrdersFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
+      const date_start = moment(myOrdersFilter.period.date_start).format(`yyyy-MM-DD HH:mm:ssZ`)
+      const date_end = moment(myOrdersFilter.period.date_end).format(`yyyy-MM-DD HH:mm:ssZ`)
+
       if (!u.group.group_id && !u.group.checkpoint_id && !u.group.facility_id && u.organization.organization_id) {
         //Рабочий
         const selectQuery = `
           ${this.includeOrders}
-          ${whereQuery} planned_datetime between '${myOrdersFilter.period.date_start}' AND '${myOrdersFilter.period.date_end}'
+          ${whereQuery} "executor_id" = ${u.organization.organization_id} AND ((planned_datetime between '${date_start}' AND '${date_end}') OR planned_datetime is null)
           ${sortQuery}
         `
+        console.log(selectQuery)
 
         count = (
           await this.sequelize.query<Order>(selectQuery, {
@@ -549,6 +621,7 @@ export class OrderService {
             type: QueryTypes.SELECT,
           })
         ).length
+
         orders = await this.sequelize.query(
           `
            ${selectQuery}
@@ -564,7 +637,7 @@ export class OrderService {
           // Вывод всех задач по всем ПП по объекту обслуживания
           const selectQuery = `
             ${this.includeOrders}
-            ${whereQuery} "facility".facility_id = ${u.group.facility_id}
+            ${whereQuery} "facility.facility_id" = ${u.group.facility_id} AND ((planned_datetime between '${date_start}' AND '${date_end}') OR planned_datetime is null)
             ${sortQuery}
           `
 
@@ -588,7 +661,7 @@ export class OrderService {
           // Вывод всех задач по всем объектам обслуживания по ПП
           const selectQuery = `
             ${this.includeOrders}
-            ${whereQuery} "checkpoint".checkpoint_id = ${u.group.checkpoint_id}
+            ${whereQuery} "facility.checkpoint.checkpoint_id" = ${u.group.checkpoint_id} AND ((planned_datetime between '${date_start}' AND '${date_end}') OR planned_datetime is null)
             ${sortQuery}
           `
 
@@ -608,11 +681,11 @@ export class OrderService {
               type: QueryTypes.SELECT,
             },
           )
-        } else if (u.group.branch_id) {
+        } else if (u.group.branch_id && u.role_id == UserRoles.BRANCH_WORKER) {
           // Вывод всех задач по всем ПП по филиалу
           const selectQuery = `
             ${this.includeOrders}
-            ${whereQuery} "branch".branch_id = ${u.group.branch_id}
+            ${whereQuery} "facility.checkpoint.branch.branch_id" = ${u.group.branch_id} AND ((planned_datetime between '${date_start}' AND '${date_end}') OR planned_datetime is null)
             ${sortQuery}
           `
 
@@ -636,6 +709,7 @@ export class OrderService {
           //Сотрудник ЦА
           const selectQuery = `
             ${this.includeOrders}
+            ${whereQuery} ((planned_datetime between '${date_start}' AND '${date_end}') OR planned_datetime is null)
             ${sortQuery}
           `
 
@@ -690,25 +764,22 @@ export class OrderService {
     }
   }
 
-  async findOne(id: number): Promise<boolean> {
+  async findOne(id: number): Promise<Order> {
     const result = await this.orderRepository.findOne({
       where: { order_id: id },
     })
 
-    if (result) {
-      return true
-    } else {
-      return false
-    }
+    return result
   }
 
-  async update(updateOrderDto: UpdateOrderDto, user_id: number): Promise<StatusOrderResponse> {
+  async update(updateOrderDto: UpdateOrderDto, user_id: number, trx?: Transaction): Promise<StatusOrderResponse> {
+    const transaction = trx ?? (await this.sequelize.transaction())
     try {
       const foundOrder = await this.orderRepository.findOne({
         where: { order_id: updateOrderDto.order_id },
       })
 
-      foundOrder.update({ ...updateOrderDto })
+      foundOrder.update({ ...updateOrderDto }, { transaction })
       const changed = foundOrder.changed()
 
       if (changed instanceof Array) {
@@ -753,7 +824,7 @@ export class OrderService {
               break
           }
 
-          await this.orderJournalService.create(orderJournalDto)
+          await this.orderJournalService.create(orderJournalDto, transaction)
         }
       }
 
@@ -762,13 +833,16 @@ export class OrderService {
           user_id: user_id,
           comment: `${AppStrings.HISTORY_ORDER_UPDATED}${foundOrder.order_id}`,
         }
-        await this.historyService.create(historyDto)
+        await this.historyService.create(historyDto, transaction)
 
+        if (!trx) transaction.commit()
         return { status: true }
       } else {
+        if (!trx) transaction.rollback()
         return { status: false }
       }
     } catch (error) {
+      if (!trx) transaction.rollback()
       throw new Error(error)
     }
   }
@@ -777,15 +851,44 @@ export class OrderService {
     try {
       const foundOrder = await this.orderRepository.findOne({
         where: { order_id: updateOrderStatusDto.order_id },
+        include: [Guest, Facility],
       })
 
-      foundOrder.update({
-        order_status_id: updateOrderStatusDto.order_status_id,
-      })
+      if (updateOrderStatusDto.order_status_id == foundOrder.order_status_id) {
+        throw new Error(AppError.ORDER_STATUS_NOT_CHANGED)
+      } else {
+        if (updateOrderStatusDto.order_status_id == 4) {
+          await foundOrder.update({
+            order_status_id: updateOrderStatusDto.order_status_id,
+            ended_at_datetime: Date.now(),
+          })
+        } else if (updateOrderStatusDto.order_status_id == 5) {
+          if (foundOrder.order_status_id == 7) {
+            throw new Error(AppError.ORDER_STATUS_NOT_CHANGED)
+          }
+          const currentDate = Date.now()
+          const endedAtDateTime = foundOrder.ended_at_datetime
+          const taskEndDateTime = foundOrder.task_end_datetime
 
-      const changed = foundOrder.changed()
+          await foundOrder.update({
+            order_status_id: endedAtDateTime > taskEndDateTime ? OrderStatuses.CLOSED_OUT_OF_DATE : OrderStatuses.CLOSED,
+            closed_at_datetime: currentDate,
+          })
 
-      if (changed !== false) {
+          if (foundOrder.guest_id != null) {
+            this.mailService.sendOrderCloseMessage({
+              guest_name: foundOrder.guest.guest_name,
+              guest_email: foundOrder.guest.guest_email,
+              order_name: foundOrder.order_name,
+              facility_name: foundOrder.facility.facility_name,
+            })
+          }
+        } else {
+          await foundOrder.update({
+            order_status_id: updateOrderStatusDto.order_status_id,
+          })
+        }
+
         const orderJournalDto = new CreateOrderJournalDto()
         orderJournalDto.user_id = user_id
         orderJournalDto.order_id = foundOrder.order_id
@@ -823,6 +926,125 @@ export class OrderService {
       return { status: false }
     } catch (error) {
       throw new Error(error)
+    }
+  }
+
+  async changeExecutor(updateExecutorDto: UpdateExecutorDto, user_id: number): Promise<StatusOrderResponse> {
+    const transaction = await this.sequelize.transaction()
+    try {
+      const changeExecutor = await this.orderRepository.update(
+        { executor_id: updateExecutorDto.executor_id, order_status_id: OrderStatuses.ASSIGNED },
+        { where: { order_id: updateExecutorDto.order_id }, transaction },
+      )
+
+      if (changeExecutor) {
+        const orderJournalDto = new CreateOrderJournalDto()
+        orderJournalDto.user_id = user_id
+        orderJournalDto.order_id = updateExecutorDto.order_id
+        orderJournalDto.changed_field = 'executor_id'
+        orderJournalDto.order_status_id = OrderStatuses.ASSIGNED
+        orderJournalDto.comment = AppStrings.HISTORY_ORDER_EXECUTOR_UPDATED
+
+        await this.orderJournalService.create(orderJournalDto, transaction)
+
+        transaction.commit()
+
+        return { status: true }
+      } else {
+        transaction.rollback()
+        return { status: false }
+      }
+    } catch (error) {
+      transaction.rollback()
+      throw new Error(error)
+    }
+  }
+
+  async import(file: Express.Multer.File, user_id: string): Promise<StatusOrderResponse> {
+    const transaction = await this.sequelize.transaction()
+
+    try {
+      const entities = await this.previewImport(file, user_id)
+      for (const entity of entities) {
+        const pk = entity.order_id
+        if (pk) {
+          const exists = await this.findOne(pk)
+          if (exists) {
+            await this.update(entity, +user_id, transaction)
+          } else {
+            await this.create(entity, +user_id, transaction)
+          }
+        } else {
+          await this.create(entity, +user_id, transaction)
+        }
+      }
+
+      transaction.commit()
+      return { status: true }
+    } catch (error) {
+      console.log('IMPORT:', error)
+
+      transaction.rollback()
+      throw new HttpException(error.message, error.status)
+    }
+  }
+
+  async previewImport(file: Express.Multer.File, user_id: string): Promise<any> {
+    try {
+      const workbook = xlsx.read(file.buffer)
+
+      const ws = workbook.Sheets[workbook.SheetNames[0]]
+      const range = xlsx.utils.decode_range(ws['!ref'])
+
+      const entities = []
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        if (R === 0) {
+          continue
+        }
+        let col = 0
+
+        const entity = {
+          order_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          task_id: null,
+          order_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          order_description: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          facility_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          executor_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          planned_datetime: formatExcelDate(ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v),
+          task_end_datetime: formatExcelDate(ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v),
+          priority_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          property_values: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v?.toString().split(';'),
+          creator_id: +user_id,
+          order_status_id: OrderStatuses.CREATED,
+        }
+
+        const facility = await this.facilityService.findOne(entity.facility_id)
+        if (!facility) {
+          throw new NotFoundException(`${AppError.FACILITY_NOT_FOUND} (ID: ${entity.facility_id})`)
+        }
+
+        const executor = await this.organizationService.findOne(entity.executor_id)
+        if (!executor) {
+          throw new NotFoundException(`${AppError.USER_EXECUTOR_NOT_FOUND} (ID: ${entity.executor_id})`)
+        }
+
+        const priority = await this.priorityService.findOne(entity.priority_id)
+        if (!priority) {
+          throw new NotFoundException(`${AppError.PRIORITY_NOT_FOUND} (ID: ${entity.priority_id})`)
+        }
+
+        const creator = await this.userService.findOne(entity.creator_id)
+        if (!creator) {
+          throw new NotFoundException(`${AppError.USER_CREATOR_NOT_FOUND} (ID: ${entity.creator_id})`)
+        }
+
+        entities.push(entity)
+      }
+
+      return entities
+    } catch (error) {
+      throw new HttpException(error.message, error.status)
     }
   }
 }

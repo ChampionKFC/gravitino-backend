@@ -9,6 +9,9 @@ import { FileType } from './entities/file_type.entity'
 import { ArrayFileTypeResponse, StatusFileTypeResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('File type')
@@ -17,7 +20,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class FileTypeController {
   constructor(private readonly fileTypeService: FileTypeService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FileTypeCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.FILE_TYPE_CREATED_RESPONSE,
     type: StatusFileTypeResponse,
@@ -38,7 +42,8 @@ export class FileTypeController {
     return this.fileTypeService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FileTypeUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.FILE_TYPE_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.FILE_TYPE_UPDATE_RESPONSE,
@@ -57,7 +62,8 @@ export class FileTypeController {
     return this.fileTypeService.update(updateFileTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FileTypeDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.FILE_TYPE_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.FILE_TYPE_DELETE_RESPONSE,

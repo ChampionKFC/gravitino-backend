@@ -34,7 +34,7 @@ export class PermissionsService {
 
   async findAll(): Promise<ArrayPermissionResponse> {
     try {
-      const result = await this.permissionRepository.findAll()
+      const result = await this.permissionRepository.findAll({ order: [['createdAt', 'DESC']] })
       return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)

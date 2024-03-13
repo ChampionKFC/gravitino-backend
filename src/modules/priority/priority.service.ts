@@ -51,6 +51,10 @@ export class PriorityService {
         sortQuery = generateSortQuery(orderPriorityFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT
           "priority_id",

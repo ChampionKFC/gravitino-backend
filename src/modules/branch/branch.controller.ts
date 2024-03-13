@@ -17,7 +17,6 @@ import { BranchService } from './branch.service'
 import { CreateBranchDto, UpdateBranchDto } from './dto'
 import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
-import { OrganizationService } from '../organization/organization.service'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { Branch } from './entities/branch.entity'
@@ -26,18 +25,19 @@ import { BranchFilter } from './filters'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Branch')
 @Controller('branch')
 @UseFilters(AllExceptionsFilter)
 export class BranchController {
-  constructor(
-    private readonly branchService: BranchService,
-    private readonly organizationService: OrganizationService,
-  ) {}
+  constructor(private readonly branchService: BranchService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.BranchCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.BRANCH_CREATED_RESPONSE,
     type: StatusBranchResponse,
@@ -48,7 +48,8 @@ export class BranchController {
     return this.branchService.create(createBranchDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.BranchGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_ALL_RESPONSE,
     type: ArrayBranchResponse,
@@ -60,7 +61,8 @@ export class BranchController {
     return this.branchService.findAll(branchFilter)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.BranchUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_UPDATE_RESPONSE,
     type: Branch,
@@ -79,7 +81,8 @@ export class BranchController {
     return this.branchService.update(updateBranchDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.BranchDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_DELETE_RESPONSE,
     type: StatusBranchResponse,
@@ -95,7 +98,8 @@ export class BranchController {
     return this.branchService.remove(+id, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.BranchCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_IMPORT_RESPONSE,
     type: StatusBranchResponse,
@@ -113,11 +117,13 @@ export class BranchController {
   async import(
     @UploadedFile()
     file: Express.Multer.File,
+    @Req() request,
   ) {
-    return this.branchService.import(file)
+    return this.branchService.import(file, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.BranchCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.BRANCH_IMPORT_UPLOAD_RESPONSE,
     type: StatusBranchResponse,

@@ -10,6 +10,7 @@ import { QueryTypes } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { AppStrings } from 'src/common/constants/strings'
 import { User } from '../users/entities/user.entity'
+import { OrderStatuses, UserRoles } from 'src/common/constants/constants'
 
 @Injectable()
 export class OrderStatusService {
@@ -52,6 +53,10 @@ export class OrderStatusService {
         sortQuery = generateSortQuery(orderStatusFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "order_status_id" ASC'
+      }
+
       const selectQuery = `
         SELECT
           "order_status_id",
@@ -92,12 +97,21 @@ export class OrderStatusService {
       const user = await this.userRepository.findOne({ where: { user_id } })
 
       const availableStatuses = []
-      if (user.role_id == 2) {
-        availableStatuses.push(...[3, 4, 5])
-      } else if (user.role_id == 3) {
-        availableStatuses.push(...[1, 2, 3, 4, 5, 6, 7, 8])
-      } else {
-        availableStatuses.push(...[1, 2, 3, 4, 5, 6, 7, 8])
+      if (user.role_id == UserRoles.EXECUTOR) {
+        availableStatuses.push(...[OrderStatuses.ASSIGNED, OrderStatuses.IN_WORK, OrderStatuses.ON_CHECKING, OrderStatuses.FOR_REVISION, OrderStatuses.CLOSED])
+      } else if (user.role_id == UserRoles.ADMIN) {
+        availableStatuses.push(
+          ...[
+            OrderStatuses.CREATED,
+            OrderStatuses.ASSIGNED,
+            OrderStatuses.IN_WORK,
+            OrderStatuses.ON_CHECKING,
+            OrderStatuses.CLOSED,
+            OrderStatuses.CANCELED,
+            OrderStatuses.FOR_REVISION,
+            OrderStatuses.NOT_ASSIGNED,
+          ],
+        )
       }
 
       const foundStatuses = await this.orderStatusRepository.findAll({ where: { order_status_id: availableStatuses } })

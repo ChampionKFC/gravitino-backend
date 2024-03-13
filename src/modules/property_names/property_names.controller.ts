@@ -8,6 +8,9 @@ import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { ArrayPropertyNameResponse, StatusPropertyNameResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Properties')
@@ -16,7 +19,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class PropertyNamesController {
   constructor(private readonly propertyNamesService: PropertyNamesService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.PropertyCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PROPERTY_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.PROPERTY_CREATED_RESPONSE,
@@ -57,7 +61,8 @@ export class PropertyNamesController {
   //   return this.propertyNamesService.update(updatePropertyDto, request.user.user_id)
   // }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.PropertyDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PROPERTY_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PROPERTY_DELETE_RESPONSE,

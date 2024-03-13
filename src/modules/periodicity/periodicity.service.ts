@@ -28,6 +28,10 @@ export class PeriodicityService {
         sortQuery = generateSortQuery(periodicityFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT
           "periodicity_id", 

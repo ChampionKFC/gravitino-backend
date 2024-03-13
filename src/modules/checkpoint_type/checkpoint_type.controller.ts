@@ -9,6 +9,9 @@ import { CheckpointTypeFilter } from './filters'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Checkpoint Type')
@@ -17,7 +20,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class CheckpointTypeController {
   constructor(private readonly checkpointTypeService: CheckpointTypeService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointTypeCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_CREATED_RESPONSE,
     type: StatusCheckpointTypeResponse,
@@ -40,7 +44,8 @@ export class CheckpointTypeController {
     return this.checkpointTypeService.findAll(checkpointTypeFilter)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointTypeUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_UPDATE_RESPONSE,
     type: CheckpointType,
@@ -51,7 +56,8 @@ export class CheckpointTypeController {
     return this.checkpointTypeService.update(updateCheckpointTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointTypeDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_TYPE_DELETE_RESPONSE,
     type: CheckpointType,

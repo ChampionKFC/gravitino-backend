@@ -16,6 +16,9 @@ import { OrganizationService } from '../organization/organization.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { FacilityTypeService } from '../facility_type/facility_type.service'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Task')
@@ -32,7 +35,8 @@ export class TaskController {
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.TaskCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.TASK_CREATED_RESPONSE,
     type: StatusTaskResponse,
@@ -79,6 +83,8 @@ export class TaskController {
           throw new HttpException(`${AppError.FACILITY_TYPE_NOT_FOUND} (ID: ${element})`, HttpStatus.NOT_FOUND)
         }
       }
+    } else {
+      createTaskDto.facility_type_ids = []
     }
 
     const facility_ids = createTaskDto.facility_ids
@@ -110,7 +116,8 @@ export class TaskController {
     return this.taskService.create(createTaskDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.TaskGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_ALL_RESPONSE,
     type: ArrayTaskResponse,
@@ -122,7 +129,8 @@ export class TaskController {
     return this.taskService.findAll(taskFilter)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.TaskUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_UPDATE_RESPONSE,
     type: Task,
@@ -149,7 +157,8 @@ export class TaskController {
     return this.taskService.update(updateTaskDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.TaskDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.TASK_DELETE_RESPONSE,
     type: StatusTaskResponse,

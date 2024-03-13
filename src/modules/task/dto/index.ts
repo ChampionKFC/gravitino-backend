@@ -54,14 +54,14 @@ export class UpdateTaskDto {
   @ApiProperty({ default: 1, required: false })
   category_id?: number
 
-  @ApiProperty({ default: 1, required: false })
-  periodicity_id?: number
+  // @ApiProperty({ default: 1, required: false })
+  // periodicity_id?: number
 
-  @ApiProperty({ required: false })
-  period_start?: Date
+  // @ApiProperty({ required: false })
+  // period_start?: Date
 
-  @ApiProperty({ required: false })
-  period_end?: Date
+  // @ApiProperty({ required: false })
+  // period_end?: Date
 }
 
 export class TaskSorts {

@@ -24,7 +24,7 @@ export class TransactionHistoryService {
 
   async findAll(): Promise<ArrayTransactionHistoryResponse> {
     try {
-      const foundHistories = await this.historyRepository.findAll()
+      const foundHistories = await this.historyRepository.findAll({ order: [['createdAt', 'DESC']] })
       return { count: foundHistories.length, data: foundHistories }
     } catch (error) {
       throw new Error(error)

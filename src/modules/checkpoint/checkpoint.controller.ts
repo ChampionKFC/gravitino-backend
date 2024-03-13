@@ -1,4 +1,20 @@
-import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpException, HttpStatus, UseFilters, Query } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+  HttpException,
+  HttpStatus,
+  UseFilters,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+  NotFoundException,
+} from '@nestjs/common'
 import { CheckpointService } from './checkpoint.service'
 import { CreateCheckpointDto, UpdateCheckpointDto } from './dto'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
@@ -11,6 +27,14 @@ import { Checkpoint } from './entities/checkpoint.entity'
 import { CheckpointFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { CheckpointTypeService } from '../checkpoint_type/checkpoint_type.service'
+import { NeighboringStateService } from '../neighboring_state/neighboring_state.service'
+import { OperatingModeService } from '../operating_mode/operating_mode.service'
+import { WorkingHoursService } from '../working_hours/working_hours.service'
 
 @ApiBearerAuth()
 @ApiTags('Checkpoint')
@@ -20,9 +44,14 @@ export class CheckpointController {
   constructor(
     private readonly checkpointService: CheckpointService,
     private readonly branchService: BranchService,
+    private readonly neighboringStateService: NeighboringStateService,
+    private readonly checkpointTypeService: CheckpointTypeService,
+    private readonly operatingModeService: OperatingModeService,
+    private readonly workingHoursService: WorkingHoursService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.CHECKPOINT_CREATED_RESPONSE,
     type: StatusCheckpointResponse,
@@ -30,15 +59,38 @@ export class CheckpointController {
   @ApiOperation({ summary: AppStrings.CHECKPOINT_CREATE_OPERATION })
   @Post()
   async create(@Body() createCheckpointDto: CreateCheckpointDto, @Req() request) {
-    const foundBranch = await this.branchService.findOne(createCheckpointDto.branch_id)
-    if (!foundBranch) {
-      throw new HttpException(AppError.BRANCH_NOT_FOUND, HttpStatus.NOT_FOUND)
+    const branch = await this.branchService.findOne(createCheckpointDto.branch_id)
+    if (!branch) {
+      throw new NotFoundException(AppError.BRANCH_NOT_FOUND)
+    }
+
+    if (createCheckpointDto.neighboring_state_id) {
+      const neighboringState = await this.neighboringStateService.findOne(createCheckpointDto.neighboring_state_id)
+      if (!neighboringState) {
+        throw new NotFoundException(AppError.NEIGHBORING_STATE_NOT_FOUND)
+      }
+    }
+
+    const checkpointType = await this.checkpointTypeService.findOne(createCheckpointDto.checkpoint_type_id)
+    if (!checkpointType) {
+      throw new NotFoundException(AppError.CHECKPOINT_TYPE_NOT_FOUND)
+    }
+
+    const operatingMode = await this.operatingModeService.findOne(createCheckpointDto.operating_mode_id)
+    if (!operatingMode) {
+      throw new NotFoundException(AppError.OPERATING_MODE_NOT_FOUND)
+    }
+
+    const workingHours = await this.workingHoursService.findOne(createCheckpointDto.working_hours_id)
+    if (!workingHours) {
+      throw new NotFoundException(AppError.WORKING_HOURS_NOT_FOUND)
     }
 
     return this.checkpointService.create(createCheckpointDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_ALL_RESPONSE,
     type: ArrayCheckpointResponse,
@@ -51,6 +103,19 @@ export class CheckpointController {
   }
 
   @UseGuards(JwtAuthGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.CHECKPOINT_ALL_RESPONSE,
+    type: ArrayCheckpointResponse,
+  })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_ALL_RESPONSE })
+  @ApiBody({ required: false, type: CheckpointFilter })
+  @Post('my')
+  async findMy(@Body() checkpointFilter: CheckpointFilter, @Req() request) {
+    return this.checkpointService.findMy(request.user.user_id, checkpointFilter)
+  }
+
+  @HasPermissions(PermissionEnum.CheckpointGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.CHECKPOINT_ALL_BY_BRANCH_RESPONSE,
@@ -72,7 +137,8 @@ export class CheckpointController {
     return this.checkpointService.findAllByBranch(branch_ids, checkpointFilter)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_UPDATE_RESPONSE,
     type: Checkpoint,
@@ -89,16 +155,42 @@ export class CheckpointController {
     }
 
     if (updateCheckpointDto.branch_id) {
-      const foundBranch = await this.branchService.findOne(updateCheckpointDto.branch_id)
-      if (!foundBranch) {
-        throw new HttpException(AppError.BRANCH_NOT_FOUND, HttpStatus.NOT_FOUND)
+      const branch = await this.branchService.findOne(updateCheckpointDto.branch_id)
+      if (!branch) {
+        throw new NotFoundException(AppError.BRANCH_NOT_FOUND)
+      }
+    }
+
+    if (updateCheckpointDto.neighboring_state_id) {
+      const neighboringState = await this.neighboringStateService.findOne(updateCheckpointDto.neighboring_state_id)
+      if (!neighboringState) {
+        throw new NotFoundException(AppError.NEIGHBORING_STATE_NOT_FOUND)
+      }
+    }
+    if (updateCheckpointDto.checkpoint_type_id) {
+      const checkpointType = await this.checkpointTypeService.findOne(updateCheckpointDto.checkpoint_type_id)
+      if (!checkpointType) {
+        throw new NotFoundException(AppError.CHECKPOINT_TYPE_NOT_FOUND)
+      }
+    }
+    if (updateCheckpointDto.operating_mode_id) {
+      const operatingMode = await this.operatingModeService.findOne(updateCheckpointDto.operating_mode_id)
+      if (!operatingMode) {
+        throw new NotFoundException(AppError.OPERATING_MODE_NOT_FOUND)
+      }
+    }
+    if (updateCheckpointDto.working_hours_id) {
+      const workingHours = await this.workingHoursService.findOne(updateCheckpointDto.working_hours_id)
+      if (!workingHours) {
+        throw new NotFoundException(AppError.WORKING_HOURS_NOT_FOUND)
       }
     }
 
     return this.checkpointService.update(updateCheckpointDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.CheckpointDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CHECKPOINT_DELETE_RESPONSE,
     type: StatusCheckpointResponse,
@@ -112,5 +204,52 @@ export class CheckpointController {
     }
 
     return this.checkpointService.remove(+id, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.CheckpointCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.CHECKPOINT_IMPORT_RESPONSE,
+    type: StatusCheckpointResponse,
+  })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_IMPORT_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('import')
+  async import(
+    @UploadedFile()
+    file: Express.Multer.File,
+    @Req() request,
+  ) {
+    return this.checkpointService.import(file, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.CheckpointCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.CHECKPOINT_IMPORT_UPLOAD_RESPONSE,
+    type: StatusCheckpointResponse,
+  })
+  @ApiOperation({ summary: AppStrings.CHECKPOINT_IMPORT_UPLOAD_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('upload-import')
+  async uploadImport(
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return this.checkpointService.previewImport(file)
   }
 }

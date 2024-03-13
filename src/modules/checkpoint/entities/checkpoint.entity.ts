@@ -7,7 +7,9 @@ import { NeighboringState } from 'src/modules/neighboring_state/entities/neighbo
 import { OperatingMode } from 'src/modules/operating_mode/entities/operating_mode.entity'
 import { WorkingHours } from 'src/modules/working_hours/entities/working_hour.entity'
 
-@Table
+export const CheckpointTableName = 'Checkpoints'
+
+@Table({ tableName: CheckpointTableName })
 export class Checkpoint extends Model {
   @PrimaryKey
   @ApiProperty()

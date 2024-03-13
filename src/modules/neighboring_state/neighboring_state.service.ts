@@ -36,7 +36,7 @@ export class NeighboringStateService {
 
   async findAll(): Promise<ArrayNeighboringStateResponse> {
     try {
-      const foundNeighboringStates = await this.neighboringStateRepository.findAll()
+      const foundNeighboringStates = await this.neighboringStateRepository.findAll({ order: [['createdAt', 'DESC']] })
 
       return { count: foundNeighboringStates.length, data: foundNeighboringStates }
     } catch (error) {

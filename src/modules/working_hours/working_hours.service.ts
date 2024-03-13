@@ -36,7 +36,7 @@ export class WorkingHoursService {
 
   async findAll(): Promise<ArrayWorkingHoursResponse> {
     try {
-      const foundWorkingHours = await this.workingHoursRepository.findAll()
+      const foundWorkingHours = await this.workingHoursRepository.findAll({ order: [['createdAt', 'DESC']] })
 
       return { count: foundWorkingHours.length, data: foundWorkingHours }
     } catch (error) {

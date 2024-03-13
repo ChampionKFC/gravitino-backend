@@ -17,16 +17,8 @@ export class Facility extends Model {
   @Column({ type: DataType.STRING(50), allowNull: false })
   facility_name: string
 
-  // @ForeignKey(() => Organization)
   @Column({ type: DataType.ARRAY(DataType.INTEGER), allowNull: false })
   organization_ids: number[]
-
-  // @ApiProperty({
-  //   type: () => Organization[],
-  //   description: AppStrings.ORGANIZATION,
-  // })
-  // @BelongsTo(() => Organization)
-  // organization: Organization
 
   @ForeignKey(() => Checkpoint)
   @Column({ type: DataType.INTEGER, allowNull: false })
@@ -49,10 +41,6 @@ export class Facility extends Model {
   })
   @BelongsTo(() => FacilityType)
   facility_type: FacilityType
-
-  // @ApiProperty({ example: 'улица У.', description: 'Местоположение пункта пропуска' })
-  // @Column({ type: DataType.STRING, allowNull: false, })
-  // location: string;
 
   @HasMany(() => Order, Facility.primaryKeyAttribute)
   orders: NonAttribute<Order[]>

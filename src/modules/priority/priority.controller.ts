@@ -10,6 +10,9 @@ import { ArrayOrderPriorityResponse, OrderPriorityResponse, StatusOrderPriorityR
 import { OrderPriorityFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @Controller('priority')
@@ -18,7 +21,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class PriorityController {
   constructor(private readonly priorityService: PriorityService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.PriorityCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PRIORITY_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.PRIORITY_CREATED_RESPONSE,
@@ -50,7 +54,8 @@ export class PriorityController {
     return this.priorityService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.PriorityUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PRIORITY_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PRIORITY_UPDATE_RESPONSE,
@@ -68,7 +73,8 @@ export class PriorityController {
     return this.priorityService.update(updatePriorityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.PriorityDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PRIORITY_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PRIORITY_DELETE_RESPONSE,

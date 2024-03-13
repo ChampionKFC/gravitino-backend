@@ -8,6 +8,9 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { ArrayFacilityTypeResponse, StatusFacilityTypeResponse } from './response'
 import { AppError } from 'src/common/constants/error'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiTags('Facility Type')
 @Controller('facility-type')
@@ -16,12 +19,13 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class FacilityTypeController {
   constructor(private readonly facilityTypeService: FacilityTypeService) {}
 
+  @HasPermissions(PermissionEnum.FacilityTypeCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.FACILITY_TYPE_ALL_RESPONSE,
     type: StatusFacilityTypeResponse,
   })
   @ApiOperation({ summary: AppStrings.FILE_TYPE_ALL_OPERATION })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
   @Post()
   create(@Body() createFacilityTypeDto: CreateFacilityTypeDto, @Req() request) {
     return this.facilityTypeService.create(createFacilityTypeDto, request.user.user_id)
@@ -38,7 +42,8 @@ export class FacilityTypeController {
     return this.facilityTypeService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityTypeUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_TYPE_UPDATE_RESPONSE,
     type: StatusFacilityTypeResponse,
@@ -53,7 +58,8 @@ export class FacilityTypeController {
     return this.facilityTypeService.update(updateFacilityTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityTypeDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_TYPE_DELETE_RESPONSE,
     type: StatusFacilityTypeResponse,

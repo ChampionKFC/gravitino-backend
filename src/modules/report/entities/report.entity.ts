@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { BelongsTo, Column, DataType, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript'
 import { AppStrings } from 'src/common/constants/strings'
 import { FileType } from 'src/modules/file_type/entities/file_type.entity'
-import { User } from 'src/modules/users/entities/user.entity'
+import { Order } from 'src/modules/order/entities/order.entity'
 
 @Table
 export class Report extends Model {
@@ -10,12 +10,12 @@ export class Report extends Model {
   @Column({ type: DataType.INTEGER, allowNull: false, autoIncrement: true })
   report_id: number
 
-  @ForeignKey(() => User)
+  @ForeignKey(() => Order)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  report_user_id: number
+  order_id: number
 
-  @BelongsTo(() => User)
-  report_user: User
+  @BelongsTo(() => Order)
+  order: Order
 
   @Column({ type: DataType.STRING, allowNull: false })
   file_sku: string

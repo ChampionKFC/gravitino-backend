@@ -4,14 +4,14 @@ import { PermissionsController } from './permissions.controller'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { Permission } from './entities/permission.entity'
 import { TransactionHistoryModule } from '../transaction_history/transaction_history.module'
-import { SeederModule } from 'nestjs-sequelize-seeder'
-import { PermissionSeeds } from './seeds'
 import { UsersModule } from '../users/users.module'
+import { RolesPermissionsService } from '../roles_permissions/roles_permissions.service'
+import { RolePermission } from '../roles_permissions/entities/roles_permission.entity'
 
 @Module({
-  imports: [SequelizeModule.forFeature([Permission]), TransactionHistoryModule, UsersModule, SeederModule.forFeature([PermissionSeeds])],
+  imports: [SequelizeModule.forFeature([Permission, RolePermission]), TransactionHistoryModule, UsersModule],
   controllers: [PermissionsController],
-  providers: [PermissionsService],
+  providers: [PermissionsService, RolesPermissionsService],
   exports: [PermissionsService],
 })
 export class PermissionsModule {}

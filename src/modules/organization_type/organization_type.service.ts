@@ -51,6 +51,10 @@ export class OrganizationTypeService {
         sortQuery = generateSortQuery(organizationTypeFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT
           "organization_type_id",

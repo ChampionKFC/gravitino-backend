@@ -1,11 +1,10 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, Req, UseFilters, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Req, UploadedFile, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { User } from './entities/user.entity'
 import { CreateUserDto, CreateUserOrganizationDto, UpdateUserDto, UpdateUserOrganizationDto, UpdateUserStatusDto } from './dto'
 import { JwtAuthGuard } from 'src/modules/auth/guards/auth.guard'
 import { RolesService } from '../roles/roles.service'
-import { OrganizationService } from '../organization/organization.service'
 import { GroupService } from '../group/group.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
@@ -14,6 +13,10 @@ import { ArrayUserResponse, StatusUserResponse } from './response'
 import { OrganizationTypeService } from '../organization_type/organization_type.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 @ApiBearerAuth()
 @ApiTags('Users')
@@ -23,11 +26,12 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly roleService: RolesService,
-    private readonly organizationService: OrganizationService,
     private readonly organizationTypeService: OrganizationTypeService,
     private readonly groupService: GroupService,
   ) {}
 
+  @HasPermissions(PermissionEnum.UserCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.USER_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.USER_CREATED_RESPONSE,
@@ -59,6 +63,8 @@ export class UsersController {
     })
   }
 
+  @HasPermissions(PermissionEnum.OrganizationCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.USER_ORGANIZATION_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.USER_ORGANIZATION_CREATED_RESPONSE,
@@ -95,7 +101,8 @@ export class UsersController {
     })
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.UserGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Post('all')
   @ApiOperation({ summary: AppStrings.USER_ALL_OPERATION })
   @ApiResponse({
@@ -122,7 +129,8 @@ export class UsersController {
 
   @ApiOperation({ summary: AppStrings.USER_UPDATE_OPERATION })
   @ApiResponse({ status: 200, description: AppStrings.USER_UPDATE_RESPONSE })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.UserUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Patch()
   async update(@Body() user: UpdateUserDto, @Req() request) {
     const foundUser = await this.usersService.findByEmail(user.email)
@@ -149,7 +157,8 @@ export class UsersController {
 
   @ApiOperation({ summary: AppStrings.USER_ORGANIZATION_UPDATE_OPERATION })
   @ApiResponse({ status: 200, description: AppStrings.USER_ORGANIZATION_UPDATE_RESPONSE })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrganizationUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Patch('organization')
   async updateOrganization(@Body() organization: UpdateUserOrganizationDto, @Req() request) {
     const foundUser = await this.usersService.findById(organization.user_id)
@@ -181,33 +190,133 @@ export class UsersController {
     return this.usersService.updateOrganization(organization, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
-  @Delete(':id')
-  @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
-  @ApiResponse({
-    status: 200,
-    description: AppStrings.USER_DELETE_RESPONSE,
-    type: User,
-  })
-  async remove(@Param('id') id: number, @Req() request) {
-    const foundUser = await this.usersService.findOne(id)
-    if (foundUser == null) {
-      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
-    }
+  // @HasPermissions(PermissionEnum.UserDelete)
+  // @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  // @Delete(':id')
+  // @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: AppStrings.USER_DELETE_RESPONSE,
+  //   type: User,
+  // })
+  // async remove(@Param('id') id: number, @Req() request) {
+  //   const foundUser = await this.usersService.findOne(id)
+  //   if (foundUser == null) {
+  //     throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+  //   }
 
-    return this.usersService.remove(+id, request.user.user_id)
-  }
+  //   return this.usersService.remove(+id, request.user.user_id)
+  // }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.UserStatusUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Patch('change_status')
-  @ApiOperation({ summary: AppStrings.USER_DELETE_OPERATION })
-  @ApiOkResponse({ type: StatusUserResponse, description: AppStrings.USER_DELETE_RESPONSE })
-  async approve(@Body() updateUserStatusDto: UpdateUserStatusDto, @Req() request) {
-    const foundUser = await this.usersService.findOne(updateUserStatusDto.user_id)
-    if (!foundUser) {
-      throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+  @ApiOperation({ summary: AppStrings.USER_STATUS_UPDATE_OPERATION })
+  @ApiOkResponse({ type: StatusUserResponse, description: AppStrings.USER_STATUS_UPDATE_RESPONSE })
+  async changeStatus(@Body() updateUserStatusDto: UpdateUserStatusDto, @Req() request) {
+    if (updateUserStatusDto.user_id == request.user.user_id) {
+      throw new HttpException(AppError.USER_SELF_DEACTIVATE, HttpStatus.FORBIDDEN)
+    } else {
+      const foundUser = await this.usersService.findOne(updateUserStatusDto.user_id)
+      if (!foundUser) {
+        throw new HttpException(AppError.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+      }
     }
 
     return this.usersService.changeStatus(updateUserStatusDto, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.UserCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.ORGANIZATION_IMPORT_RESPONSE,
+    type: StatusUserResponse,
+  })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_IMPORT_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('organization/import')
+  async importOrganization(
+    @UploadedFile()
+    file: Express.Multer.File,
+    @Req() request,
+  ) {
+    return this.usersService.importOrganization(file, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.UserCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.ORGANIZATION_IMPORT_UPLOAD_RESPONSE,
+    type: StatusUserResponse,
+  })
+  @ApiOperation({ summary: AppStrings.ORGANIZATION_IMPORT_UPLOAD_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('organization/upload-import')
+  async uploadImportOrganization(
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return this.usersService.previewImportOrganization(file)
+  }
+
+  @HasPermissions(PermissionEnum.UserCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.USER_IMPORT_RESPONSE,
+    type: StatusUserResponse,
+  })
+  @ApiOperation({ summary: AppStrings.USER_IMPORT_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('import')
+  async import(
+    @UploadedFile()
+    file: Express.Multer.File,
+    @Req() request,
+  ) {
+    return this.usersService.import(file, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.UserCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.USER_IMPORT_UPLOAD_RESPONSE,
+    type: StatusUserResponse,
+  })
+  @ApiOperation({ summary: AppStrings.USER_IMPORT_UPLOAD_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('upload-import')
+  async uploadImport(
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return this.usersService.previewImport(file)
   }
 }

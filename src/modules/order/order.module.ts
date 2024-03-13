@@ -9,8 +9,6 @@ import { OrganizationModule } from '../organization/organization.module'
 import { UsersModule } from '../users/users.module'
 import { OrderStatusModule } from '../order_status/order_status.module'
 import { PriorityModule } from '../priority/priority.module'
-import { OrderSeeds } from './seeds'
-import { SeederModule } from 'nestjs-sequelize-seeder'
 import { CheckpointModule } from '../checkpoint/checkpoint.module'
 import { User } from '../users/entities/user.entity'
 import { FacilityModule } from '../facility/facility.module'
@@ -18,10 +16,17 @@ import { BranchModule } from '../branch/branch.module'
 import { OrderJournalModule } from '../order_journal/order_journal.module'
 import { File } from '../files/entities/file.entity'
 import { Organization } from '../organization/entities/organization.entity'
+import { FacilityTypeModule } from '../facility_type/facility_type.module'
+import { GuestModule } from '../guest/guest.module'
+import { MailModule } from '../mail/mail.module'
+import { PermissionsService } from '../permissions/permissions.service'
+import { RolesPermissionsService } from '../roles_permissions/roles_permissions.service'
+import { Permission } from '../permissions/entities/permission.entity'
+import { RolePermission } from '../roles_permissions/entities/roles_permission.entity'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Order, User, File, Organization]),
+    SequelizeModule.forFeature([Order, User, File, Organization, RolePermission, Permission]),
     TaskModule,
     CheckpointModule,
     FacilityModule,
@@ -32,10 +37,12 @@ import { Organization } from '../organization/entities/organization.entity'
     PriorityModule,
     TransactionHistoryModule,
     OrderJournalModule,
-    SeederModule.forFeature([OrderSeeds]),
+    FacilityTypeModule,
+    GuestModule,
+    MailModule,
   ],
   controllers: [OrderController],
-  providers: [OrderService],
+  providers: [OrderService, RolesPermissionsService, PermissionsService],
   exports: [OrderService],
 })
 export class OrderModule {}

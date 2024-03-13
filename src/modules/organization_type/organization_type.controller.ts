@@ -10,6 +10,9 @@ import { ArrayOrganizationTypeResponse, StatusOrganizationTypeResponse } from '.
 import { OrganizationTypeFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Organization Type')
@@ -18,7 +21,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class OrganizationTypeController {
   constructor(private readonly organizationTypeService: OrganizationTypeService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrganizationTypeCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ORGANIZATION_TYPE_CREATED_RESPONSE,
@@ -50,7 +54,8 @@ export class OrganizationTypeController {
     return this.organizationTypeService.findAll({})
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrganizationTypeUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORGANIZATION_TYPE_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORGANIZATION_TYPE_UPDATE_RESPONSE,
@@ -69,7 +74,8 @@ export class OrganizationTypeController {
     return this.organizationTypeService.update(updateOrganizationTypeDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrganizationTypeDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORGANIZATION_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.ORGANIZATION_DELETE_RESPONSE,

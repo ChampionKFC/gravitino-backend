@@ -14,13 +14,13 @@ import { CategoryFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
 
+@ApiBearerAuth()
 @ApiTags('Category (Task)')
 @Controller('category')
 @UseFilters(AllExceptionsFilter)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @ApiBearerAuth()
   @HasPermissions(PermissionEnum.CategoryCreate)
   @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
@@ -33,7 +33,6 @@ export class CategoryController {
     return this.categoryService.create(createCategoryDto, request.user.user_id)
   }
 
-  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.CATEGORY_ALL_RESPONSE,
@@ -46,7 +45,6 @@ export class CategoryController {
     return this.categoryService.findAll(categoryFilter)
   }
 
-  @ApiBearerAuth()
   @HasPermissions(PermissionEnum.CategoryUpdate)
   @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
@@ -67,7 +65,6 @@ export class CategoryController {
     return this.categoryService.update(updateCategoryDto, request.user.user_id)
   }
 
-  @ApiBearerAuth()
   @HasPermissions(PermissionEnum.CategoryDelete)
   @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({

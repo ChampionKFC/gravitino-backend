@@ -5,6 +5,7 @@ import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, PrimaryKey, Ta
 import { AppStrings } from 'src/common/constants/strings'
 import { Facility } from 'src/modules/facility/entities/facility.entity'
 import { File } from 'src/modules/files/entities/file.entity'
+import { Guest } from 'src/modules/guest/entities/guest.entity'
 import { OrderJournal } from 'src/modules/order_journal/entities/order_journal.entity'
 import { OrderStatus } from 'src/modules/order_status/entities/order_status.entity'
 import { Organization } from 'src/modules/organization/entities/organization.entity'
@@ -37,7 +38,7 @@ export class Order extends Model {
   order_name?: string
 
   @ApiProperty({ required: false })
-  @Column({ type: DataType.STRING, allowNull: true })
+  @Column({ type: DataType.TEXT, allowNull: true })
   order_description?: string
 
   @ForeignKey(() => Facility)
@@ -52,8 +53,8 @@ export class Order extends Model {
   facility: Facility
 
   @ForeignKey(() => Organization)
-  @Column({ type: DataType.INTEGER, allowNull: false })
-  executor_id: number
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  executor_id?: number
 
   @ApiProperty({
     type: () => Organization,
@@ -75,8 +76,8 @@ export class Order extends Model {
   completed_by_user?: User
 
   @ForeignKey(() => User)
-  @Column({ type: DataType.INTEGER, allowNull: false })
-  creator_id: number
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  creator_id?: number
 
   @ApiProperty({
     type: () => User,
@@ -85,8 +86,19 @@ export class Order extends Model {
   @BelongsTo(() => User, 'creator_id')
   creator: User
 
+  @ForeignKey(() => Guest)
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  guest_id?: number
+
+  @ApiProperty({
+    type: () => Guest,
+    description: AppStrings.ORDER_GUEST,
+  })
+  @BelongsTo(() => Guest, 'guest_id')
+  guest: Guest
+
   @ForeignKey(() => OrderStatus)
-  @Column({ type: DataType.INTEGER, allowNull: false })
+  @Column({ type: DataType.INTEGER, allowNull: true })
   order_status_id: number
 
   @ApiProperty({
@@ -97,16 +109,20 @@ export class Order extends Model {
   order_status: OrderStatus
 
   @ApiProperty()
-  @Column({ type: DataType.DATE, allowNull: false })
-  planned_datetime: Date
+  @Column({ type: DataType.DATE, allowNull: true })
+  planned_datetime?: Date
 
   @ApiProperty()
-  @Column({ type: DataType.DATE, allowNull: false })
-  task_end_datetime: Date
+  @Column({ type: DataType.DATE, allowNull: true })
+  task_end_datetime?: Date
 
   @ApiProperty({ required: false })
   @Column({ type: DataType.DATE, allowNull: true })
   ended_at_datetime?: Date
+
+  @ApiProperty({ required: false })
+  @Column({ type: DataType.DATE, allowNull: true })
+  closed_at_datetime?: Date
 
   @ForeignKey(() => OrderPriority)
   @Column({ type: DataType.INTEGER, allowNull: false })

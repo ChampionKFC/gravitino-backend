@@ -9,8 +9,6 @@ import { TransactionHistoryModule } from '../transaction_history/transaction_his
 import { RolesModule } from '../roles/roles.module'
 import { OrganizationModule } from '../organization/organization.module'
 import { GroupModule } from '../group/group.module'
-import { SeederModule } from 'nestjs-sequelize-seeder'
-import { UserSeeds } from './seeds'
 import { RolesPermissionsService } from '../roles_permissions/roles_permissions.service'
 import { PermissionsService } from '../permissions/permissions.service'
 import { Permission } from '../permissions/entities/permission.entity'
@@ -25,7 +23,6 @@ import { OrganizationTypeModule } from '../organization_type/organization_type.m
     OrganizationTypeModule,
     GroupModule,
     TransactionHistoryModule,
-    SeederModule.forFeature([UserSeeds]),
   ],
   controllers: [UsersController],
   providers: [UsersService, RolesPermissionsService, PermissionsService],

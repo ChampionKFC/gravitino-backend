@@ -8,6 +8,9 @@ import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { AppError } from 'src/common/constants/error'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiTags('Working Hours')
 @Controller('working-hours')
@@ -21,7 +24,8 @@ export class WorkingHoursController {
     type: StatusWorkingHoursResponse,
   })
   @ApiOperation({ summary: AppStrings.WORKING_HOURS_CREATE_OPERATION })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.WorkingHoursCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Post()
   create(@Body() createWorkingHourDto: CreateWorkingHourDto, @Req() request) {
     return this.workingHoursService.create(createWorkingHourDto, request.user.user_id)
@@ -43,7 +47,8 @@ export class WorkingHoursController {
     type: StatusWorkingHoursResponse,
   })
   @ApiOperation({ summary: AppStrings.WORKING_HOURS_UPDATE_OPERATION })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.WorkingHoursUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Patch()
   async update(@Body() updateWorkingHourDto: UpdateWorkingHourDto, @Req() request) {
     const foundWorkingHours = await this.workingHoursService.findOne(updateWorkingHourDto.working_hours_id)
@@ -54,7 +59,8 @@ export class WorkingHoursController {
     return this.workingHoursService.update(updateWorkingHourDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.WorkingHoursDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.WORKING_HOURS_DELETE_RESPONSE,
     type: StatusWorkingHoursResponse,

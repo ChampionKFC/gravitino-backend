@@ -41,7 +41,7 @@ export class FacilityTypeService {
 
   async findAll(): Promise<ArrayFacilityTypeResponse> {
     try {
-      const result = await this.facilityTypeRepository.findAll()
+      const result = await this.facilityTypeRepository.findAll({ order: [['createdAt', 'DESC']] })
 
       return { count: result.length, data: result }
     } catch (error) {

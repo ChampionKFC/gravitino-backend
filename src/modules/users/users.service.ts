@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common'
 import { User } from './entities/user.entity'
 import { CreateUserDto, CreateUserOrganizationDto, UpdateUserDto, UpdateUserOrganizationDto, UpdateUserStatusDto } from './dto'
 import { Role } from 'src/modules/roles/entities/role.entity'
@@ -11,13 +11,16 @@ import { Group } from 'src/modules/group/entities/group.entity'
 import { Sequelize } from 'sequelize-typescript'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { AppError } from 'src/common/constants/error'
-import { Op, QueryTypes } from 'sequelize'
+import { Op, QueryTypes, Transaction } from 'sequelize'
 import { ArrayUserResponse, StatusUserResponse, UserResponse } from './response'
 import { UserFilter } from './filters'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
-import { OrganizationService } from '../organization/organization.service'
 import { CreateOrganizationDto, UpdateOrganizationDto } from '../organization/dto'
 import { AppStrings } from 'src/common/constants/strings'
+
+import * as xlsx from 'xlsx'
+import { RolesService } from '../roles/roles.service'
+import { GroupService } from '../group/group.service'
 
 @Injectable()
 export class UsersService {
@@ -25,18 +28,18 @@ export class UsersService {
     @InjectModel(User) private userRepository: typeof User,
     @InjectModel(Person) private personRepository: typeof Person,
     @InjectModel(Organization) private organizationRepository: typeof Organization,
-    private readonly organizationService: OrganizationService,
+    private readonly roleService: RolesService,
+    private readonly groupService: GroupService,
     private readonly historyService: TransactionHistoryService,
     private sequelize: Sequelize,
   ) {}
 
-  async create(user: CreateUserDto): Promise<StatusUserResponse> {
+  async create(user: CreateUserDto, trx?: Transaction): Promise<StatusUserResponse> {
+    const transaction = trx ?? (await this.sequelize.transaction())
     try {
-      const transaction = await this.sequelize.transaction()
-
       const email = user.email.toLowerCase()
       user.email = email
-      user.password = await bcrypt.hash(user.password, 10)
+      user.password = await bcrypt.hash(user.password.toString(), 10)
 
       if (user.last_name && user.first_name && user.phone) {
         const createPersonDto = new CreatePersonDto()
@@ -44,13 +47,14 @@ export class UsersService {
         createPersonDto.first_name = user.first_name
         createPersonDto.patronymic = user.patronymic
         createPersonDto.phone = user.phone
+        createPersonDto.property_values = user.property_values
 
         const newPerson = await this.personRepository.create({ ...createPersonDto }, { transaction: transaction })
 
         user.person_id = newPerson.person_id
       }
 
-      const newUser = await this.userRepository.create({ ...user }, { transaction: transaction }).catch((error) => {
+      const newUser = await this.userRepository.create({ ...user }, { transaction: transaction }).catch(async (error) => {
         let errorMessage = error.message
         let errorCode = HttpStatus.BAD_REQUEST
         if (error.original.code === '23505') {
@@ -61,14 +65,13 @@ export class UsersService {
         throw new HttpException(errorMessage, errorCode)
       })
 
-      await transaction.commit()
-
       const historyDto = {
         user_id: newUser.user_id,
         comment: `${AppStrings.HISTORY_USER_CREATED}${newUser.user_id} (person_id: ${newUser.person_id})`,
       }
-      await this.historyService.create(historyDto)
+      await this.historyService.create(historyDto, transaction)
 
+      if (!trx) await transaction.commit()
       return {
         status: true,
         data: {
@@ -78,6 +81,7 @@ export class UsersService {
         },
       }
     } catch (error) {
+      if (!trx) await transaction.rollback()
       if (error.code === 409) {
         throw new Error(error.message)
       } else {
@@ -86,19 +90,20 @@ export class UsersService {
     }
   }
 
-  async createOrganization(organization: CreateUserOrganizationDto): Promise<StatusUserResponse> {
-    try {
-      const transaction = await this.sequelize.transaction()
+  async createOrganization(organization: CreateUserOrganizationDto, trx?: Transaction): Promise<StatusUserResponse> {
+    const transaction = trx ?? (await this.sequelize.transaction())
 
+    try {
       const email = organization.email.toLowerCase()
       organization.email = email
-      organization.password = await bcrypt.hash(organization.password, 10)
+      organization.password = await bcrypt.hash(organization.password.toString(), 10)
 
       const createOrganizationDto = new CreateOrganizationDto()
       createOrganizationDto.organization_type_id = organization.organization_type_id
       createOrganizationDto.full_name = organization.full_name
       createOrganizationDto.short_name = organization.short_name
       createOrganizationDto.phone = organization.phone
+      createOrganizationDto.property_values = organization.property_values
 
       const newOrganization = await this.organizationRepository.create({ ...createOrganizationDto }, { transaction: transaction })
       organization.organization_id = newOrganization.organization_id
@@ -111,7 +116,7 @@ export class UsersService {
       }
       await this.historyService.create(historyDto, transaction)
 
-      await transaction.commit()
+      if (!trx) await transaction.commit()
 
       return {
         status: true,
@@ -122,6 +127,7 @@ export class UsersService {
         },
       }
     } catch (error) {
+      if (!trx) await transaction.rollback()
       if (error.code === 409) {
         throw new Error(error.message)
       } else {
@@ -130,10 +136,9 @@ export class UsersService {
     }
   }
 
-  async update(updatedUser: UpdateUserDto, user_id: number): Promise<UserResponse> {
+  async update(updatedUser: UpdateUserDto, user_id: number, trx?: Transaction): Promise<UserResponse> {
+    const transaction = trx ?? (await this.sequelize.transaction())
     try {
-      const transaction = await this.sequelize.transaction()
-
       if (updatedUser.email != undefined) {
         const email = updatedUser.email.toLowerCase()
         updatedUser.email = email
@@ -149,7 +154,7 @@ export class UsersService {
         where: { person_id },
       })
       if (foundPerson == null) {
-        await transaction.rollback()
+        if (!trx) await transaction.rollback()
         throw new HttpException(AppError.PERSON_NOT_FOUND, HttpStatus.BAD_REQUEST)
       }
 
@@ -173,19 +178,20 @@ export class UsersService {
           user_id: user_id,
           comment: `${AppStrings.HISTORY_USER_UPDATED}${foundUser.user_id}`,
         }
-        await this.historyService.create(historyDto)
+        await this.historyService.create(historyDto, transaction)
       }
 
-      await transaction.commit()
+      if (!trx) await transaction.commit()
 
       return foundUser
     } catch (error) {
+      if (!trx) await transaction.rollback()
       throw new Error(error)
     }
   }
 
-  async updateOrganization(organization: UpdateUserOrganizationDto, user_id: number): Promise<StatusUserResponse> {
-    const transaction = await this.sequelize.transaction()
+  async updateOrganization(organization: UpdateUserOrganizationDto, user_id: number, trx?: Transaction): Promise<StatusUserResponse> {
+    const transaction = trx ?? (await this.sequelize.transaction())
     try {
       if (organization.email != undefined) {
         const email = organization.email.toLowerCase()
@@ -202,7 +208,7 @@ export class UsersService {
         where: { organization_id },
       })
       if (!foundOrganization) {
-        await transaction.rollback()
+        if (!trx) await transaction.rollback()
         throw new HttpException(AppError.PERSON_NOT_FOUND, HttpStatus.BAD_REQUEST)
       }
 
@@ -226,14 +232,14 @@ export class UsersService {
         }
         await this.historyService.create(historyDto, transaction)
 
-        await transaction.commit()
+        if (!trx) await transaction.commit()
         return { status: true }
       } else {
-        await transaction.rollback()
+        if (!trx) await transaction.rollback()
         return { status: false }
       }
     } catch (error) {
-      await transaction.rollback()
+      if (!trx) await transaction.rollback()
       throw new Error(error)
     }
   }
@@ -250,6 +256,10 @@ export class UsersService {
       let sortQuery = ''
       if (userFilter?.sorts) {
         sortQuery = generateSortQuery(userFilter?.sorts)
+      }
+
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
       }
 
       const selectQuery = `
@@ -474,6 +484,158 @@ export class UsersService {
       }
     } catch (error) {
       throw new Error(error)
+    }
+  }
+
+  async importOrganization(file: Express.Multer.File, user_id: string): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
+
+    try {
+      const entities = await this.previewImportOrganization(file)
+      for (const entity of entities) {
+        const pk = entity.user_id
+        if (pk) {
+          const exists = await this.findOne(pk)
+          if (exists) {
+            await this.update(entity, +user_id, transaction)
+          } else {
+            await this.create(entity, transaction)
+          }
+        } else {
+          await this.create(entity, transaction)
+        }
+      }
+
+      transaction.commit()
+      return { status: true }
+    } catch (error) {
+      console.log('IMPORT:', error)
+
+      transaction.rollback()
+      throw new Error(error)
+    }
+  }
+
+  async previewImportOrganization(file: Express.Multer.File): Promise<any> {
+    try {
+      const workbook = xlsx.read(file.buffer)
+
+      const ws = workbook.Sheets[workbook.SheetNames[0]]
+      const range = xlsx.utils.decode_range(ws['!ref'])
+
+      const entities = []
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        if (R === 0) {
+          continue
+        }
+        let col = 0
+
+        const entity = {
+          user_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          organization_type_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          full_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          short_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          phone: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          role_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          group_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          email: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          password: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          property_values: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v?.toString().split(';'),
+        }
+
+        const role = await this.roleService.findOne(entity.role_id)
+        if (!role) {
+          throw new NotFoundException(`${AppError.ROLE_NOT_FOUND} (ID: ${entity.role_id})`)
+        }
+
+        const group = await this.groupService.findOne(entity.group_id)
+        if (!group) {
+          throw new NotFoundException(`${AppError.GROUP_NOT_FOUND} (ID: ${entity.group_id})`)
+        }
+
+        entities.push(entity)
+      }
+
+      return entities
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async import(file: Express.Multer.File, user_id: string): Promise<StatusUserResponse> {
+    const transaction = await this.sequelize.transaction()
+
+    try {
+      const entities = await this.previewImport(file)
+      for (const entity of entities) {
+        const pk = entity.user_id
+        if (pk) {
+          const exists = await this.findOne(pk)
+          if (exists) {
+            await this.update(entity, +user_id, transaction)
+          } else {
+            await this.create(entity, transaction)
+          }
+        } else {
+          await this.create(entity, transaction)
+        }
+      }
+
+      transaction.commit()
+      return { status: true }
+    } catch (error) {
+      console.log('IMPORT:', error)
+
+      transaction.rollback()
+      throw new HttpException(error.message, error.status)
+    }
+  }
+
+  async previewImport(file: Express.Multer.File): Promise<any> {
+    try {
+      const workbook = xlsx.read(file.buffer)
+
+      const ws = workbook.Sheets[workbook.SheetNames[0]]
+      const range = xlsx.utils.decode_range(ws['!ref'])
+
+      const entities = []
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        if (R === 0) {
+          continue
+        }
+        let col = 0
+
+        const entity = {
+          user_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          last_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          first_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          patronymic: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          phone: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          role_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          group_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          email: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          password: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          property_values: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v?.toString().split(';'),
+        }
+
+        const role = await this.roleService.findOne(entity.role_id)
+        if (!role) {
+          throw new NotFoundException(`${AppError.ROLE_NOT_FOUND} (ID: ${entity.role_id})`)
+        }
+
+        const group = await this.groupService.findOne(entity.group_id)
+        if (!group) {
+          throw new NotFoundException(`${AppError.GROUP_NOT_FOUND} (ID: ${entity.group_id})`)
+        }
+
+        entities.push(entity)
+      }
+
+      return entities
+    } catch (error) {
+      throw new HttpException(error.message, error.status)
     }
   }
 }

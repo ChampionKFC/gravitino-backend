@@ -39,7 +39,11 @@ export class PropertyValuesService {
 
   async findAll(): Promise<ArrayPropertyValueResponse> {
     try {
-      const result = await this.propertyValueRepository.findAll({ include: [PropertyName], attributes: { exclude: ['property_name_id'] } })
+      const result = await this.propertyValueRepository.findAll({
+        include: [PropertyName],
+        attributes: { exclude: ['property_name_id'] },
+        order: [['createdAt', 'DESC']],
+      })
       return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)

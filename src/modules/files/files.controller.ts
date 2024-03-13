@@ -1,14 +1,11 @@
-import { Controller, Post, UseGuards, UseInterceptors, Query, Req, UploadedFiles, Get, HttpException, HttpStatus } from '@nestjs/common'
+import { Controller, Post, UseInterceptors, Query, UploadedFiles, Get, HttpException, HttpStatus, Param, Res } from '@nestjs/common'
 import { FilesService } from './files.service'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { JwtAuthGuard } from '../auth/guards/auth.guard'
 import { OrderService } from '../order/order.service'
-import { FileTypeService } from '../file_type/file_type.service'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { StatusFileResponse } from './response'
 import { UploadFileDto } from './dto'
 import { AppStrings } from 'src/common/constants/strings'
-import { ActiveGuard } from '../auth/guards/active.guard'
 import { AppError } from 'src/common/constants/error'
 
 @ApiBearerAuth()
@@ -18,7 +15,6 @@ export class FilesController {
   constructor(
     private readonly filesService: FilesService,
     private readonly orderService: OrderService,
-    private readonly fileTypeService: FileTypeService,
   ) {}
 
   @ApiCreatedResponse({
@@ -26,7 +22,7 @@ export class FilesController {
     type: StatusFileResponse,
   })
   @ApiOperation({ summary: AppStrings.FILE_CREATE_OPERATION })
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  //@UseGuards(JwtAuthGuard, ActiveGuard)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       limits: { fileSize: 5242880 },
@@ -41,7 +37,6 @@ export class FilesController {
     @Query() uploadFileDto: UploadFileDto,
     @UploadedFiles()
     files: Array<Express.Multer.File>,
-    @Req() request,
   ) {
     if (uploadFileDto.order_ids.length > 0) {
       for (const order_id of uploadFileDto.order_ids) {
@@ -54,12 +49,21 @@ export class FilesController {
       throw new HttpException(AppError.ORDERS_NOT_SELECTED, HttpStatus.BAD_REQUEST)
     }
 
-    return this.filesService.uploadToS3(uploadFileDto, files, request.user.user_id)
+    if (!files) {
+      throw new HttpException(AppError.ORDERS_NOT_SELECTED, HttpStatus.BAD_REQUEST)
+    }
+
+    return this.filesService.uploadToS3(uploadFileDto, files)
   }
 
   @Get('find')
   async findImage(@Query('file_ids') file_ids: number[]) {
     return this.filesService.loadFromS3(file_ids)
+  }
+
+  @Get('template/:type')
+  async getTemplate(@Param('type') type: string, @Res() res) {
+    return res.sendFile(`uploads/templates/${type}.xlsx`, { root: './' })
   }
 
   // @UseGuards(JwtAuthGuard)

@@ -36,7 +36,7 @@ export class OperatingModeService {
 
   async findAll(): Promise<ArrayOperatingModeResponse> {
     try {
-      const foundOperatingModes = await this.operatingModeRepository.findAll()
+      const foundOperatingModes = await this.operatingModeRepository.findAll({ order: [['createdAt', 'DESC']] })
 
       return { count: foundOperatingModes.length, data: foundOperatingModes }
     } catch (error) {

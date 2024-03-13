@@ -31,7 +31,7 @@ export class FileTypeService {
 
   async findAll(): Promise<ArrayFileTypeResponse> {
     try {
-      const result = await this.fileTypeRepository.findAll()
+      const result = await this.fileTypeRepository.findAll({ order: [['createdAt', 'DESC']] })
       return { count: result.length, data: result }
     } catch (error) {
       throw new Error(error)

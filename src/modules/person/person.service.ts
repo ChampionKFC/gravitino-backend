@@ -38,6 +38,10 @@ export class PersonService {
         sortQuery = generateSortQuery(personFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT
           "person_id",

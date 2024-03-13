@@ -8,6 +8,9 @@ import { PermissionsService } from '../permissions/permissions.service'
 import { AppError } from 'src/common/constants/error'
 import { AllExceptionsFilter } from 'src/common/exception.filter'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('RolesPermissions')
@@ -21,7 +24,8 @@ export class RolesPermissionsController {
     //private readonly usersService: UsersService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.RolePermissionCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Post()
   async create(@Body() createRolesPermissionDto: CreateRolesPermissionDto, @Req() request) {
     const foundRole = await this.rolesService.findOne(createRolesPermissionDto.role_id)
@@ -48,7 +52,8 @@ export class RolesPermissionsController {
     return this.rolesPermissionsService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.RolePermissionUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Patch()
   async update(@Body() updateRolesPermissionDto: UpdateRolesPermissionDto, @Req() request) {
     let foundRolePermission = null
@@ -77,7 +82,8 @@ export class RolesPermissionsController {
     return this.rolesPermissionsService.update(updateRolesPermissionDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.RolePermissionDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Delete(':id')
   async remove(@Param('id') id: number, @Req() request) {
     const foundRolePermission = await this.rolesPermissionsService.findOne(id)

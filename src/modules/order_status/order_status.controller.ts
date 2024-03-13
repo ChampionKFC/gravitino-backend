@@ -10,6 +10,9 @@ import { ArrayOrderStatusResponse, StatusOrderStatusResponse } from './response'
 import { OrderStatusFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Order Status')
@@ -18,7 +21,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class OrderStatusController {
   constructor(private readonly orderStatusService: OrderStatusService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrderStatusCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.ORDER_STATUS_CREATED_RESPONSE,
@@ -63,7 +67,8 @@ export class OrderStatusController {
     return this.orderStatusService.findAllByRole(request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrderStatusUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Patch()
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_UPDATE_OPERATION })
   @ApiOkResponse({
@@ -83,7 +88,8 @@ export class OrderStatusController {
     return this.orderStatusService.update(updateOrderStatusDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.OrderStatusDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @Delete(':id')
   @ApiOperation({ summary: AppStrings.ORDER_STATUS_DELETE_OPERATION })
   @ApiOkResponse({

@@ -14,6 +14,8 @@ import { FacilityService } from '../facility/facility.service'
 import { OrderService } from '../order/order.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { FacilityTypeService } from '../facility_type/facility_type.service'
+import { StatusArrayOrderResponse } from '../order/response'
+import { AppError } from 'src/common/constants/error'
 
 @Injectable()
 export class TaskService {
@@ -26,13 +28,13 @@ export class TaskService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  async create(task: CreateTaskDto, user_id: number): Promise<StatusTaskResponse> {
+  async create(task: CreateTaskDto, user_id: number): Promise<StatusArrayOrderResponse> {
     const transaction = await this.sequelize.transaction()
     try {
       const newTask = await this.taskRepository.create({ ...task }, { transaction })
-
       const dates = getPeriodDates(task.periodicity_id, task.period_start, task.period_end)
 
+      const orders = []
       for (let index = 0; index < task.executor_ids.length; index++) {
         const executor_id = task.executor_ids[index]
 
@@ -45,61 +47,72 @@ export class TaskService {
         orderDto.order_status_id = 1
         orderDto.priority_id = task.priority_id
 
-        if (task.facility_ids && task.facility_ids.length > 0) {
-          for (let index = 0; index < task.facility_ids.length; index++) {
-            const facility_id = task.facility_ids[index]
+        if (task.facility_ids) {
+          if (task.facility_ids.length > 0) {
+            for (let index = 0; index < task.facility_ids.length; index++) {
+              const facility_id = task.facility_ids[index]
 
-            for (let index = 0; index < dates.length; index++) {
-              const period = dates[index]
+              for (let index = 0; index < dates.length; index++) {
+                const period = dates[index]
 
-              orderDto.facility_id = facility_id
-              orderDto.planned_datetime = period.planned_datetime
-              orderDto.task_end_datetime = period.task_end_datetime
+                orderDto.facility_id = facility_id
+                orderDto.planned_datetime = period.planned_datetime
+                orderDto.task_end_datetime = period.task_end_datetime
 
-              await this.orderService.create(orderDto, user_id, transaction).catch((e) => {
-                transaction.rollback()
-                throw new Error(e)
-              })
+                const newOrder = await this.orderService.create(orderDto, user_id, transaction)
+
+                orders.push(newOrder)
+              }
             }
+          } else {
+            throw AppError.FACILITIES_NOT_FOUND
           }
-        } else if (task.checkpoint_ids && task.checkpoint_ids.length > 0) {
+        } else if (task.checkpoint_ids) {
           const facilities = await this.facilityService.findAllByCheckpoint(task.checkpoint_ids, task.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.count; index++) {
-            const facility_id = facilities.data[index].facility_id
+          if (facilities.count > 0) {
+            for (let index = 0; index < facilities.count; index++) {
+              const facility_id = facilities.data[index].facility_id
 
-            for (let index = 0; index < dates.length; index++) {
-              const period = dates[index]
+              for (let index = 0; index < dates.length; index++) {
+                const period = dates[index]
 
-              orderDto.facility_id = facility_id
-              orderDto.planned_datetime = period.planned_datetime
-              orderDto.task_end_datetime = period.task_end_datetime
+                orderDto.facility_id = facility_id
+                orderDto.planned_datetime = period.planned_datetime
+                orderDto.task_end_datetime = period.task_end_datetime
 
-              await this.orderService.create(orderDto, user_id, transaction).catch((e) => {
-                transaction.rollback()
-                throw new Error(e)
-              })
+                const newOrder = await this.orderService.create(orderDto, user_id, transaction)
+
+                orders.push(newOrder)
+              }
             }
+          } else {
+            throw AppError.FACILITIES_NOT_FOUND
           }
-        } else {
+        } else if (task.branch_ids) {
           const facilities = await this.facilityService.findAllByBranch(task.branch_ids, task.facility_type_ids, {})
 
-          for (let index = 0; index < facilities.count; index++) {
-            const facility_id = facilities.data[index].facility_id
+          if (facilities.count > 0) {
+            for (let index = 0; index < facilities.count; index++) {
+              const facility_id = facilities.data[index].facility_id
 
-            for (let index = 0; index < dates.length; index++) {
-              const period = dates[index]
+              for (let index = 0; index < dates.length; index++) {
+                const period = dates[index]
 
-              orderDto.facility_id = facility_id
-              orderDto.planned_datetime = period.planned_datetime
-              orderDto.task_end_datetime = period.task_end_datetime
+                orderDto.facility_id = facility_id
+                orderDto.planned_datetime = period.planned_datetime
+                orderDto.task_end_datetime = period.task_end_datetime
 
-              await this.orderService.create(orderDto, user_id, transaction).catch((e) => {
-                transaction.rollback()
-                throw new Error(e)
-              })
+                const newOrder = await this.orderService.create(orderDto, user_id, transaction)
+
+                orders.push(newOrder)
+              }
             }
+          } else {
+            throw AppError.FACILITIES_NOT_FOUND
           }
+        } else {
+          throw AppError.FACILITIES_NOT_FOUND
         }
       }
 
@@ -107,11 +120,11 @@ export class TaskService {
         user_id: user_id,
         comment: `${AppStrings.HISTORY_TASK_CREATED}${newTask.task_id}`,
       }
-      await this.historyService.create(historyDto)
+      await this.historyService.create(historyDto, transaction)
 
       transaction.commit()
 
-      return { status: true }
+      return { status: true, data: { count: orders.length, data: [...orders] } }
     } catch (error) {
       transaction.rollback()
       throw new Error(error)
@@ -130,6 +143,10 @@ export class TaskService {
       let sortQuery = ''
       if (taskFilter?.sorts) {
         sortQuery = generateSortQuery(taskFilter?.sorts)
+      }
+
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
       }
 
       const selectQuery = `

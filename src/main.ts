@@ -21,14 +21,13 @@ async function bootstrap() {
       'http://devops.gravitino.ru',
       'http://frontend.devops-prod.gravitino.ru',
       'http://frontend.devops-dev.gravitino.ru',
+      'http://frontend.devops-prod.gravitino.ru',
+      'https://frontend.devops-prod.gravitino.ru',
       'https://frontend.devops-dev.gravitino.ru',
-      'https://frontend.devops-prod.gravitino.ru'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   })
-
-
   const config = new DocumentBuilder()
     .setTitle('GRAVITINO ASU API')
     .setDescription('The GRAVITINO ASU API!')
@@ -43,9 +42,7 @@ async function bootstrap() {
       in: 'header',
     })
     .build()
-
   const port = configService.get('port')
-
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api', app, document, {
     swaggerOptions: {
@@ -54,7 +51,6 @@ async function bootstrap() {
     },
     customSiteTitle: 'GRAVITINO ASU API',
   })
-
   app.useGlobalPipes(new ValidationPipe())
   await app.listen(port)
 }

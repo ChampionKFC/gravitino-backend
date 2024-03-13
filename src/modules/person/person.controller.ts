@@ -7,6 +7,9 @@ import { PersonFilter } from './filters'
 import { AppStrings } from 'src/common/constants/strings'
 import { ArrayPersonResponse } from './response'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Person')
@@ -15,7 +18,8 @@ import { ActiveGuard } from '../auth/guards/active.guard'
 export class PersonController {
   constructor(private readonly personService: PersonService) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.UserGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.PERSON_ALL_OPERATION })
   @ApiOkResponse({
     description: AppStrings.PERSON_ALL_RESPONSE,

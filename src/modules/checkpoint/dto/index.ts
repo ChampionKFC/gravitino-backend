@@ -136,8 +136,8 @@ export class CheckpointFilters {
   @ApiProperty({ required: false })
   region?: string
 
-  @ApiProperty({ required: false })
-  checkpoint_type?: CheckpointTypeFilters
+  // @ApiProperty({ required: false })
+  // checkpoint_type?: CheckpointTypeFilters
 
   @ApiProperty({ required: false })
   operating_mode?: OperatingModeFilters
@@ -147,4 +147,10 @@ export class CheckpointFilters {
 
   @ApiProperty({ required: false })
   branch?: BranchFilters
+
+  @ApiProperty({
+    required: false,
+    default: [{ checkpoint_type_id: 1, checkpoint_type_name: '' }],
+  })
+  checkpoint_type?: CheckpointTypeFilters[]
 }

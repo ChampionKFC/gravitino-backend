@@ -1,4 +1,19 @@
-import { Controller, Post, Body, Patch, Param, Delete, UseGuards, Req, HttpException, HttpStatus, UseFilters, Query } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+  HttpException,
+  HttpStatus,
+  UseFilters,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common'
 import { FacilityService } from './facility.service'
 import { CreateFacilityDto, UpdateFacilityDto } from './dto'
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
@@ -14,6 +29,10 @@ import { BranchService } from '../branch/branch.service'
 import { AppStrings } from 'src/common/constants/strings'
 import { FacilityTypeService } from '../facility_type/facility_type.service'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags('Facility')
 @Controller('facility')
@@ -28,7 +47,8 @@ export class FacilityController {
     private readonly organizationService: OrganizationService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiCreatedResponse({
     description: AppStrings.FACILITY_CREATED_RESPONSE,
     type: StatusFacilityResponse,
@@ -51,7 +71,8 @@ export class FacilityController {
     return this.facilityService.create(createFacilityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_ALL_RESPONSE,
     type: ArrayFacilityResponse,
@@ -63,7 +84,8 @@ export class FacilityController {
     return this.facilityService.findAll(facilityFilter)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_BRANCH_RESPONSE,
@@ -85,7 +107,8 @@ export class FacilityController {
     return this.facilityService.findAllByBranch(branch_ids, [], facilityFilter) //todo
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityGet)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
     description: AppStrings.FACILITY_ALL_BY_CHECKPOINT_RESPONSE,
@@ -110,6 +133,7 @@ export class FacilityController {
     return this.facilityService.findAllByCheckpoint(checkpoint_ids, [], facilityFilter) //todo
   }
 
+  // @HasPermissions(PermissionEnum.FacilityGet)
   @UseGuards(JwtAuthGuard, ActiveGuard)
   @ApiResponse({
     status: 200,
@@ -135,7 +159,8 @@ export class FacilityController {
     return this.facilityService.findAllByType(type_ids, facilityFilter)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_UPDATE_RESPONSE,
     type: Facility,
@@ -170,7 +195,8 @@ export class FacilityController {
     return this.facilityService.update(updateFacilityDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.FacilityDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOkResponse({
     description: AppStrings.FACILITY_DELETE_RESPONSE,
     type: StatusFacilityResponse,
@@ -184,5 +210,52 @@ export class FacilityController {
     }
 
     return this.facilityService.remove(+id, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.FacilityCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.FACILITY_IMPORT_RESPONSE,
+    type: StatusFacilityResponse,
+  })
+  @ApiOperation({ summary: AppStrings.FACILITY_IMPORT_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('import')
+  async import(
+    @UploadedFile()
+    file: Express.Multer.File,
+    @Req() request,
+  ) {
+    return this.facilityService.import(file, request.user.user_id)
+  }
+
+  @HasPermissions(PermissionEnum.CheckpointCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
+  @ApiOkResponse({
+    description: AppStrings.FACILITY_IMPORT_UPLOAD_RESPONSE,
+    type: StatusFacilityResponse,
+  })
+  @ApiOperation({ summary: AppStrings.FACILITY_IMPORT_UPLOAD_OPERATION })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: (req, file, callback) => {
+        if (!Boolean(file.mimetype.match(/(xls|xlsx|csv)/))) callback(null, false)
+        callback(null, true)
+      },
+    }),
+  )
+  @Post('upload-import')
+  async uploadImport(
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return this.facilityService.previewImport(file)
   }
 }

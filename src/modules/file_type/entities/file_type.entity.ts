@@ -13,11 +13,11 @@ export class FileType extends Model {
   file_type_id: number
 
   @ApiProperty({ example: AppStrings.FILE_TYPE_NAME_EXAMPLE, description: AppStrings.FILE_TYPE_NAME_DESCRIPTION })
-  @Column({ type: DataType.STRING(30), allowNull: false })
+  @Column({ type: DataType.STRING(50), allowNull: false })
   file_type_name: string
 
   @ApiProperty({ example: AppStrings.FILE_TYPE_EXTENSION_EXAMPLE, description: AppStrings.FILE_TYPE_EXTENSION_DESCRIPTION })
-  @Column({ type: DataType.STRING(30), allowNull: false })
+  @Column({ type: DataType.STRING(50), allowNull: false })
   file_extension: string
 
   // @HasMany(() => Report, 'file_type_id')

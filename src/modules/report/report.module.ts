@@ -9,12 +9,25 @@ import { TransactionHistoryService } from '../transaction_history/transaction_hi
 import { OrderModule } from '../order/order.module'
 import { BranchModule } from '../branch/branch.module'
 import { UsersModule } from '../users/users.module'
-import { CheckpointModule } from '../checkpoint/checkpoint.module'
 import { FacilityModule } from '../facility/facility.module'
-
+import { CheckpointModule } from '../checkpoint/checkpoint.module'
+import { RolesPermissionsService } from '../roles_permissions/roles_permissions.service'
+import { PermissionsService } from '../permissions/permissions.service'
+import { RolePermission } from '../roles_permissions/entities/roles_permission.entity'
+import { Permission } from '../permissions/entities/permission.entity'
+import { OrganizationModule } from '../organization/organization.module'
 @Module({
-  imports: [SequelizeModule.forFeature([Report, FileType, TransactionHistory]), BranchModule, FacilityModule, CheckpointModule, UsersModule, OrderModule],
+  imports: [
+    SequelizeModule.forFeature([Report, FileType, TransactionHistory, File, RolePermission, Permission]),
+    BranchModule,
+    FacilityModule,
+    UsersModule,
+    OrderModule,
+    CheckpointModule,
+    OrganizationModule,
+  ],
   controllers: [ReportController],
-  providers: [ReportService, TransactionHistoryService],
+  providers: [ReportService, TransactionHistoryService, RolesPermissionsService, PermissionsService],
+  exports: [ReportService],
 })
 export class ReportModule {}

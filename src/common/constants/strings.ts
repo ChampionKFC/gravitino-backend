@@ -12,6 +12,7 @@ export const AppStrings = {
   ORDER_PRIORITY: 'Приоритет',
   ORDER_EXECUTOR: 'Выполнен (кем)',
   ORDER_CREATOR: 'Создатель заказа',
+  ORDER_GUEST: 'Создатель заказа (посетитель)',
   TASK: 'Задача',
   FILE_TYPE: 'Заказ',
   FACILITY: 'Объект обслуживания',
@@ -77,6 +78,10 @@ export const AppStrings = {
   CHECKPOINT_UPDATE_OPERATION: 'Изменение пункта пропуска',
   CHECKPOINT_DELETE_RESPONSE: 'Пункт пропуска удален',
   CHECKPOINT_DELETE_OPERATION: 'Удаление пункта пропуска',
+  CHECKPOINT_IMPORT_RESPONSE: 'Пункты пропуска импортированы',
+  CHECKPOINT_IMPORT_OPERATION: 'Импорт пунктов пропуска',
+  CHECKPOINT_IMPORT_UPLOAD_RESPONSE: 'Файл импорта загружен',
+  CHECKPOINT_IMPORT_UPLOAD_OPERATION: 'Импорт файла пунктов пропуска',
 
   CHECKPOINT_TYPE_NAME_EXAMPLE: 'Тип пункта пропуска',
   CHECKPOINT_TYPE_NAME_DESCRIPTION: 'Тип пункта пропуска',
@@ -105,6 +110,10 @@ export const AppStrings = {
   FACILITY_UPDATE_OPERATION: 'Изменение объекта обслуживания',
   FACILITY_DELETE_RESPONSE: 'Объект обслуживания удален',
   FACILITY_DELETE_OPERATION: 'Удаление объекта обслуживания',
+  FACILITY_IMPORT_RESPONSE: 'Объекты обслуживания импортированы',
+  FACILITY_IMPORT_OPERATION: 'Импорт объектов обслуживания ',
+  FACILITY_IMPORT_UPLOAD_RESPONSE: 'Файл импорта загружен',
+  FACILITY_IMPORT_UPLOAD_OPERATION: 'Импорт файла объектов обслуживания',
 
   FACILITY_TYPE_EXAMPLE: 'Котельная №1',
   FACILITY_TYPE_DESCRIPTION: 'Название типа объекта обслуживания',
@@ -132,6 +141,13 @@ export const AppStrings = {
 
   FILE_CREATED_RESPONSE: 'Файл загружен',
   FILE_CREATE_OPERATION: 'Загрузка файлов',
+
+  GUEST_NAME_EXAMPLE: 'Иван',
+  GUEST_NAME_DESCRIPTION: 'Имя посетителя',
+  GUEST_EMAIL_EXAMPLE: 'mail@mail.com',
+  GUEST_EMAIL_DESCRIPTION: 'E-Mail посетителя',
+  GUEST_PHONE_EXAMPLE: '+78001234567',
+  GUEST_PHONE_DESCRIPTION: 'Номер телефона посетителя',
 
   GROUP_NAME_EXAMPLE: 'Группа №1',
   GROUP_NAME_DESCRIPTION: 'Название группы',
@@ -168,6 +184,8 @@ export const AppStrings = {
 
   ORDER_CREATED_RESPONSE: 'Заказ создан',
   ORDER_CREATE_OPERATION: 'Создание заказа',
+  ORDER_GUEST_CREATED_RESPONSE: 'Жалоба создана',
+  ORDER_GUEST_CREATE_OPERATION: 'Создание жалобы (заказ по QR)',
   ORDER_ALL_RESPONSE: 'Список заказов получен',
   ORDER_ALL_OPERATION: 'Получение списка всех заказов',
   ORDER_ALL_BY_BRANCH_RESPONSE: 'Список заказов получен',
@@ -182,6 +200,12 @@ export const AppStrings = {
   ORDER_STATUS_UPDATE_OPERATION: 'Изменение статуса заказа',
   ORDER_DELETE_RESPONSE: 'Заказ удален',
   ORDER_DELETE_OPERATION: 'Удаление заказа',
+  ORDER_CHANGE_EXECUTOR_RESPONSE: 'Исполнитель изменен',
+  ORDER_CHANGE_EXECUTOR_OPERATION: 'Изменение исполнителя заказа',
+  ORDER_IMPORT_RESPONSE: 'Заказы импортированы',
+  ORDER_IMPORT_OPERATION: 'Импорт заказов',
+  ORDER_IMPORT_UPLOAD_RESPONSE: 'Файл импорта загружен',
+  ORDER_IMPORT_UPLOAD_OPERATION: 'Импорт файла заказов',
 
   ORDER_JOURNAL_COMMENT_EXAMPLE: 'Изменен статус заказа',
   ORDER_JOURNAL_COMMENT_DESCRIPTION: 'Название действия',
@@ -209,12 +233,18 @@ export const AppStrings = {
   ORGANIZATION_CREATE_OPERATION: 'Создание организации',
   ORGANIZATION_ALL_RESPONSE: 'Список организаций получен',
   ORGANIZATION_ALL_OPERATION: 'Получение списка всех организаций',
+  ORGANIZATION_MY_RESPONSE: 'Список организаций пользователя получен',
+  ORGANIZATION_MY_OPERATION: 'Получение списка всех организаций пользователя',
   ORGANIZATION_ALL_BY_CHECKPOINT_RESPONSE: 'Список организаций получен',
   ORGANIZATION_ALL_BY_CHECKPOINT_OPERATION: 'Получение списка всех организаций по пункту пропуска',
   ORGANIZATION_UPDATE_RESPONSE: 'Организация изменена',
   ORGANIZATION_UPDATE_OPERATION: 'Изменение организации',
   ORGANIZATION_DELETE_RESPONSE: 'Организация удалена',
   ORGANIZATION_DELETE_OPERATION: 'Удаление организации',
+  ORGANIZATION_IMPORT_RESPONSE: 'Организации импортированы',
+  ORGANIZATION_IMPORT_OPERATION: 'Импорт организаций',
+  ORGANIZATION_IMPORT_UPLOAD_RESPONSE: 'Файл импорта загружен',
+  ORGANIZATION_IMPORT_UPLOAD_OPERATION: 'Импорт файла организаций',
 
   ORGANIZATION_TYPE_NAME_EXAMPLE: 'Уборка, ремонт',
   ORGANIZATION_TYPE_NAME_DESCRIPTION: 'Вид деятельности организации',
@@ -292,10 +322,14 @@ export const AppStrings = {
 
   REPORT_BRANCH_ALL_RESPONSE: 'Отчет по всем филиалам сгенерирован',
   REPORT_BRANCH_ALL_OPERATION: 'Генерация отчета по всем филиалам',
+  REPORT_MY_BRANCH_ALL_RESPONSE: 'Отчет по филиалу пользователя сгенерирован',
+  REPORT_MY_BRANCH_ALL_OPERATION: 'Генерация отчета по филиалу пользователя',
   REPORT_CHECKPOINT_ALL_RESPONSE: 'Отчет по пунктам пропуска сгенерирован',
   REPORT_CHECKPOINT_ALL_OPERATION: 'Генерация отчета по пунктам пропуска',
   REPORT_ORGANIZATIONS_ALL_RESPONSE: 'Отчет по подрядчикам сгенерирован',
   REPORT_ORGANIZATIONS_ALL_OPERATION: 'Генерация отчета по подрядчикам',
+  REPORT_MY_ORGANIZATIONS_RESPONSE: 'Отчет по организациям пользователя сгенерирован',
+  REPORT_MY_ORGANIZATIONS_OPERATION: 'Генерация отчета по организациям пользователя',
 
   ROLE_NAME_EXAMPLE: 'Заказчик',
   ROLE_NAME_DESCRIPTION: 'Роль пользователя',
@@ -346,6 +380,10 @@ export const AppStrings = {
   USER_STATUS_UPDATE_OPERATION: 'Изменение статуса пользователя',
   USER_DELETE_RESPONSE: 'Пользователь удален',
   USER_DELETE_OPERATION: 'Удаление пользователя',
+  USER_IMPORT_RESPONSE: 'Пользователи импортированы',
+  USER_IMPORT_OPERATION: 'Импорт пользователей',
+  USER_IMPORT_UPLOAD_RESPONSE: 'Файл импорта загружен',
+  USER_IMPORT_UPLOAD_OPERATION: 'Импорт файла пользователей',
 
   WORKING_HOURS_NAME_EXAMPLE: 'Круглосуточно',
   WORKING_HOURS_NAME_DESCRIPTION: 'Часы работы',
@@ -463,4 +501,6 @@ export const AppStrings = {
   HISTORY_ROLES_PERMISSIONS_DELETED: 'Отозвано разрешение #',
   HISTORY_ROLES_PERMISSIONS_VALUE: 'со значением',
   HISTORY_ROLES_PERMISSIONS_ROLE: 'роли #',
+
+  MAIL_ORDER_CLOSE_SUBJECT: 'Отчет по жалобе',
 }

@@ -50,6 +50,10 @@ export class OrderResponse {
   @ApiProperty({ required: false })
   ended_at_datetime?: Date
 
+  @IsDate()
+  @ApiProperty({ required: false })
+  closed_at_datetime?: Date
+
   @IsInt()
   @ApiProperty({ default: 1 })
   priority_id: number

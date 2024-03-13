@@ -51,6 +51,10 @@ export class CheckpointTypeService {
         sortQuery = generateSortQuery(checkpointTypeFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT
           "checkpoint_type_id",

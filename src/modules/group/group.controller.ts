@@ -9,6 +9,9 @@ import { BranchService } from '../branch/branch.service'
 import { ArrayGroupResponse, StatusGroupResponse } from './response'
 import { AppStrings } from 'src/common/constants/strings'
 import { ActiveGuard } from '../auth/guards/active.guard'
+import { PermissionEnum } from '../auth/guards/enums/permission.enum'
+import { PermissionsGuard } from '../auth/guards/permission.guard'
+import { HasPermissions } from '../auth/guards/permissions.decorator'
 
 @ApiBearerAuth()
 @ApiTags('Group')
@@ -20,7 +23,8 @@ export class GroupController {
     private readonly branchService: BranchService,
   ) {}
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.GroupCreate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_CREATE_OPERATION })
   @ApiCreatedResponse({
     description: AppStrings.GROUP_CREATED_RESPONSE,
@@ -49,7 +53,8 @@ export class GroupController {
     return this.groupService.findAll()
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.GroupUpdate)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_UPDATE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.GROUP_UPDATE_RESPONSE,
@@ -75,7 +80,8 @@ export class GroupController {
     return this.groupService.update(updateGroupDto, request.user.user_id)
   }
 
-  @UseGuards(JwtAuthGuard, ActiveGuard)
+  @HasPermissions(PermissionEnum.GroupDelete)
+  @UseGuards(JwtAuthGuard, PermissionsGuard, ActiveGuard)
   @ApiOperation({ summary: AppStrings.GROUP_DELETE_OPERATION })
   @ApiOkResponse({
     description: AppStrings.GROUP_DELETE_RESPONSE,

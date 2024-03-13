@@ -48,6 +48,10 @@ export class CategoryService {
         sortQuery = generateSortQuery(categoryFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT
           "category_id",

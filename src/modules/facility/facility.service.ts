@@ -1,24 +1,29 @@
-import { Injectable } from '@nestjs/common'
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common'
 import { CreateFacilityDto, UpdateFacilityDto } from './dto'
 import { InjectModel } from '@nestjs/sequelize'
 import { Facility } from './entities/facility.entity'
 import { TransactionHistoryService } from '../transaction_history/transaction_history.service'
 import { ArrayFacilityResponse, FacilityResponse, StatusFacilityResponse } from './response'
 import { FacilityFilter } from './filters'
-import { QueryTypes } from 'sequelize'
+import { QueryTypes, Transaction } from 'sequelize'
 import { generateWhereQuery, generateSortQuery } from 'src/common/utlis/generate_sort_query'
 import { Sequelize } from 'sequelize-typescript'
 import { AppStrings } from 'src/common/constants/strings'
-import { OrganizationService } from '../organization/organization.service'
 import { Organization } from '../organization/entities/organization.entity'
 import { OrganizationType } from '../organization_type/entities/organization_type.entity'
+
+import * as xlsx from 'xlsx'
+import { CheckpointService } from '../checkpoint/checkpoint.service'
+import { FacilityTypeService } from '../facility_type/facility_type.service'
+import { AppError } from 'src/common/constants/error'
 
 @Injectable()
 export class FacilityService {
   constructor(
     @InjectModel(Facility) private facilityRepository: typeof Facility,
     @InjectModel(Organization) private organizationRepository: typeof Organization,
-    private readonly organizationService: OrganizationService,
+    private readonly checkpointService: CheckpointService,
+    private readonly facilityTypeService: FacilityTypeService,
     private readonly historyService: TransactionHistoryService,
     private readonly sequelize: Sequelize,
   ) {}
@@ -62,18 +67,21 @@ export class FacilityService {
       LEFT JOIN "OperatingModes" AS "operating_mode" ON "checkpoint"."operating_mode_id" = "operating_mode"."operating_mode_id"
   ) AS query`
 
-  async create(facility: CreateFacilityDto, user_id: number): Promise<StatusFacilityResponse> {
+  async create(facility: CreateFacilityDto, user_id: number, trx?: Transaction): Promise<StatusFacilityResponse> {
+    const transaction = trx ?? (await this.sequelize.transaction())
     try {
-      const newFacility = await this.facilityRepository.create({ ...facility })
+      const newFacility = await this.facilityRepository.create({ ...facility }, { transaction })
 
       const historyDto = {
         user_id: user_id,
         comment: `${AppStrings.HISTORY_FACILITY_CREATED}${newFacility.facility_id}`,
       }
-      await this.historyService.create(historyDto)
+      await this.historyService.create(historyDto, transaction)
 
+      if (!trx) transaction.commit()
       return { status: true, data: newFacility }
     } catch (error) {
+      if (!trx) transaction.rollback()
       throw new Error(error)
     }
   }
@@ -90,6 +98,10 @@ export class FacilityService {
       let sortQuery = ''
       if (facilityFilter?.sorts) {
         sortQuery = generateSortQuery(facilityFilter?.sorts)
+      }
+
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
       }
 
       const query = `
@@ -136,7 +148,8 @@ export class FacilityService {
       const facilities = await this.sequelize.query<Facility>(
         `
           ${this.selectQuery}
-          WHERE ${organization_id} = ANY(organization_ids);
+          WHERE ${organization_id} = ANY(organization_ids)
+          ORDER BY "createdAt" DESC;
         `,
         {
           nest: true,
@@ -150,50 +163,89 @@ export class FacilityService {
     }
   }
 
-  async findOrganizationsByFacility(facility_id: number) {
+  async findOrganizationsByBranch(branch_id: string, include?: boolean) {
+    const includeFacilities = include ?? true
+    try {
+      const facilities = await this.findAll({ filter: { checkpoint: { branch: { branch_id: +branch_id } } } })
+
+      if (facilities.data.length > 0) {
+        const organizations = []
+        for (const organization of facilities.data[0].organizations) {
+          if (includeFacilities) {
+            const facilities = await this.findByOrganization(organization.organization_id)
+            organization.setDataValue('facilities', facilities)
+          }
+
+          organizations.push(organization)
+        }
+
+        return organizations
+      } else {
+        return []
+      }
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findOrganizationsByFacility(facility_id: number, include?: boolean) {
+    const includeFacilities = include ?? true
     try {
       const facilities = await this.findAll({ filter: { facility_id } })
 
-      const organizations = []
-      for (const organization of facilities.data[0].organizations) {
-        const facilities = await this.findByOrganization(organization.organization_id)
-        organization.setDataValue('facilities', facilities)
-        organizations.push(organization)
-      }
+      if (facilities.data.length > 0) {
+        const organizations = []
+        for (const organization of facilities.data[0].organizations) {
+          if (includeFacilities) {
+            const facilities = await this.findByOrganization(organization.organization_id)
+            organization.setDataValue('facilities', facilities)
+          }
+          organizations.push(organization)
+        }
 
-      return organizations
+        return organizations
+      } else {
+        return []
+      }
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findOrganizationsByCheckpoint(checkpoint_id: string) {
+  async findOrganizationsByCheckpoint(checkpoint_id: string, include?: boolean) {
+    const includeFacilities = include ?? true
     try {
       const facilities = await this.findAll({ filter: { checkpoint: { checkpoint_id: +checkpoint_id } } })
 
-      const organizations = []
-      for (const organization of facilities.data[0].organizations) {
-        const facilities = await this.findByOrganization(organization.organization_id)
-        organization.setDataValue('facilities', facilities)
-        organizations.push(organization)
-      }
+      if (facilities.data.length > 0) {
+        const organizations = []
+        for (const organization of facilities.data[0].organizations) {
+          if (includeFacilities) {
+            const facilities = await this.findByOrganization(organization.organization_id)
+            organization.setDataValue('facilities', facilities)
+          }
+          organizations.push(organization)
+        }
 
-      return organizations
+        return organizations
+      } else {
+        return []
+      }
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findOne(facility_id: number): Promise<boolean> {
+  async findOne(facility_id: number): Promise<FacilityResponse> {
     try {
       const result = await this.facilityRepository.findOne({
         where: { facility_id },
       })
 
       if (result) {
-        return true
+        return result
       } else {
-        return false
+        return null
       }
     } catch (error) {
       throw new Error(error)
@@ -269,9 +321,10 @@ export class FacilityService {
     }
   }
 
-  async update(updatedFacility: UpdateFacilityDto, user_id: number): Promise<FacilityResponse> {
+  async update(updatedFacility: UpdateFacilityDto, user_id: number, trx?: Transaction): Promise<FacilityResponse> {
+    const transaction = await this.sequelize.transaction()
     try {
-      await this.facilityRepository.update({ ...updatedFacility }, { where: { checkpoint_id: updatedFacility.facility_id } })
+      await this.facilityRepository.update({ ...updatedFacility }, { where: { checkpoint_id: updatedFacility.facility_id }, transaction })
 
       const foundFacility = await this.facilityRepository.findOne({
         where: { checkpoint_id: updatedFacility.facility_id },
@@ -282,11 +335,15 @@ export class FacilityService {
           user_id: user_id,
           comment: `${AppStrings.HISTORY_FACILITY_UPDATED}${foundFacility.facility_id}`,
         }
-        await this.historyService.create(historyDto)
+        await this.historyService.create(historyDto, transaction)
       }
+
+      if (!trx) transaction.commit()
 
       return foundFacility
     } catch (error) {
+      if (!trx) transaction.rollback()
+
       throw new Error(error)
     }
   }
@@ -310,6 +367,76 @@ export class FacilityService {
       return { status: false }
     } catch (error) {
       throw new Error(error)
+    }
+  }
+
+  async import(file: Express.Multer.File, user_id: string): Promise<StatusFacilityResponse> {
+    const transaction = await this.sequelize.transaction()
+
+    try {
+      const entities = await this.previewImport(file)
+      for (const facility of entities) {
+        const pk = facility.facility_id
+        if (pk) {
+          const exists = await this.findOne(pk)
+          if (exists) {
+            await this.update(facility, +user_id, transaction)
+          } else {
+            await this.create(facility, +user_id, transaction)
+          }
+        } else {
+          await this.create(facility, +user_id, transaction)
+        }
+      }
+
+      transaction.commit()
+      return { status: true }
+    } catch (error) {
+      console.log('IMPORT:', error)
+
+      transaction.rollback()
+      throw new HttpException(error.message, error.status)
+    }
+  }
+
+  async previewImport(file: Express.Multer.File): Promise<any> {
+    try {
+      const workbook = xlsx.read(file.buffer)
+      const ws = workbook.Sheets[workbook.SheetNames[0]]
+      const range = xlsx.utils.decode_range(ws['!ref'])
+
+      const entities = []
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        if (R === 0) {
+          continue
+        }
+        let col = 0
+
+        const entity = {
+          facility_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          facility_name: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          organization_ids: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v ?? [],
+          checkpoint_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+          facility_type_id: ws[xlsx.utils.encode_cell({ c: col++, r: R })]?.v,
+        }
+
+        const checkpoint = await this.checkpointService.findOne(entity.checkpoint_id)
+        if (!checkpoint) {
+          throw new NotFoundException(`${AppError.CHECKPOINT_NOT_FOUND} (ID: ${entity.checkpoint_id})`)
+        }
+
+        const facilityType = await this.facilityTypeService.findOne(entity.facility_type_id)
+        if (!facilityType) {
+          throw new NotFoundException(`${AppError.FACILITY_TYPE_NOT_FOUND} (ID: ${entity.facility_type_id})`)
+        }
+
+        entities.push(entity)
+      }
+
+      return entities
+    } catch (error) {
+      throw new HttpException(error.message, error.status)
     }
   }
 }

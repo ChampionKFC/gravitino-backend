@@ -75,6 +75,26 @@ export class BulkCreateOrderDto {
   property_values?: number[]
 }
 
+export class CreateGuestOrderDto {
+  @ApiProperty({ required: false })
+  guest_name?: string
+
+  @ApiProperty({ required: false })
+  guest_email?: string
+
+  @ApiProperty({ required: false })
+  guest_phone?: string
+
+  @ApiProperty({ required: false })
+  order_name?: string
+
+  @ApiProperty({ required: false })
+  order_description?: string
+
+  @ApiProperty({ default: 1 })
+  facility_id: number
+}
+
 export class UpdateOrderDto {
   @ApiProperty({ default: 1 })
   order_id: number
@@ -109,9 +129,6 @@ export class UpdateOrderDto {
   @ApiProperty({ required: false })
   task_end_datetime?: Date
 
-  @ApiProperty({ required: false })
-  ended_at_datetime?: Date
-
   @ApiProperty({ default: 1, required: false })
   priority_id?: number
 
@@ -125,6 +142,14 @@ export class UpdateStatusDto {
 
   @ApiProperty({ default: 1, required: false })
   order_status_id?: number
+}
+
+export class UpdateExecutorDto {
+  @ApiProperty({ default: 1 })
+  order_id: number
+
+  @ApiProperty({ default: 1 })
+  executor_id: number
 }
 
 export class OrderSorts {
@@ -151,6 +176,9 @@ export class OrderSorts {
 
   @ApiProperty({ default: AppStrings.ASC, required: false })
   ended_at_datetime?: string
+
+  @ApiProperty({ default: AppStrings.ASC, required: false })
+  closed_at_datetime?: string
 
   @ApiProperty({ required: false })
   facility?: FacilitySorts
@@ -192,6 +220,9 @@ export class OrderFilters {
 
   @ApiProperty({ required: false })
   ended_at_datetime?: Date
+
+  @ApiProperty({ required: false })
+  closed_at_datetime?: Date
 
   @ApiProperty({ required: false })
   facility?: FacilityFilters

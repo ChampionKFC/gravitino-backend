@@ -76,11 +76,5 @@ export class OrganizationFilters {
   short_name?: string
 
   @ApiProperty({ required: false })
-  register_number?: string
-
-  @ApiProperty({ required: false })
   phone?: string
-
-  @ApiProperty({ required: false })
-  email?: string
 }

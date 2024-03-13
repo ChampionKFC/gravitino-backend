@@ -48,6 +48,10 @@ export class RolesService {
         sortQuery = generateSortQuery(roleFilter?.sorts)
       }
 
+      if (sortQuery == '') {
+        sortQuery = 'ORDER BY "createdAt" DESC'
+      }
+
       const selectQuery = `
         SELECT * FROM
           (

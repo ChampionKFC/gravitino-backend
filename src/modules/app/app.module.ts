@@ -36,7 +36,6 @@ import { TransactionHistory } from '../transaction_history/entities/transaction_
 import { PermissionsModule } from '../permissions/permissions.module'
 import { RolesPermissionsModule } from '../roles_permissions/roles_permissions.module'
 import { TransactionHistoryModule } from '../transaction_history/transaction_history.module'
-import { SeederModule } from 'nestjs-sequelize-seeder'
 import { Branch } from '../branch/entities/branch.entity'
 import { BranchModule } from '../branch/branch.module'
 import { File } from '../files/entities/file.entity'
@@ -63,18 +62,15 @@ import { FacilityTypeModule } from '../facility_type/facility_type.module'
 import { FacilityType } from '../facility_type/entities/facility_type.entity'
 import { ReportModule } from '../report/report.module'
 import { Report } from '../report/entities/report.entity'
+import { Guest } from '../guest/entities/guest.entity'
+import { GuestModule } from '../guest/guest.module'
+import { MailModule } from '../mail/mail.module'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-    }),
-    SeederModule.forRoot({
-      isGlobal: true,
-      logging: true,
-      runOnlyIfTableIsEmpty: false,
-      foreignDelay: 2000,
     }),
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
@@ -84,15 +80,12 @@ import { Report } from '../report/entities/report.entity'
         username: configService.get('db_username'),
         password: configService.get('db_password'),
         database: configService.get('db_name'),
-        autoLoadModels: true,
+        sync: { force: true },
         logging: false,
-        synchronize: true,
         models: [
           User,
-          //Gender,
           Auth,
           Person,
-          //PersonStatus,
           Role,
           Group,
           Organization,
@@ -120,15 +113,14 @@ import { Report } from '../report/entities/report.entity'
           NeighboringState,
           WorkingHours,
           OperatingMode,
+          Guest,
         ],
       }),
       inject: [ConfigService],
     }),
     AuthModule,
     UsersModule,
-    //GenderModule,
     PersonModule,
-    //PersonStatusModule,
     RolesModule,
     GroupModule,
 
@@ -165,6 +157,9 @@ import { Report } from '../report/entities/report.entity'
     WorkingHoursModule,
     OperatingModeModule,
     NeighboringStateModule,
+
+    GuestModule,
+    MailModule,
   ],
 })
 export class AppModule {}

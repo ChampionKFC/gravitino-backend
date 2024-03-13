@@ -23,7 +23,9 @@ jobs:
       run: git clone https://github.com/ChampionKFC/devops-gravitino.git -b ${{ github.ref_name }}
 
     - name: Copy Dockerfile to backend directory
-      run: cp devops-gravitino/docker_images/backend/Dockerfile gravitino-backend/
+      run: |
+        cp devops-gravitino/docker_images/backend/Dockerfile gravitino-backend/
+        cp devops-gravitino/docker_images/backend/startup.sh gravitino-backend/
 
     - name: Build Docker image
       run: |
